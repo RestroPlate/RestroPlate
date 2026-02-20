@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useReveal } from './hooks/useReveal';
 
 const TOKEN = {
@@ -25,6 +25,9 @@ const TAGS: string[] = [
 
 export function Mission() {
     const [ref, visible] = useReveal(0.1);
+    const [hoveredTag, setHoveredTag] = useState<string | null>(null);
+    const [imgHovered, setImgHovered] = useState(false);
+    const [badgeHovered, setBadgeHovered] = useState(false);
 
     const sectionStyle: React.CSSProperties = {
         background: TOKEN.bgDeep,
@@ -32,12 +35,8 @@ export function Mission() {
     };
 
     const innerStyle: React.CSSProperties = {
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-        gap: '6vw',
         maxWidth: '1200px',
         margin: '0 auto',
-        alignItems: 'center',
         opacity: visible ? 1 : 0,
         transform: visible ? 'translateY(0)' : 'translateY(36px)',
         transition: 'opacity 0.8s ease, transform 0.8s ease',
@@ -46,6 +45,8 @@ export function Mission() {
     const imageWrapStyle: React.CSSProperties = {
         position: 'relative',
         display: 'block',
+        overflow: 'hidden',
+        borderRadius: '16px',
     };
 
     const imgStyle: React.CSSProperties = {
@@ -54,6 +55,8 @@ export function Mission() {
         borderRadius: '16px',
         objectFit: 'cover',
         display: 'block',
+        transform: imgHovered ? 'scale(1.03)' : 'scale(1)',
+        transition: 'transform 0.6s ease',
     };
 
     const badgeStyle: React.CSSProperties = {
@@ -65,6 +68,9 @@ export function Mission() {
         padding: '20px 24px',
         textAlign: 'center',
         boxShadow: '0 16px 48px rgba(0,0,0,0.4)',
+        cursor: 'pointer',
+        transform: badgeHovered ? 'scale(1.05) translateY(-3px)' : 'scale(1) translateY(0)',
+        transition: 'transform 0.3s ease',
     };
 
     const badgeNumStyle: React.CSSProperties = {
@@ -123,7 +129,7 @@ export function Mission() {
         marginTop: '32px',
     };
 
-    const tagStyle: React.CSSProperties = {
+    const getTagStyle = (tag: string): React.CSSProperties => ({
         fontFamily: TOKEN.fontBody,
         fontSize: '0.78rem',
         fontWeight: 600,
@@ -132,15 +138,30 @@ export function Mission() {
         borderRadius: '4px',
         padding: '6px 14px',
         letterSpacing: '0.05em',
-    };
+        cursor: 'pointer',
+        background: hoveredTag === tag ? 'rgba(125,197,66,0.12)' : 'transparent',
+        transform: hoveredTag === tag ? 'translateY(-2px)' : 'translateY(0)',
+        transition: 'background 0.3s ease, transform 0.3s ease',
+    });
 
     return (
         <section ref={ref as React.RefObject<HTMLElement>} style={sectionStyle} id="partners" aria-label="Our mission">
-            <div style={innerStyle}>
+            <div style={innerStyle} className="mission-grid">
                 {/* Image column */}
-                <div style={imageWrapStyle}>
-                    <img src={IMG.mission} alt="Community sharing food" style={imgStyle} />
-                    <div style={badgeStyle}>
+                <div style={{ position: 'relative', display: 'block' }} className="mission-image-col">
+                    <div
+                        style={imageWrapStyle}
+                        onMouseEnter={() => setImgHovered(true)}
+                        onMouseLeave={() => setImgHovered(false)}
+                    >
+                        <img src={IMG.mission} alt="Community sharing food" style={imgStyle} className="mission-image" />
+                    </div>
+                    <div
+                        style={badgeStyle}
+                        className="mission-badge"
+                        onMouseEnter={() => setBadgeHovered(true)}
+                        onMouseLeave={() => setBadgeHovered(false)}
+                    >
                         <span style={badgeNumStyle}>1 in 3</span>
                         <span style={badgeLabelStyle}>meals wasted globally</span>
                     </div>
@@ -162,7 +183,14 @@ export function Mission() {
 
                     <div style={tagsRowStyle}>
                         {TAGS.map((tag) => (
-                            <span key={tag} style={tagStyle}>{tag}</span>
+                            <span
+                                key={tag}
+                                style={getTagStyle(tag)}
+                                onMouseEnter={() => setHoveredTag(tag)}
+                                onMouseLeave={() => setHoveredTag(null)}
+                            >
+                                {tag}
+                            </span>
                         ))}
                     </div>
                 </div>

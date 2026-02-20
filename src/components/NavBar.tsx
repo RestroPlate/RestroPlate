@@ -5,7 +5,6 @@ const TOKEN = {
     accent: '#7DC542',
     textPrimary: '#F0EBE1',
     textMuted: 'rgba(240,235,225,0.55)',
-    border: 'rgba(125,197,66,0.13)',
     fontDisplay: "'Roboto', sans-serif",
     fontBody: "'Nunito', sans-serif",
 } as const;
@@ -20,12 +19,18 @@ const NAV_LINKS: { label: string; href: string }[] = [
 export function NavBar() {
     const [scrolled, setScrolled] = useState(false);
     const [hoveredLink, setHoveredLink] = useState<string | null>(null);
+    const [hoveredLogo, setHoveredLogo] = useState(false);
+    const [hoveredBtn, setHoveredBtn] = useState(false);
+    const [menuOpen, setMenuOpen] = useState<boolean>(false);
 
-    useEffect(() => {
-        const onScroll = () => setScrolled(window.scrollY > 40);
-        window.addEventListener('scroll', onScroll, { passive: true });
-        return () => window.removeEventListener('scroll', onScroll);
-    }, []);
+    useEffect((): (() => void) => {
+        const handleScroll = (): void => {
+            if (menuOpen) setMenuOpen(false);
+            setScrolled(window.scrollY > 40);
+        };
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return (): void => window.removeEventListener('scroll', handleScroll);
+    }, [menuOpen]);
 
     const navStyle: React.CSSProperties = {
         position: 'fixed',
@@ -54,13 +59,20 @@ export function NavBar() {
         fontWeight: 700,
         textDecoration: 'none',
         letterSpacing: '-0.01em',
+        cursor: 'pointer',
     };
 
-    const linksContainerStyle: React.CSSProperties = {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '32px',
+    const leafStyle: React.CSSProperties = {
+        display: 'inline-block',
+        transition: 'transform 0.3s ease',
+        transform: hoveredLogo ? 'rotate(-15deg) scale(1.15)' : 'rotate(0deg) scale(1)',
     };
+
+    const getLinkWrapStyle = (): React.CSSProperties => ({
+        position: 'relative',
+        display: 'inline-block',
+        cursor: 'pointer',
+    });
 
     const getLinkStyle = (label: string): React.CSSProperties => ({
         fontFamily: TOKEN.fontBody,
@@ -68,9 +80,23 @@ export function NavBar() {
         fontWeight: 600,
         color: hoveredLink === label ? TOKEN.textPrimary : TOKEN.textMuted,
         textDecoration: 'none',
-        transition: 'color 0.35s ease',
-        cursor: 'pointer',
+        transition: 'color 0.25s ease',
         letterSpacing: '0.02em',
+        display: 'block',
+        paddingBottom: '3px',
+    });
+
+    const getUnderlineStyle = (label: string): React.CSSProperties => ({
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: '2px',
+        background: TOKEN.accent,
+        transformOrigin: 'left',
+        transform: hoveredLink === label ? 'scaleX(1)' : 'scaleX(0)',
+        transition: 'transform 0.25s ease',
+        borderRadius: '1px',
     });
 
     const btnStyle: React.CSSProperties = {
@@ -84,40 +110,91 @@ export function NavBar() {
         borderRadius: '6px',
         padding: '10px 22px',
         cursor: 'pointer',
-        transition: 'opacity 0.35s ease, transform 0.35s ease',
         marginLeft: '8px',
+        transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+        transform: hoveredBtn ? 'translateY(-2px)' : 'translateY(0)',
+        boxShadow: hoveredBtn ? '0 8px 24px rgba(125,197,66,0.4)' : 'none',
+    };
+
+    // hamburger span transforms
+    const bar1: React.CSSProperties = {
+        transform: menuOpen ? 'rotate(45deg) translateY(7px)' : 'none',
+        transition: 'transform 0.3s ease',
+    };
+    const bar2: React.CSSProperties = {
+        opacity: menuOpen ? 0 : 1,
+        transition: 'opacity 0.3s ease',
+    };
+    const bar3: React.CSSProperties = {
+        transform: menuOpen ? 'rotate(-45deg) translateY(-7px)' : 'none',
+        transition: 'transform 0.3s ease',
     };
 
     return (
         <nav style={navStyle} aria-label="Main navigation">
-            <a href="#" style={logoStyle}>
-                <span role="img" aria-label="leaf">🍃</span>
+            {/* Main row */}
+            <a
+                href="#"
+                style={logoStyle}
+                onMouseEnter={() => setHoveredLogo(true)}
+                onMouseLeave={() => setHoveredLogo(false)}
+            >
+                <span role="img" aria-label="leaf" style={leafStyle}>🍃</span>
                 RestroPlate
             </a>
 
-            <div style={linksContainerStyle}>
+            {/* Desktop links */}
+            <div className="nav-links">
+                {NAV_LINKS.map(({ label, href }) => (
+                    <div
+                        key={label}
+                        style={getLinkWrapStyle()}
+                        onMouseEnter={() => setHoveredLink(label)}
+                        onMouseLeave={() => setHoveredLink(null)}
+                    >
+                        <a href={href} style={getLinkStyle(label)}>{label}</a>
+                        <div style={getUnderlineStyle(label)} aria-hidden="true" />
+                    </div>
+                ))}
+                <button
+                    className="nav-join-btn"
+                    style={btnStyle}
+                    type="button"
+                    onMouseEnter={() => setHoveredBtn(true)}
+                    onMouseLeave={() => setHoveredBtn(false)}
+                >
+                    JOIN FREE
+                </button>
+            </div>
+
+            {/* Hamburger (mobile) */}
+            <button
+                className="mobile-menu-btn"
+                type="button"
+                onClick={() => setMenuOpen(prev => !prev)}
+                aria-label="Toggle menu"
+            >
+                <span style={bar1} />
+                <span style={bar2} />
+                <span style={bar3} />
+            </button>
+
+            {/* Mobile drawer */}
+            <div className={`mobile-nav-drawer${menuOpen ? ' open' : ''}`}>
                 {NAV_LINKS.map(({ label, href }) => (
                     <a
                         key={label}
                         href={href}
-                        style={getLinkStyle(label)}
-                        onMouseEnter={() => setHoveredLink(label)}
-                        onMouseLeave={() => setHoveredLink(null)}
+                        className="mobile-nav-link"
+                        onClick={() => setMenuOpen(false)}
                     >
                         {label}
                     </a>
                 ))}
                 <button
-                    style={btnStyle}
-                    onMouseEnter={(e) => {
-                        (e.currentTarget as HTMLButtonElement).style.opacity = '0.88';
-                        (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-1px)';
-                    }}
-                    onMouseLeave={(e) => {
-                        (e.currentTarget as HTMLButtonElement).style.opacity = '1';
-                        (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(0)';
-                    }}
+                    className="mobile-join-btn"
                     type="button"
+                    onClick={() => setMenuOpen(false)}
                 >
                     JOIN FREE
                 </button>

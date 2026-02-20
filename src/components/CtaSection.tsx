@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useReveal } from './hooks/useReveal';
 
 const TOKEN = {
@@ -16,6 +16,17 @@ const IMG = {
 
 export function CtaSection() {
     const [ref, visible] = useReveal(0.1);
+    const [mousePos, setMousePos] = useState<{ x: number; y: number }>({ x: 50, y: 50 });
+    const [hoveredFilled, setHoveredFilled] = useState(false);
+    const [hoveredGhost, setHoveredGhost] = useState(false);
+
+    const handleMouseMove = (e: React.MouseEvent<HTMLElement>): void => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        setMousePos({
+            x: ((e.clientX - rect.left) / rect.width) * 100,
+            y: ((e.clientY - rect.top) / rect.height) * 100,
+        });
+    };
 
     const sectionStyle: React.CSSProperties = {
         position: 'relative',
@@ -38,8 +49,10 @@ export function CtaSection() {
     const glowStyle: React.CSSProperties = {
         position: 'absolute',
         inset: 0,
-        background: 'radial-gradient(ellipse at center, rgba(125,197,66,0.12) 0%, transparent 72%)',
+        background: `radial-gradient(ellipse at ${mousePos.x}% ${mousePos.y}%, rgba(125,197,66,0.1) 0%, transparent 65%)`,
         zIndex: 1,
+        transition: 'background 0.1s ease',
+        pointerEvents: 'none',
     };
 
     const contentStyle: React.CSSProperties = {
@@ -81,12 +94,7 @@ export function CtaSection() {
         marginBottom: '44px',
     };
 
-    const btnRowStyle: React.CSSProperties = {
-        display: 'flex',
-        gap: '16px',
-        justifyContent: 'center',
-        flexWrap: 'wrap' as const,
-    };
+    const btnRowStyle: React.CSSProperties = {};
 
     const btnFilledStyle: React.CSSProperties = {
         fontFamily: TOKEN.fontBody,
@@ -99,8 +107,11 @@ export function CtaSection() {
         borderRadius: '6px',
         padding: '16px 36px',
         cursor: 'pointer',
-        boxShadow: '0 8px 32px rgba(125,197,66,0.35)',
-        transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+        boxShadow: hoveredFilled
+            ? '0 16px 48px rgba(125,197,66,0.45)'
+            : '0 8px 32px rgba(125,197,66,0.35)',
+        transform: hoveredFilled ? 'translateY(-4px)' : 'translateY(0)',
+        transition: 'all 0.3s ease',
     };
 
     const btnGhostStyle: React.CSSProperties = {
@@ -108,54 +119,48 @@ export function CtaSection() {
         fontSize: '0.85rem',
         fontWeight: 800,
         letterSpacing: '0.1em',
-        color: TOKEN.textPrimary,
+        color: hoveredGhost ? TOKEN.accent : TOKEN.textPrimary,
         background: 'transparent',
-        border: `2px solid rgba(240,235,225,0.35)`,
+        border: `2px solid ${hoveredGhost ? TOKEN.accent : 'rgba(240,235,225,0.35)'}`,
         borderRadius: '6px',
         padding: '16px 36px',
         cursor: 'pointer',
-        transition: 'border-color 0.3s ease, color 0.3s ease',
+        transform: hoveredGhost ? 'translateY(-4px)' : 'translateY(0)',
+        transition: 'all 0.3s ease',
     };
 
     return (
-        <section ref={ref as React.RefObject<HTMLElement>} style={sectionStyle} aria-label="Call to action">
+        <section
+            ref={ref as React.RefObject<HTMLElement>}
+            style={sectionStyle}
+            aria-label="Call to action"
+            onMouseMove={handleMouseMove}
+        >
             <div style={bgStyle} aria-hidden="true" />
             <div style={glowStyle} aria-hidden="true" />
 
             <div style={contentStyle}>
                 <span style={eyebrowStyle}>TAKE ACTION · TODAY</span>
-                <h2 style={h2Style}>Ready to End Food Waste?</h2>
+                <h2 style={h2Style} className="cta-heading">Ready to End Food Waste?</h2>
                 <p style={paraStyle}>
                     Join thousands of restaurants, volunteers, and families already making a difference.
                     Every action — big or small — feeds someone who needs it.
                 </p>
 
-                <div style={btnRowStyle}>
+                <div style={btnRowStyle} className="cta-buttons">
                     <button
                         style={btnFilledStyle}
                         type="button"
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = 'translateY(-3px)';
-                            e.currentTarget.style.boxShadow = '0 14px 40px rgba(125,197,66,0.45)';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = 'translateY(0)';
-                            e.currentTarget.style.boxShadow = '0 8px 32px rgba(125,197,66,0.35)';
-                        }}
+                        onMouseEnter={() => setHoveredFilled(true)}
+                        onMouseLeave={() => setHoveredFilled(false)}
                     >
                         I WANT TO DONATE FOOD
                     </button>
                     <button
                         style={btnGhostStyle}
                         type="button"
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.borderColor = TOKEN.accent;
-                            e.currentTarget.style.color = TOKEN.accent;
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.borderColor = 'rgba(240,235,225,0.35)';
-                            e.currentTarget.style.color = TOKEN.textPrimary;
-                        }}
+                        onMouseEnter={() => setHoveredGhost(true)}
+                        onMouseLeave={() => setHoveredGhost(false)}
                     >
                         I NEED FOOD SUPPORT
                     </button>

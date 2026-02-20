@@ -27,7 +27,7 @@ const CARDS: PhotoCard[] = [
 ];
 
 export function PhotoStrip() {
-    const [hovered, setHovered] = useState<number | null>(null);
+    const [hoveredCard, setHoveredCard] = useState<number | null>(null);
 
     const sectionStyle: React.CSSProperties = {
         background: TOKEN.bgDeep,
@@ -36,11 +36,13 @@ export function PhotoStrip() {
         gap: '4px',
     };
 
-    const getCardStyle = (): React.CSSProperties => ({
+    const getCardStyle = (i: number): React.CSSProperties => ({
         position: 'relative',
         height: '360px',
         overflow: 'hidden',
         cursor: 'pointer',
+        transform: hoveredCard === i ? 'translateY(-6px)' : 'translateY(0)',
+        transition: 'transform 0.4s ease',
     });
 
     const getImgStyle = (i: number): React.CSSProperties => ({
@@ -49,15 +51,18 @@ export function PhotoStrip() {
         objectFit: 'cover',
         display: 'block',
         filter: 'brightness(0.5)',
-        transform: hovered === i ? 'scale(1.07)' : 'scale(1)',
+        transform: hoveredCard === i ? 'scale(1.07)' : 'scale(1)',
         transition: 'transform 0.6s ease, filter 0.6s ease',
     });
 
-    const overlayStyle: React.CSSProperties = {
+    const getOverlayStyle = (i: number): React.CSSProperties => ({
         position: 'absolute',
         inset: 0,
-        background: 'linear-gradient(to top, rgba(11,26,8,0.85) 0%, transparent 55%)',
-    };
+        background: hoveredCard === i
+            ? 'linear-gradient(to top, rgba(11,26,8,0.25) 0%, transparent 55%)'
+            : 'linear-gradient(to top, rgba(11,26,8,0.85) 0%, transparent 55%)',
+        transition: 'background 0.4s ease',
+    });
 
     const labelWrapStyle: React.CSSProperties = {
         position: 'absolute',
@@ -75,31 +80,35 @@ export function PhotoStrip() {
         marginBottom: '6px',
     };
 
-    const subLabelStyle: React.CSSProperties = {
+    const getSubLabelStyle = (i: number): React.CSSProperties => ({
         fontFamily: TOKEN.fontBody,
         fontSize: '0.78rem',
         fontWeight: 600,
-        letterSpacing: '0.1em',
+        letterSpacing: hoveredCard === i ? '0.18em' : '0.1em',
         color: TOKEN.accent,
         display: 'block',
-    };
+        transition: 'letter-spacing 0.3s ease',
+    });
 
     return (
-        <section style={sectionStyle} aria-label="Photo strip">
+        <section style={sectionStyle} aria-label="Photo strip" className="photo-strip-grid">
             {CARDS.map((card, i) => (
                 <div
                     key={card.label}
-                    style={getCardStyle()}
-                    onMouseEnter={() => setHovered(i)}
-                    onMouseLeave={() => setHovered(null)}
+                    style={getCardStyle(i)}
+                    className="photo-card"
+                    onMouseEnter={() => setHoveredCard(i)}
+                    onMouseLeave={() => setHoveredCard(null)}
+                    onTouchStart={() => setHoveredCard(i)}
+                    onTouchEnd={() => setHoveredCard(null)}
                     role="img"
                     aria-label={card.label}
                 >
                     <img src={card.img} alt={card.label} style={getImgStyle(i)} />
-                    <div style={overlayStyle} aria-hidden="true" />
+                    <div style={getOverlayStyle(i)} aria-hidden="true" />
                     <div style={labelWrapStyle}>
                         <span style={labelStyle}>{card.label}</span>
-                        <span style={subLabelStyle}>JOIN THE NETWORK →</span>
+                        <span style={getSubLabelStyle(i)}>JOIN THE NETWORK →</span>
                     </div>
                 </div>
             ))}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useReveal } from './hooks/useReveal';
 
 const TOKEN = {
@@ -43,6 +43,7 @@ const TESTIMONIALS: Testimonial[] = [
 
 export function Testimonials() {
     const [ref, visible] = useReveal(0.1);
+    const [hoveredCard, setHoveredCard] = useState<number | null>(null);
 
     const sectionStyle: React.CSSProperties = {
         background: TOKEN.bgSurface,
@@ -75,41 +76,44 @@ export function Testimonials() {
     };
 
     const gridStyle: React.CSSProperties = {
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-        gap: '24px',
         maxWidth: '1200px',
         margin: '0 auto',
     };
 
     const getCardStyle = (i: number): React.CSSProperties => ({
-        background: TOKEN.bgCard,
-        border: `1px solid ${TOKEN.border}`,
+        background: hoveredCard === i ? 'rgba(125,197,66,0.06)' : TOKEN.bgCard,
+        border: `1px solid ${hoveredCard === i ? 'rgba(125,197,66,0.35)' : TOKEN.border}`,
         borderRadius: '12px',
         padding: '36px 32px',
         display: 'flex',
         flexDirection: 'column' as const,
         gap: '24px',
+        cursor: 'default',
         opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(32px)',
-        transition: `opacity 0.7s ease ${i * 0.12}s, transform 0.7s ease ${i * 0.12}s`,
+        transform: visible
+            ? (hoveredCard === i ? 'translateY(-5px)' : 'translateY(0)')
+            : 'translateY(32px)',
+        boxShadow: hoveredCard === i ? '0 20px 50px rgba(0,0,0,0.25)' : '0 0 0 rgba(0,0,0,0)',
+        transition: `opacity 0.7s ease ${i * 0.12}s, transform 0.35s ease, background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease`,
     });
 
-    const quoteMarkStyle: React.CSSProperties = {
+    const getQuoteMarkStyle = (i: number): React.CSSProperties => ({
         fontFamily: TOKEN.fontDisplay,
         fontSize: '3rem',
         fontWeight: 900,
-        color: TOKEN.accent,
+        color: hoveredCard === i ? 'rgba(125,197,66,0.9)' : TOKEN.accent,
         lineHeight: 1,
         display: 'block',
         marginBottom: '-16px',
-    };
+        transition: 'color 0.35s ease',
+    });
 
     const quoteStyle: React.CSSProperties = {
         fontFamily: TOKEN.fontBody,
         fontSize: '0.97rem',
         lineHeight: 1.75,
         color: TOKEN.textMuted,
+        fontStyle: 'italic',
         flexGrow: 1,
     };
 
@@ -120,7 +124,7 @@ export function Testimonials() {
         marginTop: 'auto',
     };
 
-    const avatarStyle: React.CSSProperties = {
+    const getAvatarStyle = (i: number): React.CSSProperties => ({
         width: '44px',
         height: '44px',
         borderRadius: '50%',
@@ -133,7 +137,9 @@ export function Testimonials() {
         fontSize: '0.85rem',
         fontWeight: 800,
         flexShrink: 0,
-    };
+        transform: hoveredCard === i ? 'scale(1.1)' : 'scale(1)',
+        transition: 'transform 0.3s ease',
+    });
 
     const nameStyle: React.CSSProperties = {
         fontFamily: TOKEN.fontBody,
@@ -160,16 +166,23 @@ export function Testimonials() {
         >
             <div style={headerStyle}>
                 <span style={eyebrowStyle}>SUCCESS STORIES</span>
-                <h2 style={h2Style}>Voices from Our Community</h2>
+                <h2 style={h2Style} className="section-heading">Voices from Our Community</h2>
             </div>
 
-            <div style={gridStyle}>
+            <div style={gridStyle} className="testimonials-grid">
                 {TESTIMONIALS.map((t, i) => (
-                    <div key={t.name} style={getCardStyle(i)}>
-                        <span style={quoteMarkStyle} aria-hidden="true">"</span>
+                    <div
+                        key={t.name}
+                        style={getCardStyle(i)}
+                        onMouseEnter={() => setHoveredCard(i)}
+                        onMouseLeave={() => setHoveredCard(null)}
+                        onTouchStart={() => setHoveredCard(i)}
+                        onTouchEnd={() => setHoveredCard(null)}
+                    >
+                        <span style={getQuoteMarkStyle(i)} aria-hidden="true">"</span>
                         <p style={quoteStyle}>{t.quote}</p>
                         <div style={authorRowStyle}>
-                            <div style={avatarStyle} aria-hidden="true">{t.initials}</div>
+                            <div style={getAvatarStyle(i)} aria-hidden="true">{t.initials}</div>
                             <div>
                                 <span style={nameStyle}>{t.name}</span>
                                 <span style={roleStyle}>{t.role}</span>

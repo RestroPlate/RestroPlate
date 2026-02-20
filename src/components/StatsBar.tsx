@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useReveal } from './hooks/useReveal';
 
 const TOKEN = {
@@ -23,6 +23,7 @@ const STATS: Stat[] = [
 
 export function StatsBar() {
     const [ref, visible] = useReveal(0.2);
+    const [hoveredStat, setHoveredStat] = useState<number | null>(null);
 
     const sectionStyle: React.CSSProperties = {
         background: TOKEN.accent,
@@ -30,8 +31,6 @@ export function StatsBar() {
     };
 
     const gridStyle: React.CSSProperties = {
-        display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
         maxWidth: '1280px',
         margin: '0 auto',
     };
@@ -39,10 +38,14 @@ export function StatsBar() {
     const getStatStyle = (i: number): React.CSSProperties => ({
         padding: '44px 32px',
         textAlign: 'center',
-        borderRight: i < 3 ? `1px solid rgba(11,26,8,0.18)` : 'none',
+        borderRight: i < 3 ? '1px solid rgba(11,26,8,0.18)' : 'none',
+        cursor: 'default',
         opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(24px)',
-        transition: `opacity 0.6s ease ${i * 0.12}s, transform 0.6s ease ${i * 0.12}s`,
+        background: hoveredStat === i ? 'rgba(0,0,0,0.08)' : 'transparent',
+        transform: visible
+            ? (hoveredStat === i ? 'translateY(-4px)' : 'translateY(0)')
+            : 'translateY(24px)',
+        transition: `opacity 0.6s ease ${i * 0.12}s, transform 0.3s ease, background 0.3s ease`,
     });
 
     const valueStyle: React.CSSProperties = {
@@ -67,9 +70,14 @@ export function StatsBar() {
 
     return (
         <section ref={ref as React.RefObject<HTMLElement>} style={sectionStyle} id="impact" aria-label="Impact statistics">
-            <div style={gridStyle}>
+            <div style={gridStyle} className="stats-grid">
                 {STATS.map((stat, i) => (
-                    <div key={stat.label} style={getStatStyle(i)}>
+                    <div
+                        key={stat.label}
+                        style={getStatStyle(i)}
+                        onMouseEnter={() => setHoveredStat(i)}
+                        onMouseLeave={() => setHoveredStat(null)}
+                    >
                         <span style={valueStyle}>{stat.value}</span>
                         <span style={labelStyle}>{stat.label}</span>
                     </div>

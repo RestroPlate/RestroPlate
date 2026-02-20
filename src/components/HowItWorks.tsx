@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useReveal } from './hooks/useReveal';
 
 const TOKEN = {
@@ -20,34 +20,15 @@ interface Step {
 }
 
 const STEPS: Step[] = [
-    {
-        n: '01',
-        icon: '🍽️',
-        title: 'List Surplus Food',
-        desc: 'Restaurants and homes log surplus meals or produce in under 60 seconds.',
-    },
-    {
-        n: '02',
-        icon: '🔗',
-        title: 'Get Matched',
-        desc: 'Our algorithm instantly pairs donors with nearby community partners.',
-    },
-    {
-        n: '03',
-        icon: '🚲',
-        title: 'Pick Up & Deliver',
-        desc: 'Verified volunteers or recipients collect food at the scheduled window.',
-    },
-    {
-        n: '04',
-        icon: '📊',
-        title: 'Track Impact',
-        desc: 'Both sides receive live updates, receipts, and impact certificates.',
-    },
+    { n: '01', icon: '🍽️', title: 'List Surplus Food', desc: 'Restaurants and homes log surplus meals or produce in under 60 seconds.' },
+    { n: '02', icon: '🔗', title: 'Get Matched', desc: 'Our algorithm instantly pairs donors with nearby community partners.' },
+    { n: '03', icon: '🚲', title: 'Pick Up & Deliver', desc: 'Verified volunteers or recipients collect food at the scheduled window.' },
+    { n: '04', icon: '📊', title: 'Track Impact', desc: 'Both sides receive live updates, receipts, and impact certificates.' },
 ];
 
 export function HowItWorks() {
     const [ref, visible] = useReveal(0.1);
+    const [hoveredStep, setHoveredStep] = useState<number | null>(null);
 
     const sectionStyle: React.CSSProperties = {
         background: TOKEN.bgSurface,
@@ -89,14 +70,18 @@ export function HowItWorks() {
 
     const getCardStyle = (i: number): React.CSSProperties => ({
         position: 'relative',
-        background: TOKEN.bgCard,
-        border: `1px solid ${TOKEN.border}`,
+        background: hoveredStep === i ? 'rgba(125,197,66,0.06)' : TOKEN.bgCard,
+        border: `1px solid ${hoveredStep === i ? 'rgba(125,197,66,0.35)' : TOKEN.border}`,
         borderRadius: '12px',
         padding: '40px 28px 36px',
         overflow: 'hidden',
+        cursor: 'pointer',
         opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(32px)',
-        transition: `opacity 0.7s ease ${i * 0.12}s, transform 0.7s ease ${i * 0.12}s`,
+        transform: visible
+            ? (hoveredStep === i ? 'translateY(-6px)' : 'translateY(0)')
+            : 'translateY(32px)',
+        boxShadow: hoveredStep === i ? '0 20px 50px rgba(0,0,0,0.3)' : '0 0 0 rgba(0,0,0,0)',
+        transition: `opacity 0.7s ease ${i * 0.12}s, transform 0.35s ease, background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease`,
     });
 
     const watermarkStyle: React.CSSProperties = {
@@ -112,11 +97,13 @@ export function HowItWorks() {
         userSelect: 'none' as const,
     };
 
-    const iconStyle: React.CSSProperties = {
+    const getIconStyle = (i: number): React.CSSProperties => ({
         fontSize: '2rem',
         marginBottom: '20px',
         display: 'block',
-    };
+        transform: hoveredStep === i ? 'scale(1.25) rotate(-5deg)' : 'scale(1) rotate(0deg)',
+        transition: 'transform 0.35s ease',
+    });
 
     const titleStyle: React.CSSProperties = {
         fontFamily: TOKEN.fontDisplay,
@@ -139,17 +126,25 @@ export function HowItWorks() {
             style={sectionStyle}
             id="how-it-works"
             aria-label="How it works"
+            className="section-pad"
         >
             <div style={headerStyle}>
                 <span style={eyebrowStyle}>THE PROCESS</span>
-                <h2 style={h2Style}>How RestroPlate Works</h2>
+                <h2 style={h2Style} className="section-heading">How RestroPlate Works</h2>
             </div>
 
-            <div style={gridStyle}>
+            <div style={gridStyle} className="steps-grid">
                 {STEPS.map((step, i) => (
-                    <div key={step.n} style={getCardStyle(i)}>
+                    <div
+                        key={step.n}
+                        style={getCardStyle(i)}
+                        onMouseEnter={() => setHoveredStep(i)}
+                        onMouseLeave={() => setHoveredStep(null)}
+                        onTouchStart={() => setHoveredStep(i)}
+                        onTouchEnd={() => setHoveredStep(null)}
+                    >
                         <span style={watermarkStyle} aria-hidden="true">{step.n}</span>
-                        <span style={iconStyle} role="img" aria-label={step.title}>{step.icon}</span>
+                        <span style={getIconStyle(i)} role="img" aria-label={step.title}>{step.icon}</span>
                         <h3 style={titleStyle}>{step.title}</h3>
                         <p style={descStyle}>{step.desc}</p>
                     </div>

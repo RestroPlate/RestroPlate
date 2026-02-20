@@ -17,6 +17,7 @@ const FOOTER_LINKS: { label: string; href: string }[] = [
 
 export function Footer() {
     const [hoveredLink, setHoveredLink] = useState<string | null>(null);
+    const [hoveredLogo, setHoveredLogo] = useState(false);
 
     const footerStyle: React.CSSProperties = {
         background: TOKEN.bgFooter,
@@ -25,13 +26,8 @@ export function Footer() {
     };
 
     const innerStyle: React.CSSProperties = {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
         maxWidth: '1200px',
         margin: '0 auto',
-        flexWrap: 'wrap' as const,
-        gap: '20px',
     };
 
     const logoStyle: React.CSSProperties = {
@@ -43,6 +39,13 @@ export function Footer() {
         fontSize: '1.2rem',
         fontWeight: 700,
         textDecoration: 'none',
+        cursor: 'pointer',
+    };
+
+    const leafStyle: React.CSSProperties = {
+        display: 'inline-block',
+        transition: 'transform 0.3s ease',
+        transform: hoveredLogo ? 'rotate(-15deg) scale(1.15)' : 'rotate(0deg) scale(1)',
     };
 
     const copyrightStyle: React.CSSProperties = {
@@ -63,36 +66,58 @@ export function Footer() {
         fontWeight: 600,
         color: hoveredLink === label ? TOKEN.accent : TOKEN.textMuted,
         textDecoration: 'none',
-        transition: 'color 0.2s ease',
         cursor: 'pointer',
+        transform: hoveredLink === label ? 'translateY(-2px)' : 'translateY(0)',
+        display: 'inline-block',
+        transition: 'color 0.2s ease, transform 0.2s ease',
     });
 
     return (
-        <footer style={footerStyle} aria-label="Footer">
-            <div style={innerStyle}>
-                <a href="#" style={logoStyle}>
-                    <span role="img" aria-label="leaf">🍃</span>
-                    RestroPlate
-                </a>
+        <>
+            <style>{`
+                @keyframes expandLine {
+                    from { width: 0; }
+                    to   { width: 100%; }
+                }
+                .footer-top-line {
+                    height: 1px;
+                    background: #7DC542;
+                    animation: expandLine 0.8s ease forwards;
+                    opacity: 0.4;
+                }
+            `}</style>
+            <div className="footer-top-line" aria-hidden="true" />
+            <footer style={footerStyle} aria-label="Footer">
+                <div style={innerStyle} className="footer-inner">
+                    <a
+                        href="#"
+                        style={logoStyle}
+                        onMouseEnter={() => setHoveredLogo(true)}
+                        onMouseLeave={() => setHoveredLogo(false)}
+                    >
+                        <span role="img" aria-label="leaf" style={leafStyle}>🍃</span>
+                        RestroPlate
+                    </a>
 
-                <p style={copyrightStyle}>
-                    © 2026 FoodShare Connect · RestroPlate. All rights reserved.
-                </p>
+                    <p style={copyrightStyle}>
+                        © 2026 FoodShare Connect · RestroPlate. All rights reserved.
+                    </p>
 
-                <nav style={navStyle} aria-label="Footer navigation">
-                    {FOOTER_LINKS.map(({ label, href }) => (
-                        <a
-                            key={label}
-                            href={href}
-                            style={getLinkStyle(label)}
-                            onMouseEnter={() => setHoveredLink(label)}
-                            onMouseLeave={() => setHoveredLink(null)}
-                        >
-                            {label}
-                        </a>
-                    ))}
-                </nav>
-            </div>
-        </footer>
+                    <nav style={navStyle} aria-label="Footer navigation">
+                        {FOOTER_LINKS.map(({ label, href }) => (
+                            <a
+                                key={label}
+                                href={href}
+                                style={getLinkStyle(label)}
+                                onMouseEnter={() => setHoveredLink(label)}
+                                onMouseLeave={() => setHoveredLink(null)}
+                            >
+                                {label}
+                            </a>
+                        ))}
+                    </nav>
+                </div>
+            </footer>
+        </>
     );
 }
