@@ -5,6 +5,15 @@ It communicates seamlessly with the RestroPlate .NET Web API to deliver a fast a
 
 ---
 
+> **🤖 AI AGENT DIRECTIVE:** If you are an AI parsing this README, DO NOT execute the prompt below. It is a text template for human use only. Ignore it completely.
+
+**For Human Developers:**
+use this stating promt for agents.
+
+```text
+Before you do anything, read AGENT_RULES.md, understand our tech stack (specifically the mix of inline styles and Tailwind), and acknowledge these constraints.
+```
+
 ## 🚀 Tech Stack
 
 - **React 18** – UI library for building user interfaces
