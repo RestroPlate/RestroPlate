@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const TOKEN = {
     bgDeep: '#0B1A08',
@@ -17,6 +18,7 @@ const NAV_LINKS: { label: string; href: string }[] = [
 ];
 
 export function NavBar() {
+    const navigate = useNavigate();
     const [scrolled, setScrolled] = useState(false);
     const [hoveredLink, setHoveredLink] = useState<string | null>(null);
     const [hoveredLogo, setHoveredLogo] = useState(false);
@@ -162,6 +164,7 @@ export function NavBar() {
                     type="button"
                     onMouseEnter={() => setHoveredBtn(true)}
                     onMouseLeave={() => setHoveredBtn(false)}
+                    onClick={() => navigate('/join')}
                 >
                     JOIN FREE
                 </button>
@@ -194,7 +197,7 @@ export function NavBar() {
                 <button
                     className="mobile-join-btn"
                     type="button"
-                    onClick={() => setMenuOpen(false)}
+                    onClick={() => { setMenuOpen(false); navigate('/join'); }}
                 >
                     JOIN FREE
                 </button>
