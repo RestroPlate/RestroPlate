@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { AccountType, LoginFormData, RegisterFormData } from "../types/Auth";
+import { mockLogin } from "../services/mockAuth";
 
 type AuthMode = "login" | "register";
 type RegisterStep = "selectType" | "form";
@@ -40,6 +41,8 @@ export default function Auth() {
 
     const [loginData, setLoginData] = useState<LoginFormData>(INITIAL_LOGIN);
     const [registerData, setRegisterData] = useState<RegisterFormData>(INITIAL_REGISTER);
+    const [loginError, setLoginError] = useState<string | null>(null);
+    const [loginLoading, setLoginLoading] = useState(false);
 
     // ── Mode switch reset ──────────────────────────────────────────────────
     const switchMode = (next: AuthMode) => {
@@ -69,9 +72,20 @@ export default function Auth() {
     };
 
     // ── Submit stubs ───────────────────────────────────────────────────────
-    const handleLoginSubmit = (e: React.FormEvent) => {
+    const handleLoginSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // TODO: wire to authService
+        setLoginError(null);
+        setLoginLoading(true);
+        try {
+            // TODO: Replace with API call to POST /api/auth/login
+            const user = await mockLogin(loginData.email, loginData.password);
+            const dashboardPath = user.role === "donator" ? "/dashboard/donor" : "/dashboard/center";
+            navigate(dashboardPath);
+        } catch (err) {
+            setLoginError(err instanceof Error ? err.message : "Login failed. Please try again.");
+        } finally {
+            setLoginLoading(false);
+        }
     };
 
     const handleRegisterSubmit = (e: React.FormEvent) => {
@@ -256,8 +270,23 @@ export default function Auth() {
                                     autoComplete="current-password"
                                 />
                             </div>
-                            <button type="submit" className="auth-submit mt-2">
-                                LOG IN
+                            {loginError && (
+                                <div
+                                    style={{
+                                        background: "rgba(255,80,80,0.1)",
+                                        border: "1px solid rgba(255,80,80,0.3)",
+                                        borderRadius: "8px",
+                                        padding: "10px 14px",
+                                        fontFamily: "'Nunito', sans-serif",
+                                        fontSize: "0.82rem",
+                                        color: "#ff6b6b",
+                                    }}
+                                >
+                                    {loginError}
+                                </div>
+                            )}
+                            <button type="submit" className="auth-submit mt-2" disabled={loginLoading}>
+                                {loginLoading ? "LOGGING IN..." : "LOG IN"}
                             </button>
                         </form>
                     )}

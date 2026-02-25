@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getCurrentUser } from '../services/mockAuth';
 
 const TOKEN = {
     bgDeep: '#0B1A08',
@@ -24,6 +25,13 @@ export function NavBar() {
     const [hoveredLogo, setHoveredLogo] = useState(false);
     const [hoveredBtn, setHoveredBtn] = useState(false);
     const [menuOpen, setMenuOpen] = useState<boolean>(false);
+
+    // TODO: Replace with auth context / token check
+    const user = getCurrentUser();
+    const isLoggedIn = user !== null;
+    const dashboardPath = user?.role === "donator" ? "/dashboard/donor" : "/dashboard/center";
+    const ctaLabel = isLoggedIn ? "DASHBOARD" : "JOIN FREE";
+    const ctaTarget = isLoggedIn ? dashboardPath : "/join";
 
     useEffect((): (() => void) => {
         const handleScroll = (): void => {
@@ -164,9 +172,9 @@ export function NavBar() {
                     type="button"
                     onMouseEnter={() => setHoveredBtn(true)}
                     onMouseLeave={() => setHoveredBtn(false)}
-                    onClick={() => navigate('/join')}
+                    onClick={() => navigate(ctaTarget)}
                 >
-                    JOIN FREE
+                    {ctaLabel}
                 </button>
             </div>
 
@@ -197,9 +205,9 @@ export function NavBar() {
                 <button
                     className="mobile-join-btn"
                     type="button"
-                    onClick={() => { setMenuOpen(false); navigate('/join'); }}
+                    onClick={() => { setMenuOpen(false); navigate(ctaTarget); }}
                 >
-                    JOIN FREE
+                    {ctaLabel}
                 </button>
             </div>
         </nav>
