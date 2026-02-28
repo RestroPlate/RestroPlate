@@ -1,13 +1,4 @@
-import React, { useEffect, useState } from 'react';
-
-const TOKEN = {
-    bgDeep: '#0B1A08',
-    accent: '#7DC542',
-    textPrimary: '#F0EBE1',
-    textMuted: 'rgba(240,235,225,0.55)',
-    fontDisplay: "'Roboto', sans-serif",
-    fontBody: "'Nunito', sans-serif",
-} as const;
+import { useEffect, useState } from 'react';
 
 const IMG = {
     hero: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1600&q=80',
@@ -40,368 +31,146 @@ export function Hero() {
     }, []);
 
     return (
-        <>
-            <style>{`
-                @keyframes fadeUp {
-                    0%   { opacity: 0; transform: translateY(28px); }
-                    100% { opacity: 1; transform: translateY(0); }
-                }
-                @keyframes heroArrowBounce {
-                    0%, 100% { transform: translateY(0); }
-                    50%      { transform: translateY(8px); }
-                }
+        <section
+            className="relative z-[1] w-full min-h-screen flex flex-col bg-[#0B1A08] overflow-hidden"
+            aria-label="Hero"
+        >
+            {/* Background image */}
+            <div
+                aria-hidden="true"
+                className="absolute inset-0 z-0 bg-center bg-cover"
+                style={{
+                    backgroundImage: `url(${IMG.hero})`,
+                    backgroundPosition: 'center 35%',
+                    filter: 'brightness(0.25)',
+                    backgroundColor: '#1a2e14',
+                }}
+            />
 
-                /* ── Hero section ── */
-                .hero-section {
-                    position: relative;
-                    z-index: 1;
-                    width: 100%;
-                    min-height: 100vh;
-                    display: flex;
-                    flex-direction: column;
-                    background-color: #0B1A08;
-                    overflow: hidden;
-                }
+            {/* Gradient overlay */}
+            <div
+                aria-hidden="true"
+                className="absolute inset-0 z-[1] pointer-events-none"
+                style={{ background: 'linear-gradient(135deg, rgba(11,26,8,0.88), rgba(5,15,3,0.55))' }}
+            />
 
-                /* ── Left column ── */
-                .hero-left {
-                    flex: 0 0 50%;
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: center;
-                    animation: fadeUp 0.8s ease 0.1s both;
-                    will-change: opacity, transform;
-                }
+            {/* Decorative left bar */}
+            <div
+                aria-hidden="true"
+                className="absolute left-[5vw] top-[20%] bottom-[20%] w-[3px] z-[2] pointer-events-none"
+                style={{ background: 'linear-gradient(to bottom, transparent, #7DC542, transparent)' }}
+            />
 
-                /* ── Right column ── */
-                .hero-right-col {
-                    flex: 0 0 44%;
-                    position: relative;
-                    height: 420px;
-                    border-radius: 20px;
-                    overflow: hidden;
-                    align-self: center;
-                    flex-shrink: 0;
-                    box-shadow: 0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(125,197,66,0.2);
-                }
-
-                .hero-buttons {
-                    display: flex;
-                    gap: 16px;
-                    flex-wrap: wrap;
-                }
-
-                .hero-h1 {
-                    font-size: clamp(2.4rem, 5vw, 5rem);
-                }
-
-                /* ── Tablet ── */
-                @media (max-width: 900px) {
-                    .hero-right-col { display: none !important; }
-                    .hero-left { flex: 0 0 100% !important; max-width: 100%; }
-                }
-
-                /* ── Mobile ── */
-                @media (max-width: 768px) {
-                    .hero-h1 { font-size: clamp(2rem, 8vw, 3rem) !important; }
-                    .hero-buttons { flex-direction: column !important; width: 100%; }
-                    .hero-buttons button { width: 100% !important; }
-                }
-
-                /* ── Small mobile ── */
-                @media (max-width: 480px) {
-                    .hero-h1 { font-size: 2rem !important; }
-                }
-            `}</style>
-
-            <section className="hero-section" aria-label="Hero">
-
-                {/* Background image */}
+            {/* Content wrapper */}
+            <div
+                className="relative z-[3] flex-1 flex flex-row items-center justify-between w-full max-w-[1200px] mx-auto px-[5vw] pt-[100px] pb-[60px] gap-[4vw] box-border"
+            >
+                {/* LEFT column */}
                 <div
-                    aria-hidden="true"
-                    style={{
-                        position: 'absolute',
-                        inset: 0,
-                        zIndex: 0,
-                        backgroundImage: `url(${IMG.hero})`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center 35%',
-                        filter: 'brightness(0.25)',
-                        backgroundColor: '#1a2e14',
-                    } satisfies React.CSSProperties}
-                />
-
-                {/* Gradient overlay */}
-                <div
-                    aria-hidden="true"
-                    style={{
-                        position: 'absolute',
-                        inset: 0,
-                        zIndex: 1,
-                        background: 'linear-gradient(135deg, rgba(11,26,8,0.88), rgba(5,15,3,0.55))',
-                        pointerEvents: 'none',
-                    } satisfies React.CSSProperties}
-                />
-
-                {/* Decorative left bar */}
-                <div
-                    aria-hidden="true"
-                    style={{
-                        position: 'absolute',
-                        left: '5vw',
-                        top: '20%',
-                        bottom: '20%',
-                        width: 3,
-                        zIndex: 2,
-                        background: 'linear-gradient(to bottom, transparent, #7DC542, transparent)',
-                        pointerEvents: 'none',
-                    } satisfies React.CSSProperties}
-                />
-
-                {/*
-                  ── CRITICAL FIX ──
-                  This wrapper uses paddingTop: 68px (navbar height) + 32px breathing room.
-                  It does NOT use minHeight — only the section has minHeight: 100vh.
-                  flex: 1 fills the remaining height of the section naturally.
-                  NO className used here to avoid any CSS override from Home.tsx.
-                */}
-                <div
-                    style={{
-                        position: 'relative',
-                        zIndex: 3,
-                        flex: 1,
-                        display: 'flex',
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        width: '100%',
-                        maxWidth: '1200px',
-                        margin: '0 auto',
-                        paddingTop: '100px',
-                        paddingBottom: '60px',
-                        paddingLeft: '5vw',
-                        paddingRight: '5vw',
-                        gap: '4vw',
-                        boxSizing: 'border-box',
-                    } satisfies React.CSSProperties}
+                    className="flex-[0_0_50%] flex flex-col justify-center md:max-w-full max-w-full"
+                    style={{ animation: 'fadeUp 0.8s ease 0.1s both' }}
                 >
+                    <p className="text-[0.75rem] font-semibold tracking-[0.22em] text-[#7DC542] mb-6 uppercase">
+                        FOODSHARE CONNECT · EST. 2026
+                    </p>
 
-                    {/* LEFT column */}
-                    <div className="hero-left">
-                        <p style={{
-                            fontFamily: TOKEN.fontBody,
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
-                            letterSpacing: '0.22em',
-                            color: TOKEN.accent,
-                            marginBottom: 24,
-                            textTransform: 'uppercase',
-                        } satisfies React.CSSProperties}>
-                            FOODSHARE CONNECT · EST. 2026
-                        </p>
-
-                        <h1
-                            className="hero-h1"
-                            style={{
-                                fontFamily: TOKEN.fontDisplay,
-                                fontWeight: 900,
-                                letterSpacing: '-0.02em',
-                                lineHeight: 1.08,
-                                color: TOKEN.textPrimary,
-                                marginBottom: 6,
-                            } satisfies React.CSSProperties}
-                        >
-                            Every Plate
-                            <span style={{
-                                color: TOKEN.accent,
-                                display: 'block',
-                            } satisfies React.CSSProperties}>
-                                Finds a Home.
-                            </span>
-                        </h1>
-
-                        <p style={{
-                            fontFamily: TOKEN.fontBody,
-                            fontSize: '1.05rem',
-                            lineHeight: 1.72,
-                            letterSpacing: '0.01em',
-                            color: TOKEN.textMuted,
-                            maxWidth: 520,
-                            marginBottom: 40,
-                            marginTop: 20,
-                        } satisfies React.CSSProperties}>
-                            We bridge the gap between restaurants and homes with surplus food and
-                            community members facing food insecurity — one meal, one connection at a time.
-                        </p>
-
-                        <div className="hero-buttons">
-                            <button
-                                type="button"
-                                style={{
-                                    fontFamily: TOKEN.fontBody,
-                                    fontSize: '0.85rem',
-                                    fontWeight: 800,
-                                    letterSpacing: '0.1em',
-                                    color: TOKEN.bgDeep,
-                                    background: TOKEN.accent,
-                                    border: 'none',
-                                    borderRadius: 6,
-                                    padding: '15px 32px',
-                                    cursor: 'pointer',
-                                    boxShadow: '0 8px 32px rgba(125,197,66,0.35)',
-                                    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-                                } satisfies React.CSSProperties}
-                                onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>): void => {
-                                    e.currentTarget.style.transform = 'translateY(-3px)';
-                                    e.currentTarget.style.boxShadow = '0 14px 40px rgba(125,197,66,0.45)';
-                                }}
-                                onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>): void => {
-                                    e.currentTarget.style.transform = 'translateY(0)';
-                                    e.currentTarget.style.boxShadow = '0 8px 32px rgba(125,197,66,0.35)';
-                                }}
-                            >
-                                DONATE FOOD
-                            </button>
-
-                            <button
-                                type="button"
-                                style={{
-                                    fontFamily: TOKEN.fontBody,
-                                    fontSize: '0.85rem',
-                                    fontWeight: 800,
-                                    letterSpacing: '0.1em',
-                                    color: TOKEN.textPrimary,
-                                    background: 'transparent',
-                                    border: '2px solid rgba(240,235,225,0.45)',
-                                    borderRadius: 6,
-                                    padding: '15px 32px',
-                                    cursor: 'pointer',
-                                    transition: 'border-color 0.3s ease, color 0.3s ease',
-                                } satisfies React.CSSProperties}
-                                onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>): void => {
-                                    e.currentTarget.style.borderColor = TOKEN.accent;
-                                    e.currentTarget.style.color = TOKEN.accent;
-                                }}
-                                onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>): void => {
-                                    e.currentTarget.style.borderColor = 'rgba(240,235,225,0.45)';
-                                    e.currentTarget.style.color = TOKEN.textPrimary;
-                                }}
-                            >
-                                FIND FOOD NEAR ME
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* RIGHT column — rotating image */}
-                    <div
-                        className="hero-right-col"
-                        aria-hidden="true"
-                        onMouseEnter={(): void => setFrameHovered(true)}
-                        onMouseLeave={(): void => setFrameHovered(false)}
-                        style={{
-                            transform: frameHovered ? 'scale(1.02)' : 'scale(1)',
-                            transition: 'transform 0.5s ease',
-                        } satisfies React.CSSProperties}
+                    <h1
+                        className="font-black tracking-[-0.02em] leading-[1.08] text-[#F0EBE1] mb-1.5"
+                        style={{ fontSize: 'clamp(2.4rem, 5vw, 5rem)' }}
                     >
-                        <img
-                            key={currentIndex}
-                            src={HERO_GALLERY[currentIndex]}
-                            alt=""
-                            style={{
-                                position: 'absolute',
-                                inset: 0,
-                                width: '100%',
-                                height: '100%',
-                                objectFit: 'cover',
-                                opacity: transitioning ? 0 : 1,
-                                transform: transitioning ? 'scale(1.03)' : 'scale(1)',
-                                transition: 'opacity 0.6s ease, transform 0.6s ease',
-                            } satisfies React.CSSProperties}
-                        />
+                        Every Plate
+                        <span className="text-[#7DC542] block">Finds a Home.</span>
+                    </h1>
 
-                        {/* Bottom gradient */}
-                        <div
-                            aria-hidden="true"
-                            style={{
-                                position: 'absolute',
-                                inset: 0,
-                                background: 'linear-gradient(to top, rgba(11,26,8,0.45) 0%, transparent 50%)',
-                                pointerEvents: 'none',
-                            } satisfies React.CSSProperties}
-                        />
+                    <p className="text-[1.05rem] leading-[1.72] tracking-[0.01em] text-[rgba(240,235,225,0.55)] max-w-[520px] mb-10 mt-5">
+                        We bridge the gap between restaurants and homes with surplus food and
+                        community members facing food insecurity — one meal, one connection at a time.
+                    </p>
 
-                        {/* Dot indicators */}
-                        <div style={{
-                            position: 'absolute',
-                            bottom: 20,
-                            left: '50%',
-                            transform: 'translateX(-50%)',
-                            display: 'flex',
-                            gap: 8,
-                            zIndex: 2,
-                        } satisfies React.CSSProperties}>
-                            {HERO_GALLERY.map((_: string, i: number): React.ReactElement => (
-                                <div
-                                    key={i}
-                                    onClick={(): void => {
-                                        setTransitioning(true);
-                                        setTimeout((): void => {
-                                            setCurrentIndex(i);
-                                            setTransitioning(false);
-                                        }, 200);
-                                    }}
-                                    onMouseEnter={(): void => setHoveredDot(i)}
-                                    onMouseLeave={(): void => setHoveredDot(null)}
-                                    style={{
-                                        width: i === currentIndex ? 24 : 7,
-                                        height: 7,
-                                        borderRadius: 4,
-                                        background: i === currentIndex
-                                            ? TOKEN.accent
-                                            : 'rgba(255,255,255,0.35)',
-                                        transition: 'width 0.4s ease, background 0.4s ease, transform 0.2s ease',
-                                        cursor: 'pointer',
-                                        transform: hoveredDot === i && i !== currentIndex
-                                            ? 'scale(1.2)'
-                                            : 'scale(1)',
-                                    } satisfies React.CSSProperties}
-                                />
-                            ))}
-                        </div>
+                    <div className="flex gap-4 flex-wrap sm:flex-col">
+                        <button
+                            type="button"
+                            className="text-[0.85rem] font-extrabold tracking-[0.1em] text-[#0B1A08] bg-[#7DC542] border-none rounded-[6px] px-8 py-[15px] cursor-pointer shadow-[0_8px_32px_rgba(125,197,66,0.35)] transition-[transform,box-shadow] duration-300 hover:-translate-y-[3px] hover:shadow-[0_14px_40px_rgba(125,197,66,0.45)]"
+                        >
+                            DONATE FOOD
+                        </button>
+
+                        <button
+                            type="button"
+                            className="text-[0.85rem] font-extrabold tracking-[0.1em] text-[#F0EBE1] bg-transparent border-2 border-[rgba(240,235,225,0.45)] rounded-[6px] px-8 py-[15px] cursor-pointer transition-[border-color,color] duration-300 hover:border-[#7DC542] hover:text-[#7DC542]"
+                        >
+                            FIND FOOD NEAR ME
+                        </button>
                     </div>
                 </div>
 
-                {/* Scroll indicator */}
+                {/* RIGHT column — rotating image */}
                 <div
+                    className="hidden md:block flex-[0_0_44%] relative h-[420px] rounded-[20px] overflow-hidden self-center flex-shrink-0 shadow-[0_32px_80px_rgba(0,0,0,0.6),0_0_0_1px_rgba(125,197,66,0.2)] transition-transform duration-500"
                     aria-hidden="true"
-                    style={{
-                        position: 'absolute',
-                        bottom: 40,
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        zIndex: 3,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: 6,
-                        pointerEvents: 'none',
-                    } satisfies React.CSSProperties}
+                    onMouseEnter={(): void => setFrameHovered(true)}
+                    onMouseLeave={(): void => setFrameHovered(false)}
+                    style={{ transform: frameHovered ? 'scale(1.02)' : 'scale(1)' }}
                 >
-                    <span style={{
-                        color: TOKEN.accent,
-                        fontSize: '1.2rem',
-                        animation: 'heroArrowBounce 1.8s ease-in-out infinite',
-                    } satisfies React.CSSProperties}>↓</span>
-                    <span style={{
-                        fontFamily: TOKEN.fontBody,
-                        fontSize: '0.6rem',
-                        letterSpacing: '0.25em',
-                        color: TOKEN.textMuted,
-                        textTransform: 'uppercase',
-                    } satisfies React.CSSProperties}>SCROLL</span>
-                </div>
+                    <img
+                        key={currentIndex}
+                        src={HERO_GALLERY[currentIndex]}
+                        alt=""
+                        className="absolute inset-0 w-full h-full object-cover transition-[opacity,transform] duration-[600ms]"
+                        style={{
+                            opacity: transitioning ? 0 : 1,
+                            transform: transitioning ? 'scale(1.03)' : 'scale(1)',
+                        }}
+                    />
 
-            </section>
-        </>
+                    {/* Bottom gradient */}
+                    <div
+                        aria-hidden="true"
+                        className="absolute inset-0 pointer-events-none"
+                        style={{ background: 'linear-gradient(to top, rgba(11,26,8,0.45) 0%, transparent 50%)' }}
+                    />
+
+                    {/* Dot indicators */}
+                    <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-2 z-[2]">
+                        {HERO_GALLERY.map((_: string, i: number) => (
+                            <div
+                                key={i}
+                                onClick={(): void => {
+                                    setTransitioning(true);
+                                    setTimeout((): void => {
+                                        setCurrentIndex(i);
+                                        setTransitioning(false);
+                                    }, 200);
+                                }}
+                                onMouseEnter={(): void => setHoveredDot(i)}
+                                onMouseLeave={(): void => setHoveredDot(null)}
+                                className="h-[7px] rounded-[4px] cursor-pointer transition-[width,background,transform] duration-[400ms]"
+                                style={{
+                                    width: i === currentIndex ? 24 : 7,
+                                    background: i === currentIndex ? '#7DC542' : 'rgba(255,255,255,0.35)',
+                                    transform: hoveredDot === i && i !== currentIndex ? 'scale(1.2)' : 'scale(1)',
+                                }}
+                            />
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* Scroll indicator */}
+            <div
+                aria-hidden="true"
+                className="absolute bottom-10 left-1/2 -translate-x-1/2 z-[3] flex flex-col items-center gap-1.5 pointer-events-none"
+            >
+                <span
+                    className="text-[#7DC542] text-[1.2rem]"
+                    style={{ animation: 'heroArrowBounce 1.8s ease-in-out infinite' }}
+                >
+                    ↓
+                </span>
+                <span className="text-[0.6rem] tracking-[0.25em] text-[rgba(240,235,225,0.55)] uppercase">
+                    SCROLL
+                </span>
+            </div>
+        </section>
     );
 }

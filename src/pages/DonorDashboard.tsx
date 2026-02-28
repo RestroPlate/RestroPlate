@@ -72,9 +72,7 @@ export default function DonorDashboard() {
     const [loading, setLoading] = useState(true);
     const [donations, setDonations] = useState<Donation[]>([]);
     const [hoveredCard, setHoveredCard] = useState<number | null>(null);
-    const [hoveredCreate, setHoveredCreate] = useState(false);
 
-    // TODO: Replace with API call to GET /api/donations
     useEffect(() => {
         const timer = setTimeout(() => {
             setDonations(mockDonations);
@@ -84,274 +82,101 @@ export default function DonorDashboard() {
     }, []);
 
     const stats = [
-        {
-            label: "Total Donations",
-            value: donations.length,
-            icon: "📦",
-            accent: "#7DC542",
-        },
-        {
-            label: "Active Listings",
-            value: donations.filter((d) => d.status === "AVAILABLE" || d.status === "REQUESTED").length,
-            icon: "🟢",
-            accent: "#66BB6A",
-        },
-        {
-            label: "Completed",
-            value: donations.filter((d) => d.status === "COMPLETED").length,
-            icon: "✅",
-            accent: "#42A5F5",
-        },
+        { label: "Total Donations", value: donations.length, icon: "📦", accent: "#7DC542" },
+        { label: "Active Listings", value: donations.filter((d) => d.status === "AVAILABLE" || d.status === "REQUESTED").length, icon: "🟢", accent: "#66BB6A" },
+        { label: "Completed", value: donations.filter((d) => d.status === "COMPLETED").length, icon: "✅", accent: "#42A5F5" },
     ];
 
     return (
         <DashboardLayout>
-            <style>{`
-				.donor-stats-grid {
-					display: grid;
-					grid-template-columns: repeat(3, 1fr);
-					gap: 20px;
-					margin-bottom: 32px;
-				}
-
-				.donor-stat-card {
-					background: rgba(255,255,255,0.03);
-					border: 1px solid rgba(125,197,66,0.12);
-					border-radius: 12px;
-					padding: 24px;
-					transition: border-color 0.25s ease, transform 0.25s ease;
-				}
-
-				.donor-stat-card:hover {
-					border-color: rgba(125,197,66,0.3);
-					transform: translateY(-2px);
-				}
-
-				.donor-donation-card {
-					background: rgba(255,255,255,0.03);
-					border: 1px solid rgba(125,197,66,0.1);
-					border-radius: 12px;
-					padding: 20px 24px;
-					transition: border-color 0.25s ease, transform 0.25s ease, background 0.25s ease;
-					cursor: pointer;
-				}
-
-				.donor-donation-card:hover {
-					border-color: rgba(125,197,66,0.25);
-					background: rgba(255,255,255,0.04);
-					transform: translateY(-1px);
-				}
-
-				.donor-create-btn {
-					display: inline-flex;
-					align-items: center;
-					gap: 8px;
-					background: #7DC542;
-					color: #0B1A08;
-					border: none;
-					border-radius: 10px;
-					padding: 14px 28px;
-					font-family: 'Nunito', sans-serif;
-					font-size: 0.9rem;
-					font-weight: 800;
-					letter-spacing: 0.06em;
-					cursor: pointer;
-					transition: transform 0.2s ease, box-shadow 0.2s ease;
-				}
-
-				.donor-create-btn:hover {
-					transform: translateY(-2px);
-					box-shadow: 0 8px 28px rgba(125,197,66,0.35);
-				}
-
-				.donor-skeleton {
-					background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.03) 75%);
-					background-size: 200% 100%;
-					animation: shimmer 1.5s ease-in-out infinite;
-					border-radius: 8px;
-				}
-
-				@keyframes shimmer {
-					0% { background-position: 200% 0; }
-					100% { background-position: -200% 0; }
-				}
-
-				@media (max-width: 768px) {
-					.donor-stats-grid { grid-template-columns: 1fr; gap: 12px; }
-				}
-
-				@media (min-width: 769px) and (max-width: 1024px) {
-					.donor-stats-grid { grid-template-columns: repeat(2, 1fr); }
-				}
-			`}</style>
-
             {/* ── Loading Skeleton ── */}
             {loading && (
                 <>
-                    <div className="donor-stats-grid">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
                         {[1, 2, 3].map((i) => (
-                            <div key={i} className="donor-skeleton" style={{ height: "100px" }} />
+                            <div key={i} className="skeleton-shimmer h-[100px]" />
                         ))}
                     </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    <div className="flex flex-col gap-3">
                         {[1, 2, 3].map((i) => (
-                            <div key={i} className="donor-skeleton" style={{ height: "120px" }} />
+                            <div key={i} className="skeleton-shimmer h-[120px]" />
                         ))}
                     </div>
                 </>
             )}
 
-            {/* ── Stats Cards ── */}
+            {/* ── Stats + Content ── */}
             {!loading && (
                 <>
-                    <div className="donor-stats-grid">
+                    {/* Stats grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
                         {stats.map(({ label, value, icon, accent }) => (
-                            <div key={label} className="donor-stat-card">
-                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                                    <span style={{ fontSize: "1.8rem" }}>{icon}</span>
-                                    <span
-                                        style={{
-                                            fontFamily: "'Roboto', sans-serif",
-                                            fontSize: "2rem",
-                                            fontWeight: 900,
-                                            color: accent,
-                                        }}
-                                    >
+                            <div
+                                key={label}
+                                className="rounded-xl p-6 border border-[rgba(125,197,66,0.12)] transition-[border-color,transform] duration-[250ms] hover:border-[rgba(125,197,66,0.3)] hover:-translate-y-0.5"
+                                style={{ background: "rgba(255,255,255,0.03)" }}
+                            >
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[1.8rem]">{icon}</span>
+                                    <span className="text-[2rem] font-black" style={{ color: accent }}>
                                         {value}
                                     </span>
                                 </div>
-                                <div
-                                    style={{
-                                        marginTop: "8px",
-                                        fontFamily: "'Nunito', sans-serif",
-                                        fontSize: "0.82rem",
-                                        fontWeight: 600,
-                                        color: "rgba(240,235,225,0.5)",
-                                        letterSpacing: "0.04em",
-                                        textTransform: "uppercase",
-                                    }}
-                                >
+                                <div className="mt-2 text-[0.82rem] font-semibold text-[rgba(240,235,225,0.5)] tracking-[0.04em] uppercase">
                                     {label}
                                 </div>
                             </div>
                         ))}
                     </div>
 
-                    {/* ── Action Bar ── */}
-                    <div
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            marginBottom: "24px",
-                            flexWrap: "wrap",
-                            gap: "12px",
-                        }}
-                    >
-                        <h2
-                            style={{
-                                fontFamily: "'Roboto', sans-serif",
-                                fontSize: "1.15rem",
-                                fontWeight: 700,
-                                color: "#F0EBE1",
-                            }}
-                        >
+                    {/* Action bar */}
+                    <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+                        <h2 className="text-[1.15rem] font-bold text-[#F0EBE1]">
                             Your Donations
                         </h2>
                         {/* TODO: Replace with modal/form to POST /api/donations */}
                         <button
                             type="button"
-                            className="donor-create-btn"
-                            onMouseEnter={() => setHoveredCreate(true)}
-                            onMouseLeave={() => setHoveredCreate(false)}
-                            style={{
-                                transform: hoveredCreate ? "translateY(-2px)" : "translateY(0)",
-                                boxShadow: hoveredCreate ? "0 8px 28px rgba(125,197,66,0.35)" : "none",
-                            }}
+                            className="inline-flex items-center gap-2 bg-[#7DC542] text-[#0B1A08] border-none rounded-[10px] px-7 py-[14px] text-[0.9rem] font-extrabold tracking-[0.06em] cursor-pointer transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_28px_rgba(125,197,66,0.35)]"
                         >
-                            <span style={{ fontSize: "1.1rem" }}>➕</span>
+                            <span className="text-[1.1rem]">➕</span>
                             Create New Donation
                         </button>
                     </div>
 
-                    {/* ── Donations List ── */}
-                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    {/* Donations list */}
+                    <div className="flex flex-col gap-3">
                         {donations.map((donation) => {
                             const statusStyle = STATUS_COLORS[donation.status];
                             return (
                                 <div
                                     key={donation.donation_id}
-                                    className="donor-donation-card"
+                                    className="rounded-xl px-6 py-5 border cursor-pointer transition-[border-color,background,transform] duration-[250ms]"
                                     onMouseEnter={() => setHoveredCard(donation.donation_id)}
                                     onMouseLeave={() => setHoveredCard(null)}
                                     style={{
+                                        background: hoveredCard === donation.donation_id ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.03)",
+                                        border: `1px solid ${hoveredCard === donation.donation_id ? "rgba(125,197,66,0.25)" : "rgba(125,197,66,0.1)"}`,
                                         transform: hoveredCard === donation.donation_id ? "translateY(-1px)" : "none",
                                     }}
                                 >
-                                    <div
-                                        style={{
-                                            display: "flex",
-                                            alignItems: "flex-start",
-                                            justifyContent: "space-between",
-                                            gap: "16px",
-                                            flexWrap: "wrap",
-                                        }}
-                                    >
-                                        <div style={{ flex: 1, minWidth: "200px" }}>
-                                            <div
-                                                style={{
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    gap: "10px",
-                                                    marginBottom: "6px",
-                                                }}
-                                            >
-                                                <span
-                                                    style={{
-                                                        fontFamily: "'Roboto', sans-serif",
-                                                        fontSize: "1.05rem",
-                                                        fontWeight: 700,
-                                                        color: "#F0EBE1",
-                                                    }}
-                                                >
+                                    <div className="flex items-start justify-between gap-4 flex-wrap">
+                                        <div className="flex-1 min-w-[200px]">
+                                            <div className="flex items-center gap-2.5 mb-1.5">
+                                                <span className="text-[1.05rem] font-bold text-[#F0EBE1]">
                                                     {donation.food_type}
                                                 </span>
                                                 <span
-                                                    style={{
-                                                        fontFamily: "'Nunito', sans-serif",
-                                                        fontSize: "0.72rem",
-                                                        fontWeight: 700,
-                                                        color: statusStyle.text,
-                                                        background: statusStyle.bg,
-                                                        padding: "3px 10px",
-                                                        borderRadius: "12px",
-                                                        letterSpacing: "0.04em",
-                                                    }}
+                                                    className="text-[0.72rem] font-bold px-2.5 py-[3px] rounded-xl tracking-[0.04em]"
+                                                    style={{ color: statusStyle.text, background: statusStyle.bg }}
                                                 >
                                                     {statusStyle.label}
                                                 </span>
                                             </div>
-                                            <p
-                                                style={{
-                                                    fontFamily: "'Nunito', sans-serif",
-                                                    fontSize: "0.84rem",
-                                                    color: "rgba(240,235,225,0.6)",
-                                                    lineHeight: 1.5,
-                                                    marginBottom: "10px",
-                                                }}
-                                            >
+                                            <p className="text-[0.84rem] text-[rgba(240,235,225,0.6)] leading-[1.5] mb-2.5">
                                                 {donation.description}
                                             </p>
-                                            <div
-                                                style={{
-                                                    display: "flex",
-                                                    gap: "20px",
-                                                    flexWrap: "wrap",
-                                                    fontFamily: "'Nunito', sans-serif",
-                                                    fontSize: "0.78rem",
-                                                    color: "rgba(240,235,225,0.45)",
-                                                }}
-                                            >
+                                            <div className="flex gap-5 flex-wrap text-[0.78rem] text-[rgba(240,235,225,0.45)]">
                                                 <span>📦 {donation.quantity} {donation.unit}</span>
                                                 <span>📍 {donation.pickup_location}</span>
                                                 <span>⏰ Expires {donation.expiry_date}</span>

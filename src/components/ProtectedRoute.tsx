@@ -1,5 +1,5 @@
 import { Navigate } from "react-router-dom";
-import { getCurrentUser } from "../services/mockAuth";
+import { getCurrentUser } from "../services/authService";
 import type { AccountType } from "../types/Auth";
 
 interface ProtectedRouteProps {
@@ -21,7 +21,7 @@ export default function ProtectedRoute({ children, allowedRole }: ProtectedRoute
 
     if (allowedRole && user.role !== allowedRole) {
         // Redirect to their own dashboard if they try to access the wrong one
-        const correctPath = user.role === "donator" ? "/dashboard/donor" : "/dashboard/center";
+        const correctPath = user.role === "DONOR" ? "/dashboard/donor" : "/dashboard/center";
         return <Navigate to={correctPath} replace />;
     }
 

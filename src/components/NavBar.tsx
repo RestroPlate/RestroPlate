@@ -1,15 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getCurrentUser } from '../services/mockAuth';
-
-const TOKEN = {
-    bgDeep: '#0B1A08',
-    accent: '#7DC542',
-    textPrimary: '#F0EBE1',
-    textMuted: 'rgba(240,235,225,0.55)',
-    fontDisplay: "'Roboto', sans-serif",
-    fontBody: "'Nunito', sans-serif",
-} as const;
+import { getCurrentUser } from "../services/authService";
 
 const NAV_LINKS: { label: string; href: string }[] = [
     { label: 'How It Works', href: '#how-it-works' },
@@ -21,15 +12,11 @@ const NAV_LINKS: { label: string; href: string }[] = [
 export function NavBar() {
     const navigate = useNavigate();
     const [scrolled, setScrolled] = useState(false);
-    const [hoveredLink, setHoveredLink] = useState<string | null>(null);
-    const [hoveredLogo, setHoveredLogo] = useState(false);
-    const [hoveredBtn, setHoveredBtn] = useState(false);
     const [menuOpen, setMenuOpen] = useState<boolean>(false);
 
-    // TODO: Replace with auth context / token check
     const user = getCurrentUser();
     const isLoggedIn = user !== null;
-    const dashboardPath = user?.role === "donator" ? "/dashboard/donor" : "/dashboard/center";
+    const dashboardPath = user?.role === "DONOR" ? "/dashboard/donor" : "/dashboard/center";
     const ctaLabel = isLoggedIn ? "DASHBOARD" : "JOIN FREE";
     const ctaTarget = isLoggedIn ? dashboardPath : "/join";
 
@@ -42,136 +29,51 @@ export function NavBar() {
         return (): void => window.removeEventListener('scroll', handleScroll);
     }, [menuOpen]);
 
-    const navStyle: React.CSSProperties = {
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 100,
-        height: '68px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 5vw',
-        background: scrolled ? 'rgba(11,26,8,0.92)' : 'transparent',
-        backdropFilter: scrolled ? 'blur(14px)' : 'none',
-        borderBottom: scrolled ? '1px solid rgba(125,197,66,0.15)' : '1px solid transparent',
-        transition: 'background 0.35s ease, backdrop-filter 0.35s ease, border-color 0.35s ease',
-    };
-
-    const logoStyle: React.CSSProperties = {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '10px',
-        color: TOKEN.accent,
-        fontFamily: TOKEN.fontDisplay,
-        fontSize: '1.35rem',
-        fontWeight: 700,
-        textDecoration: 'none',
-        letterSpacing: '-0.01em',
-        cursor: 'pointer',
-    };
-
-    const leafStyle: React.CSSProperties = {
-        display: 'inline-block',
-        transition: 'transform 0.3s ease',
-        transform: hoveredLogo ? 'rotate(-15deg) scale(1.15)' : 'rotate(0deg) scale(1)',
-    };
-
-    const getLinkWrapStyle = (): React.CSSProperties => ({
-        position: 'relative',
-        display: 'inline-block',
-        cursor: 'pointer',
-    });
-
-    const getLinkStyle = (label: string): React.CSSProperties => ({
-        fontFamily: TOKEN.fontBody,
-        fontSize: '0.85rem',
-        fontWeight: 600,
-        color: hoveredLink === label ? TOKEN.textPrimary : TOKEN.textMuted,
-        textDecoration: 'none',
-        transition: 'color 0.25s ease',
-        letterSpacing: '0.02em',
-        display: 'block',
-        paddingBottom: '3px',
-    });
-
-    const getUnderlineStyle = (label: string): React.CSSProperties => ({
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        height: '2px',
-        background: TOKEN.accent,
-        transformOrigin: 'left',
-        transform: hoveredLink === label ? 'scaleX(1)' : 'scaleX(0)',
-        transition: 'transform 0.25s ease',
-        borderRadius: '1px',
-    });
-
-    const btnStyle: React.CSSProperties = {
-        fontFamily: TOKEN.fontBody,
-        fontSize: '0.8rem',
-        fontWeight: 800,
-        letterSpacing: '0.1em',
-        color: TOKEN.bgDeep,
-        background: TOKEN.accent,
-        border: 'none',
-        borderRadius: '6px',
-        padding: '10px 22px',
-        cursor: 'pointer',
-        marginLeft: '8px',
-        transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-        transform: hoveredBtn ? 'translateY(-2px)' : 'translateY(0)',
-        boxShadow: hoveredBtn ? '0 8px 24px rgba(125,197,66,0.4)' : 'none',
-    };
-
-    // hamburger span transforms
-    const bar1: React.CSSProperties = {
-        transform: menuOpen ? 'rotate(45deg) translateY(7px)' : 'none',
-        transition: 'transform 0.3s ease',
-    };
-    const bar2: React.CSSProperties = {
-        opacity: menuOpen ? 0 : 1,
-        transition: 'opacity 0.3s ease',
-    };
-    const bar3: React.CSSProperties = {
-        transform: menuOpen ? 'rotate(-45deg) translateY(-7px)' : 'none',
-        transition: 'transform 0.3s ease',
-    };
-
     return (
-        <nav style={navStyle} aria-label="Main navigation">
-            {/* Main row */}
+        <nav
+            aria-label="Main navigation"
+            className={[
+                'fixed top-0 left-0 right-0 z-[100] h-[68px] flex items-center justify-between px-[5vw] transition-[background,backdrop-filter,border-color] duration-[350ms] ease-in-out border-b',
+                scrolled
+                    ? 'bg-[rgba(11,26,8,0.92)] backdrop-blur-[14px] border-[rgba(125,197,66,0.15)]'
+                    : 'bg-transparent border-transparent',
+            ].join(' ')}
+        >
+            {/* Logo */}
             <a
                 href="#"
-                style={logoStyle}
-                onMouseEnter={() => setHoveredLogo(true)}
-                onMouseLeave={() => setHoveredLogo(false)}
+                className="flex items-center gap-2.5 text-[#7DC542] text-[1.35rem] font-bold no-underline tracking-[-0.01em] cursor-pointer group"
             >
-                <span role="img" aria-label="leaf" style={leafStyle}>🍃</span>
+                <span
+                    role="img"
+                    aria-label="leaf"
+                    className="inline-block transition-transform duration-300 group-hover:rotate-[-15deg] group-hover:scale-[1.15]"
+                >
+                    🍃
+                </span>
                 RestroPlate
             </a>
 
             {/* Desktop links */}
-            <div className="nav-links">
+            <div className="hidden md:flex gap-9 items-center">
                 {NAV_LINKS.map(({ label, href }) => (
-                    <div
-                        key={label}
-                        style={getLinkWrapStyle()}
-                        onMouseEnter={() => setHoveredLink(label)}
-                        onMouseLeave={() => setHoveredLink(null)}
-                    >
-                        <a href={href} style={getLinkStyle(label)}>{label}</a>
-                        <div style={getUnderlineStyle(label)} aria-hidden="true" />
+                    <div key={label} className="relative inline-block group cursor-pointer">
+                        <a
+                            href={href}
+                            className="text-[0.85rem] font-semibold text-[rgba(240,235,225,0.55)] no-underline tracking-[0.02em] block pb-[3px] transition-colors duration-[250ms] hover:text-[#F0EBE1]"
+                        >
+                            {label}
+                        </a>
+                        {/* Underline */}
+                        <div
+                            aria-hidden="true"
+                            className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#7DC542] rounded-[1px] origin-left scale-x-0 transition-transform duration-[250ms] group-hover:scale-x-100"
+                        />
                     </div>
                 ))}
                 <button
-                    className="nav-join-btn"
-                    style={btnStyle}
                     type="button"
-                    onMouseEnter={() => setHoveredBtn(true)}
-                    onMouseLeave={() => setHoveredBtn(false)}
+                    className="text-[0.8rem] font-extrabold tracking-[0.1em] text-[#0B1A08] bg-[#7DC542] border-none rounded-[6px] px-[22px] py-[10px] ml-2 cursor-pointer transition-[transform,box-shadow] duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(125,197,66,0.4)]"
                     onClick={() => navigate(ctaTarget)}
                 >
                     {ctaLabel}
@@ -180,31 +82,49 @@ export function NavBar() {
 
             {/* Hamburger (mobile) */}
             <button
-                className="mobile-menu-btn"
                 type="button"
+                className="flex md:hidden flex-col gap-[5px] p-2 cursor-pointer bg-transparent border-none"
                 onClick={() => setMenuOpen(prev => !prev)}
                 aria-label="Toggle menu"
             >
-                <span style={bar1} />
-                <span style={bar2} />
-                <span style={bar3} />
+                <span
+                    className="block w-6 h-[2px] bg-[#F0EBE1] rounded-[2px] transition-transform duration-300"
+                    style={{ transform: menuOpen ? 'rotate(45deg) translateY(7px)' : 'none' }}
+                />
+                <span
+                    className="block w-6 h-[2px] bg-[#F0EBE1] rounded-[2px] transition-opacity duration-300"
+                    style={{ opacity: menuOpen ? 0 : 1 }}
+                />
+                <span
+                    className="block w-6 h-[2px] bg-[#F0EBE1] rounded-[2px] transition-transform duration-300"
+                    style={{ transform: menuOpen ? 'rotate(-45deg) translateY(-7px)' : 'none' }}
+                />
             </button>
 
             {/* Mobile drawer */}
-            <div className={`mobile-nav-drawer${menuOpen ? ' open' : ''}`}>
+            <div
+                className={[
+                    'fixed top-[68px] left-0 right-0 z-[99] flex flex-col',
+                    'px-[5vw] pb-8 pt-0',
+                    'border-b border-[rgba(125,197,66,0.15)]',
+                    'bg-[rgba(11,26,8,0.98)] backdrop-blur-[20px]',
+                    'transition-transform duration-[350ms] ease-in-out',
+                    menuOpen ? 'translate-y-0' : '-translate-y-[150%]',
+                ].join(' ')}
+            >
                 {NAV_LINKS.map(({ label, href }) => (
                     <a
                         key={label}
                         href={href}
-                        className="mobile-nav-link"
+                        className="text-[1.1rem] text-[rgba(240,235,225,0.8)] no-underline py-4 border-b border-[rgba(125,197,66,0.08)] last:border-b-0 transition-colors duration-200 hover:text-[#7DC542]"
                         onClick={() => setMenuOpen(false)}
                     >
                         {label}
                     </a>
                 ))}
                 <button
-                    className="mobile-join-btn"
                     type="button"
+                    className="mt-5 bg-[#7DC542] text-[#0B1A08] border-none rounded-lg py-[14px] font-extrabold text-[0.95rem] tracking-[0.06em] cursor-pointer w-full"
                     onClick={() => { setMenuOpen(false); navigate(ctaTarget); }}
                 >
                     {ctaLabel}

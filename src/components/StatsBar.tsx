@@ -1,20 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useReveal } from './hooks/useReveal';
+import React from 'react';
 
-const TOKEN = {
-    bgDeep: '#0B1A08',
-    accent: '#7DC542',
-    textPrimary: '#F0EBE1',
-    fontDisplay: "'Roboto', sans-serif",
-    fontBody: "'Nunito', sans-serif",
-} as const;
-
-interface Stat {
-    value: string;
-    label: string;
-}
-
-const STATS: Stat[] = [
+const STATS: { value: string; label: string }[] = [
     { value: '120K+', label: 'Meals Rescued' },
     { value: '840+', label: 'Partner Restaurants' },
     { value: '12T', label: 'CO₂ Avoided (kg)' },
@@ -25,61 +13,39 @@ export function StatsBar() {
     const [ref, visible] = useReveal(0.2);
     const [hoveredStat, setHoveredStat] = useState<number | null>(null);
 
-    const sectionStyle: React.CSSProperties = {
-        background: TOKEN.accent,
-        padding: '0',
-    };
-
-    const gridStyle: React.CSSProperties = {
-        maxWidth: '1280px',
-        margin: '0 auto',
-    };
-
-    const getStatStyle = (i: number): React.CSSProperties => ({
-        padding: '44px 32px',
-        textAlign: 'center',
-        borderRight: i < 3 ? '1px solid rgba(11,26,8,0.18)' : 'none',
-        cursor: 'default',
-        opacity: visible ? 1 : 0,
-        background: hoveredStat === i ? 'rgba(0,0,0,0.08)' : 'transparent',
-        transform: visible
-            ? (hoveredStat === i ? 'translateY(-4px)' : 'translateY(0)')
-            : 'translateY(24px)',
-        transition: `opacity 0.6s ease ${i * 0.12}s, transform 0.3s ease, background 0.3s ease`,
-    });
-
-    const valueStyle: React.CSSProperties = {
-        fontFamily: TOKEN.fontDisplay,
-        fontSize: 'clamp(2.2rem, 4vw, 3rem)',
-        fontWeight: 900,
-        color: TOKEN.bgDeep,
-        lineHeight: 1,
-        marginBottom: '8px',
-        display: 'block',
-    };
-
-    const labelStyle: React.CSSProperties = {
-        fontFamily: TOKEN.fontBody,
-        fontSize: '0.78rem',
-        fontWeight: 600,
-        textTransform: 'uppercase' as const,
-        letterSpacing: '0.14em',
-        color: 'rgba(11,26,8,0.62)',
-        display: 'block',
-    };
-
     return (
-        <section ref={ref as React.RefObject<HTMLElement>} style={sectionStyle} id="impact" aria-label="Impact statistics">
-            <div style={gridStyle} className="stats-grid">
+        <section
+            ref={ref as React.RefObject<HTMLElement>}
+            id="impact"
+            aria-label="Impact statistics"
+            className="bg-[#7DC542]"
+        >
+            <div className="grid grid-cols-2 md:grid-cols-4 max-w-[1280px] mx-auto">
                 {STATS.map((stat, i) => (
                     <div
                         key={stat.label}
-                        style={getStatStyle(i)}
                         onMouseEnter={() => setHoveredStat(i)}
                         onMouseLeave={() => setHoveredStat(null)}
+                        className="text-center py-11 px-8 cursor-default transition-[opacity,transform,background] duration-300"
+                        style={{
+                            borderRight: i < 3 ? '1px solid rgba(11,26,8,0.18)' : 'none',
+                            opacity: visible ? 1 : 0,
+                            background: hoveredStat === i ? 'rgba(0,0,0,0.08)' : 'transparent',
+                            transform: visible
+                                ? (hoveredStat === i ? 'translateY(-4px)' : 'translateY(0)')
+                                : 'translateY(24px)',
+                            transition: `opacity 0.6s ease ${i * 0.12}s, transform 0.3s ease, background 0.3s ease`,
+                        }}
                     >
-                        <span style={valueStyle}>{stat.value}</span>
-                        <span style={labelStyle}>{stat.label}</span>
+                        <span
+                            className="font-black text-[#0B1A08] leading-none mb-2 block"
+                            style={{ fontSize: 'clamp(2.2rem, 4vw, 3rem)' }}
+                        >
+                            {stat.value}
+                        </span>
+                        <span className="text-[0.78rem] font-semibold uppercase tracking-[0.14em] text-[rgba(11,26,8,0.62)] block">
+                            {stat.label}
+                        </span>
                     </div>
                 ))}
             </div>
