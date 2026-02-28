@@ -1,6 +1,5 @@
-@import "tailwindcss";
-
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@700;900&family=Nunito:wght@400;600;800&display=swap');
+@import "tailwindcss";
 
 /* ─── Design Tokens ─── */
 @theme {
@@ -117,7 +116,7 @@
 
   /* Auth submit button */
   .auth-submit {
-    @apply w-full rounded-lg py-[13px] text-[#0B1A08] font-extrabold cursor-pointer transition-[transform, box-shadow] duration-200;
+    @apply w-full rounded-lg py-[13px] text-[#0B1A08] font-extrabold cursor-pointer transition-[transform,box-shadow] duration-200;
     background: #7DC542;
     border: none;
     font-size: 0.92rem;
