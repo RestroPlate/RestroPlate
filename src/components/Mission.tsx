@@ -1,15 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useReveal } from './hooks/useReveal';
-
-const TOKEN = {
-    bgDeep: '#0B1A08',
-    accent: '#7DC542',
-    textPrimary: '#F0EBE1',
-    textMuted: 'rgba(240,235,225,0.55)',
-    border: 'rgba(125,197,66,0.13)',
-    fontDisplay: "'Roboto', sans-serif",
-    fontBody: "'Nunito', sans-serif",
-} as const;
+import React from 'react';
 
 const IMG = {
     mission: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=900&q=80',
@@ -25,169 +16,79 @@ const TAGS: string[] = [
 
 export function Mission() {
     const [ref, visible] = useReveal(0.1);
-    const [hoveredTag, setHoveredTag] = useState<string | null>(null);
     const [imgHovered, setImgHovered] = useState(false);
     const [badgeHovered, setBadgeHovered] = useState(false);
 
-    const sectionStyle: React.CSSProperties = {
-        background: TOKEN.bgDeep,
-        padding: '100px 5vw',
-    };
-
-    const innerStyle: React.CSSProperties = {
-        maxWidth: '1200px',
-        margin: '0 auto',
-        opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(36px)',
-        transition: 'opacity 0.8s ease, transform 0.8s ease',
-    };
-
-    const imageWrapStyle: React.CSSProperties = {
-        position: 'relative',
-        display: 'block',
-        overflow: 'hidden',
-        borderRadius: '16px',
-    };
-
-    const imgStyle: React.CSSProperties = {
-        width: '100%',
-        height: '420px',
-        borderRadius: '16px',
-        objectFit: 'cover',
-        display: 'block',
-        transform: imgHovered ? 'scale(1.03)' : 'scale(1)',
-        transition: 'transform 0.6s ease',
-    };
-
-    const badgeStyle: React.CSSProperties = {
-        position: 'absolute',
-        bottom: '-24px',
-        right: '-24px',
-        background: TOKEN.accent,
-        borderRadius: '12px',
-        padding: '20px 24px',
-        textAlign: 'center',
-        boxShadow: '0 16px 48px rgba(0,0,0,0.4)',
-        cursor: 'pointer',
-        transform: badgeHovered ? 'scale(1.05) translateY(-3px)' : 'scale(1) translateY(0)',
-        transition: 'transform 0.3s ease',
-    };
-
-    const badgeNumStyle: React.CSSProperties = {
-        fontFamily: TOKEN.fontDisplay,
-        fontSize: '2.2rem',
-        fontWeight: 900,
-        color: TOKEN.bgDeep,
-        display: 'block',
-        lineHeight: 1,
-    };
-
-    const badgeLabelStyle: React.CSSProperties = {
-        fontFamily: TOKEN.fontBody,
-        fontSize: '0.72rem',
-        fontWeight: 600,
-        color: 'rgba(11,26,8,0.75)',
-        display: 'block',
-        marginTop: '4px',
-        maxWidth: '100px',
-        lineHeight: 1.3,
-    };
-
-    const eyebrowStyle: React.CSSProperties = {
-        fontFamily: TOKEN.fontBody,
-        fontSize: '0.75rem',
-        fontWeight: 600,
-        letterSpacing: '0.22em',
-        color: TOKEN.accent,
-        marginBottom: '18px',
-        textTransform: 'uppercase' as const,
-    };
-
-    const h2Style: React.CSSProperties = {
-        fontFamily: TOKEN.fontDisplay,
-        fontSize: 'clamp(1.9rem, 3.5vw, 2.8rem)',
-        fontWeight: 800,
-        letterSpacing: '-0.02em',
-        lineHeight: 1.08,
-        color: TOKEN.textPrimary,
-        marginBottom: '24px',
-    };
-
-    const paraStyle: React.CSSProperties = {
-        fontFamily: TOKEN.fontBody,
-        fontSize: '1rem',
-        lineHeight: 1.75,
-        letterSpacing: '0.01em',
-        color: TOKEN.textMuted,
-        marginBottom: '16px',
-    };
-
-    const tagsRowStyle: React.CSSProperties = {
-        display: 'flex',
-        flexWrap: 'wrap' as const,
-        gap: '10px',
-        marginTop: '32px',
-    };
-
-    const getTagStyle = (tag: string): React.CSSProperties => ({
-        fontFamily: TOKEN.fontBody,
-        fontSize: '0.78rem',
-        fontWeight: 600,
-        color: TOKEN.accent,
-        border: `1px solid ${TOKEN.border}`,
-        borderRadius: '4px',
-        padding: '6px 14px',
-        letterSpacing: '0.05em',
-        cursor: 'pointer',
-        background: hoveredTag === tag ? 'rgba(125,197,66,0.12)' : 'transparent',
-        transform: hoveredTag === tag ? 'translateY(-2px)' : 'translateY(0)',
-        transition: 'background 0.3s ease, transform 0.3s ease',
-    });
-
     return (
-        <section ref={ref as React.RefObject<HTMLElement>} style={sectionStyle} id="partners" aria-label="Our mission">
-            <div style={innerStyle} className="mission-grid">
+        <section
+            ref={ref as React.RefObject<HTMLElement>}
+            id="partners"
+            aria-label="Our mission"
+            className="bg-[#0B1A08] py-[100px] px-[5vw]"
+        >
+            {/* Reveal wrapper */}
+            <div
+                className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-[6vw] items-center transition-[opacity,transform] duration-[800ms]"
+                style={{
+                    opacity: visible ? 1 : 0,
+                    transform: visible ? 'translateY(0)' : 'translateY(36px)',
+                }}
+            >
                 {/* Image column */}
-                <div style={{ position: 'relative', display: 'block' }} className="mission-image-col">
+                <div className="relative block order-first">
                     <div
-                        style={imageWrapStyle}
+                        className="relative block overflow-hidden rounded-2xl"
                         onMouseEnter={() => setImgHovered(true)}
                         onMouseLeave={() => setImgHovered(false)}
                     >
-                        <img src={IMG.mission} alt="Community sharing food" style={imgStyle} className="mission-image" />
+                        <img
+                            src={IMG.mission}
+                            alt="Community sharing food"
+                            className="w-full h-[420px] md:h-[300px] rounded-2xl object-cover block transition-transform duration-[600ms]"
+                            style={{ transform: imgHovered ? 'scale(1.03)' : 'scale(1)' }}
+                        />
                     </div>
+
+                    {/* Badge */}
                     <div
-                        style={badgeStyle}
-                        className="mission-badge"
+                        className="absolute bottom-[-24px] right-[-24px] md:bottom-[-12px] md:right-[-8px] bg-[#7DC542] rounded-xl p-5 px-6 text-center shadow-[0_16px_48px_rgba(0,0,0,0.4)] cursor-pointer transition-transform duration-300"
                         onMouseEnter={() => setBadgeHovered(true)}
                         onMouseLeave={() => setBadgeHovered(false)}
+                        style={{ transform: badgeHovered ? 'scale(1.05) translateY(-3px)' : 'scale(1) translateY(0)' }}
                     >
-                        <span style={badgeNumStyle}>1 in 3</span>
-                        <span style={badgeLabelStyle}>meals wasted globally</span>
+                        <span className="text-[2.2rem] font-black text-[#0B1A08] block leading-none">1 in 3</span>
+                        <span className="text-[0.72rem] font-semibold text-[rgba(11,26,8,0.75)] block mt-1 max-w-[100px] leading-[1.3]">
+                            meals wasted globally
+                        </span>
                     </div>
                 </div>
 
                 {/* Text column */}
                 <div>
-                    <p style={eyebrowStyle}>OUR MISSION</p>
-                    <h2 style={h2Style}>Turning Surplus Into Sustenance</h2>
-                    <p style={paraStyle}>
+                    <p className="text-[0.75rem] font-semibold tracking-[0.22em] text-[#7DC542] mb-[18px] uppercase">
+                        OUR MISSION
+                    </p>
+                    <h2
+                        className="font-extrabold tracking-[-0.02em] leading-[1.08] text-[#F0EBE1] mb-6"
+                        style={{ fontSize: 'clamp(1.9rem, 3.5vw, 2.8rem)' }}
+                    >
+                        Turning Surplus Into Sustenance
+                    </h2>
+                    <p className="text-base leading-[1.75] tracking-[0.01em] text-[rgba(240,235,225,0.55)] mb-4">
                         Every day, tons of perfectly edible food goes to landfill — while millions go to
                         bed hungry. RestroPlate exists to close that gap with technology, compassion, and community.
                     </p>
-                    <p style={paraStyle}>
+                    <p className="text-base leading-[1.75] tracking-[0.01em] text-[rgba(240,235,225,0.55)] mb-4">
                         We work with local restaurants, catering companies, and households to list surplus
                         food in real time, matching it instantly with verified community partners, shelters,
                         and individuals in need — all within a 5 km radius.
                     </p>
 
-                    <div style={tagsRowStyle}>
+                    <div className="flex flex-wrap gap-2.5 mt-8">
                         {TAGS.map((tag) => (
                             <span
                                 key={tag}
-                                style={getTagStyle(tag)}
-                                onMouseEnter={() => setHoveredTag(tag)}
-                                onMouseLeave={() => setHoveredTag(null)}
+                                className="text-[0.78rem] font-semibold text-[#7DC542] rounded border border-[rgba(125,197,66,0.13)] px-[14px] py-1.5 tracking-[0.05em] cursor-pointer transition-[background,transform] duration-300 hover:bg-[rgba(125,197,66,0.12)] hover:-translate-y-0.5"
                             >
                                 {tag}
                             </span>

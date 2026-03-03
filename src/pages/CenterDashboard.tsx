@@ -4,78 +4,20 @@ import type { DistributionInventory } from "../types/Dashboard";
 
 // TODO: Replace with API call to GET /api/inventory?center=current_user
 const mockInventory: DistributionInventory[] = [
-    {
-        inventory_id: 1,
-        donation_id: 5,
-        food_type: "Rice",
-        collected_quantity: 50,
-        distributed_quantity: 30,
-        available_quantity: 20,
-        is_public: true,
-        collection_date: "2026-02-24",
-    },
-    {
-        inventory_id: 2,
-        donation_id: 8,
-        food_type: "Fresh Bread",
-        collected_quantity: 40,
-        distributed_quantity: 25,
-        available_quantity: 15,
-        is_public: true,
-        collection_date: "2026-02-25",
-    },
-    {
-        inventory_id: 3,
-        donation_id: 12,
-        food_type: "Canned Lentils",
-        collected_quantity: 100,
-        distributed_quantity: 60,
-        available_quantity: 40,
-        is_public: false,
-        collection_date: "2026-02-22",
-    },
-    {
-        inventory_id: 4,
-        donation_id: 15,
-        food_type: "Mixed Vegetables",
-        collected_quantity: 25,
-        distributed_quantity: 10,
-        available_quantity: 15,
-        is_public: true,
-        collection_date: "2026-02-25",
-    },
-    {
-        inventory_id: 5,
-        donation_id: 18,
-        food_type: "Pastries",
-        collected_quantity: 30,
-        distributed_quantity: 28,
-        available_quantity: 2,
-        is_public: false,
-        collection_date: "2026-02-23",
-    },
-    {
-        inventory_id: 6,
-        donation_id: 21,
-        food_type: "Coconut Milk",
-        collected_quantity: 45,
-        distributed_quantity: 15,
-        available_quantity: 30,
-        is_public: true,
-        collection_date: "2026-02-24",
-    },
+    { inventory_id: 1, donation_id: 5, food_type: "Rice", collected_quantity: 50, distributed_quantity: 30, available_quantity: 20, is_public: true, collection_date: "2026-02-24" },
+    { inventory_id: 2, donation_id: 8, food_type: "Fresh Bread", collected_quantity: 40, distributed_quantity: 25, available_quantity: 15, is_public: true, collection_date: "2026-02-25" },
+    { inventory_id: 3, donation_id: 12, food_type: "Canned Lentils", collected_quantity: 100, distributed_quantity: 60, available_quantity: 40, is_public: false, collection_date: "2026-02-22" },
+    { inventory_id: 4, donation_id: 15, food_type: "Mixed Vegetables", collected_quantity: 25, distributed_quantity: 10, available_quantity: 15, is_public: true, collection_date: "2026-02-25" },
+    { inventory_id: 5, donation_id: 18, food_type: "Pastries", collected_quantity: 30, distributed_quantity: 28, available_quantity: 2, is_public: false, collection_date: "2026-02-23" },
+    { inventory_id: 6, donation_id: 21, food_type: "Coconut Milk", collected_quantity: 45, distributed_quantity: 15, available_quantity: 30, is_public: true, collection_date: "2026-02-24" },
 ];
 
 export default function CenterDashboard() {
     const [loading, setLoading] = useState(true);
     const [inventory, setInventory] = useState<DistributionInventory[]>([]);
     const [editingId, setEditingId] = useState<number | null>(null);
-    const [editValues, setEditValues] = useState<{ distributed: number; available: number }>({
-        distributed: 0,
-        available: 0,
-    });
+    const [editValues, setEditValues] = useState<{ distributed: number; available: number }>({ distributed: 0, available: 0 });
 
-    // TODO: Replace with API call to GET /api/inventory
     useEffect(() => {
         const timer = setTimeout(() => {
             setInventory(mockInventory);
@@ -94,382 +36,132 @@ export default function CenterDashboard() {
         { label: "Available Now", value: totalAvailable, icon: "📦", accent: "#42A5F5", unit: "items" },
     ];
 
-    // TODO: Replace with API call to PATCH /api/inventory/:id/visibility
     const handleToggleVisibility = (id: number) => {
         setInventory((prev) =>
-            prev.map((item) =>
-                item.inventory_id === id ? { ...item, is_public: !item.is_public } : item,
-            ),
+            prev.map((item) => item.inventory_id === id ? { ...item, is_public: !item.is_public } : item),
         );
     };
 
     const startEdit = (item: DistributionInventory) => {
         setEditingId(item.inventory_id);
-        setEditValues({
-            distributed: item.distributed_quantity,
-            available: item.available_quantity,
-        });
+        setEditValues({ distributed: item.distributed_quantity, available: item.available_quantity });
     };
 
-    // TODO: Replace with API call to PATCH /api/inventory/:id
     const saveEdit = (id: number) => {
         setInventory((prev) =>
             prev.map((item) =>
                 item.inventory_id === id
-                    ? {
-                        ...item,
-                        distributed_quantity: editValues.distributed,
-                        available_quantity: editValues.available,
-                    }
+                    ? { ...item, distributed_quantity: editValues.distributed, available_quantity: editValues.available }
                     : item,
             ),
         );
         setEditingId(null);
     };
 
-    const cancelEdit = () => {
-        setEditingId(null);
-    };
+    const cancelEdit = () => setEditingId(null);
 
     return (
         <DashboardLayout>
-            <style>{`
-				.center-stats-grid {
-					display: grid;
-					grid-template-columns: repeat(3, 1fr);
-					gap: 20px;
-					margin-bottom: 32px;
-				}
-
-				.center-stat-card {
-					background: rgba(255,255,255,0.03);
-					border: 1px solid rgba(125,197,66,0.12);
-					border-radius: 12px;
-					padding: 24px;
-					transition: border-color 0.25s ease, transform 0.25s ease;
-				}
-
-				.center-stat-card:hover {
-					border-color: rgba(125,197,66,0.3);
-					transform: translateY(-2px);
-				}
-
-				.center-table-wrap {
-					background: rgba(255,255,255,0.02);
-					border: 1px solid rgba(125,197,66,0.1);
-					border-radius: 12px;
-					overflow: hidden;
-				}
-
-				.center-table {
-					width: 100%;
-					border-collapse: collapse;
-					font-family: 'Nunito', sans-serif;
-				}
-
-				.center-table thead {
-					background: rgba(125,197,66,0.06);
-				}
-
-				.center-table th {
-					padding: 14px 18px;
-					text-align: left;
-					font-size: 0.75rem;
-					font-weight: 700;
-					color: rgba(240,235,225,0.5);
-					text-transform: uppercase;
-					letter-spacing: 0.06em;
-					border-bottom: 1px solid rgba(125,197,66,0.08);
-				}
-
-				.center-table td {
-					padding: 14px 18px;
-					font-size: 0.85rem;
-					color: #F0EBE1;
-					border-bottom: 1px solid rgba(125,197,66,0.05);
-					vertical-align: middle;
-				}
-
-				.center-table tbody tr {
-					transition: background 0.2s ease;
-				}
-
-				.center-table tbody tr:hover {
-					background: rgba(125,197,66,0.04);
-				}
-
-				.center-table tbody tr:last-child td {
-					border-bottom: none;
-				}
-
-				/* Toggle switch */
-				.toggle-switch {
-					position: relative;
-					display: inline-block;
-					width: 44px;
-					height: 24px;
-				}
-
-				.toggle-switch input {
-					opacity: 0;
-					width: 0;
-					height: 0;
-				}
-
-				.toggle-slider {
-					position: absolute;
-					cursor: pointer;
-					top: 0; left: 0; right: 0; bottom: 0;
-					background: rgba(255,255,255,0.1);
-					border-radius: 24px;
-					transition: background 0.3s ease;
-				}
-
-				.toggle-slider::before {
-					content: '';
-					position: absolute;
-					height: 18px;
-					width: 18px;
-					left: 3px;
-					bottom: 3px;
-					background: #F0EBE1;
-					border-radius: 50%;
-					transition: transform 0.3s ease;
-				}
-
-				.toggle-switch input:checked + .toggle-slider {
-					background: #7DC542;
-				}
-
-				.toggle-switch input:checked + .toggle-slider::before {
-					transform: translateX(20px);
-				}
-
-				/* Inline edit inputs */
-				.center-edit-input {
-					width: 70px;
-					background: rgba(255,255,255,0.06);
-					border: 1px solid rgba(125,197,66,0.3);
-					border-radius: 6px;
-					padding: 6px 8px;
-					color: #F0EBE1;
-					font-family: 'Nunito', sans-serif;
-					font-size: 0.85rem;
-					outline: none;
-					transition: border-color 0.2s ease;
-				}
-
-				.center-edit-input:focus {
-					border-color: #7DC542;
-				}
-
-				.center-action-btn {
-					padding: 6px 14px;
-					border-radius: 6px;
-					font-family: 'Nunito', sans-serif;
-					font-size: 0.75rem;
-					font-weight: 700;
-					cursor: pointer;
-					border: none;
-					transition: transform 0.15s ease, opacity 0.2s ease;
-				}
-
-				.center-action-btn:hover {
-					transform: translateY(-1px);
-				}
-
-				.center-skeleton {
-					background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.03) 75%);
-					background-size: 200% 100%;
-					animation: center-shimmer 1.5s ease-in-out infinite;
-					border-radius: 8px;
-				}
-
-				@keyframes center-shimmer {
-					0% { background-position: 200% 0; }
-					100% { background-position: -200% 0; }
-				}
-
-				/* ── Responsive table → card layout ── */
-				.center-mobile-cards { display: none; }
-
-				@media (max-width: 768px) {
-					.center-stats-grid { grid-template-columns: 1fr; gap: 12px; }
-					.center-table-wrap { display: none; }
-					.center-mobile-cards { display: flex; flex-direction: column; gap: 12px; }
-				}
-
-				@media (min-width: 769px) and (max-width: 1024px) {
-					.center-stats-grid { grid-template-columns: repeat(2, 1fr); }
-				}
-
-				.center-mobile-card {
-					background: rgba(255,255,255,0.03);
-					border: 1px solid rgba(125,197,66,0.1);
-					border-radius: 12px;
-					padding: 18px 20px;
-				}
-
-				.center-mobile-card-row {
-					display: flex;
-					justify-content: space-between;
-					align-items: center;
-					padding: 6px 0;
-					font-family: 'Nunito', sans-serif;
-					font-size: 0.82rem;
-				}
-
-				.center-mobile-card-label {
-					color: rgba(240,235,225,0.5);
-					font-weight: 600;
-				}
-
-				.center-mobile-card-value {
-					color: #F0EBE1;
-					font-weight: 700;
-				}
-			`}</style>
-
             {/* ── Loading Skeleton ── */}
             {loading && (
                 <>
-                    <div className="center-stats-grid">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
                         {[1, 2, 3].map((i) => (
-                            <div key={i} className="center-skeleton" style={{ height: "100px" }} />
+                            <div key={i} className="skeleton-shimmer h-[100px]" />
                         ))}
                     </div>
-                    <div className="center-skeleton" style={{ height: "320px" }} />
+                    <div className="skeleton-shimmer h-[320px]" />
                 </>
             )}
 
-            {/* ── Stats Cards ── */}
+            {/* ── Stats + Content ── */}
             {!loading && (
                 <>
-                    <div className="center-stats-grid">
+                    {/* Stats grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
                         {stats.map(({ label, value, icon, accent, unit }) => (
-                            <div key={label} className="center-stat-card">
-                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                                    <span style={{ fontSize: "1.8rem" }}>{icon}</span>
-                                    <div style={{ textAlign: "right" }}>
-                                        <span
-                                            style={{
-                                                fontFamily: "'Roboto', sans-serif",
-                                                fontSize: "2rem",
-                                                fontWeight: 900,
-                                                color: accent,
-                                            }}
-                                        >
+                            <div
+                                key={label}
+                                className="rounded-xl p-6 border border-[rgba(125,197,66,0.12)] transition-[border-color,transform] duration-[250ms] hover:border-[rgba(125,197,66,0.3)] hover:-translate-y-0.5"
+                                style={{ background: "rgba(255,255,255,0.03)" }}
+                            >
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[1.8rem]">{icon}</span>
+                                    <div className="text-right">
+                                        <span className="text-[2rem] font-black" style={{ color: accent }}>
                                             {value}
                                         </span>
-                                        <span
-                                            style={{
-                                                fontFamily: "'Nunito', sans-serif",
-                                                fontSize: "0.75rem",
-                                                color: "rgba(240,235,225,0.4)",
-                                                marginLeft: "4px",
-                                            }}
-                                        >
+                                        <span className="text-[0.75rem] text-[rgba(240,235,225,0.4)] ml-1">
                                             {unit}
                                         </span>
                                     </div>
                                 </div>
-                                <div
-                                    style={{
-                                        marginTop: "8px",
-                                        fontFamily: "'Nunito', sans-serif",
-                                        fontSize: "0.82rem",
-                                        fontWeight: 600,
-                                        color: "rgba(240,235,225,0.5)",
-                                        letterSpacing: "0.04em",
-                                        textTransform: "uppercase",
-                                    }}
-                                >
+                                <div className="mt-2 text-[0.82rem] font-semibold text-[rgba(240,235,225,0.5)] tracking-[0.04em] uppercase">
                                     {label}
                                 </div>
                             </div>
                         ))}
                     </div>
 
-                    {/* ── Section Header ── */}
-                    <h2
-                        style={{
-                            fontFamily: "'Roboto', sans-serif",
-                            fontSize: "1.15rem",
-                            fontWeight: 700,
-                            color: "#F0EBE1",
-                            marginBottom: "20px",
-                        }}
-                    >
+                    {/* Section header */}
+                    <h2 className="text-[1.15rem] font-bold text-[#F0EBE1] mb-5">
                         Inventory Management
                     </h2>
 
                     {/* ── Desktop Table ── */}
-                    <div className="center-table-wrap">
-                        <table className="center-table">
-                            <thead>
+                    <div className="hidden md:block rounded-xl overflow-hidden border border-[rgba(125,197,66,0.1)]"
+                        style={{ background: "rgba(255,255,255,0.02)" }}>
+                        <table className="w-full border-collapse">
+                            <thead className="bg-[rgba(125,197,66,0.06)]">
                                 <tr>
-                                    <th>Food Type</th>
-                                    <th>Collected</th>
-                                    <th>Distributed</th>
-                                    <th>Available</th>
-                                    <th>Visible</th>
-                                    <th>Collected On</th>
-                                    <th>Actions</th>
+                                    {["Food Type", "Collected", "Distributed", "Available", "Visible", "Collected On", "Actions"].map((col) => (
+                                        <th key={col} className="px-[18px] py-[14px] text-left text-[0.75rem] font-bold text-[rgba(240,235,225,0.5)] uppercase tracking-[0.06em] border-b border-[rgba(125,197,66,0.08)]">
+                                            {col}
+                                        </th>
+                                    ))}
                                 </tr>
                             </thead>
                             <tbody>
                                 {inventory.map((item) => (
-                                    <tr key={item.inventory_id}>
-                                        <td>
-                                            <span style={{ fontWeight: 700 }}>{item.food_type}</span>
+                                    <tr
+                                        key={item.inventory_id}
+                                        className="border-b border-[rgba(125,197,66,0.05)] last:border-b-0 transition-[background] duration-200 hover:bg-[rgba(125,197,66,0.04)]"
+                                    >
+                                        <td className="px-[18px] py-[14px] text-[0.85rem] text-[#F0EBE1] align-middle">
+                                            <span className="font-bold">{item.food_type}</span>
                                         </td>
-                                        <td>{item.collected_quantity}</td>
-                                        <td>
+                                        <td className="px-[18px] py-[14px] text-[0.85rem] text-[#F0EBE1] align-middle">
+                                            {item.collected_quantity}
+                                        </td>
+                                        <td className="px-[18px] py-[14px] text-[0.85rem] text-[#F0EBE1] align-middle">
                                             {editingId === item.inventory_id ? (
                                                 <input
                                                     type="number"
                                                     className="center-edit-input"
                                                     value={editValues.distributed}
-                                                    onChange={(e) =>
-                                                        setEditValues((prev) => ({
-                                                            ...prev,
-                                                            distributed: Number(e.target.value),
-                                                        }))
-                                                    }
+                                                    onChange={(e) => setEditValues((prev) => ({ ...prev, distributed: Number(e.target.value) }))}
                                                     min={0}
                                                     max={item.collected_quantity}
                                                 />
-                                            ) : (
-                                                item.distributed_quantity
-                                            )}
+                                            ) : item.distributed_quantity}
                                         </td>
-                                        <td>
+                                        <td className="px-[18px] py-[14px] text-[0.85rem] text-[#F0EBE1] align-middle">
                                             {editingId === item.inventory_id ? (
                                                 <input
                                                     type="number"
                                                     className="center-edit-input"
                                                     value={editValues.available}
-                                                    onChange={(e) =>
-                                                        setEditValues((prev) => ({
-                                                            ...prev,
-                                                            available: Number(e.target.value),
-                                                        }))
-                                                    }
+                                                    onChange={(e) => setEditValues((prev) => ({ ...prev, available: Number(e.target.value) }))}
                                                     min={0}
                                                     max={item.collected_quantity}
                                                 />
                                             ) : (
-                                                <span
-                                                    style={{
-                                                        color: item.available_quantity > 0 ? "#7DC542" : "#9E9E9E",
-                                                        fontWeight: 700,
-                                                    }}
-                                                >
+                                                <span className="font-bold" style={{ color: item.available_quantity > 0 ? "#7DC542" : "#9E9E9E" }}>
                                                     {item.available_quantity}
                                                 </span>
                                             )}
                                         </td>
-                                        <td>
+                                        <td className="px-[18px] py-[14px] align-middle">
                                             <label className="toggle-switch">
                                                 <input
                                                     type="checkbox"
@@ -479,12 +171,12 @@ export default function CenterDashboard() {
                                                 <span className="toggle-slider" />
                                             </label>
                                         </td>
-                                        <td style={{ color: "rgba(240,235,225,0.5)", fontSize: "0.82rem" }}>
+                                        <td className="px-[18px] py-[14px] text-[0.82rem] text-[rgba(240,235,225,0.5)] align-middle">
                                             {item.collection_date}
                                         </td>
-                                        <td>
+                                        <td className="px-[18px] py-[14px] align-middle">
                                             {editingId === item.inventory_id ? (
-                                                <div style={{ display: "flex", gap: "6px" }}>
+                                                <div className="flex gap-1.5">
                                                     <button
                                                         type="button"
                                                         className="center-action-btn"
@@ -496,10 +188,7 @@ export default function CenterDashboard() {
                                                     <button
                                                         type="button"
                                                         className="center-action-btn"
-                                                        style={{
-                                                            background: "rgba(255,255,255,0.08)",
-                                                            color: "rgba(240,235,225,0.7)",
-                                                        }}
+                                                        style={{ background: "rgba(255,255,255,0.08)", color: "rgba(240,235,225,0.7)" }}
                                                         onClick={cancelEdit}
                                                     >
                                                         Cancel
@@ -509,10 +198,7 @@ export default function CenterDashboard() {
                                                 <button
                                                     type="button"
                                                     className="center-action-btn"
-                                                    style={{
-                                                        background: "rgba(125,197,66,0.12)",
-                                                        color: "#7DC542",
-                                                    }}
+                                                    style={{ background: "rgba(125,197,66,0.12)", color: "#7DC542" }}
                                                     onClick={() => startEdit(item)}
                                                 >
                                                     Edit
@@ -525,26 +211,16 @@ export default function CenterDashboard() {
                         </table>
                     </div>
 
-                    {/* ── Mobile Cards (replaces table below 768px) ── */}
-                    <div className="center-mobile-cards">
+                    {/* ── Mobile Cards (< md) ── */}
+                    <div className="flex md:hidden flex-col gap-3">
                         {inventory.map((item) => (
-                            <div key={item.inventory_id} className="center-mobile-card">
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "space-between",
-                                        marginBottom: "10px",
-                                    }}
-                                >
-                                    <span
-                                        style={{
-                                            fontFamily: "'Roboto', sans-serif",
-                                            fontSize: "1rem",
-                                            fontWeight: 700,
-                                            color: "#F0EBE1",
-                                        }}
-                                    >
+                            <div
+                                key={item.inventory_id}
+                                className="rounded-xl px-5 py-[18px] border border-[rgba(125,197,66,0.1)]"
+                                style={{ background: "rgba(255,255,255,0.03)" }}
+                            >
+                                <div className="flex items-center justify-between mb-2.5">
+                                    <span className="text-base font-bold text-[#F0EBE1]">
                                         {item.food_type}
                                     </span>
                                     <label className="toggle-switch">
@@ -556,39 +232,24 @@ export default function CenterDashboard() {
                                         <span className="toggle-slider" />
                                     </label>
                                 </div>
-                                <div className="center-mobile-card-row">
-                                    <span className="center-mobile-card-label">Collected</span>
-                                    <span className="center-mobile-card-value">{item.collected_quantity}</span>
-                                </div>
-                                <div className="center-mobile-card-row">
-                                    <span className="center-mobile-card-label">Distributed</span>
-                                    <span className="center-mobile-card-value">{item.distributed_quantity}</span>
-                                </div>
-                                <div className="center-mobile-card-row">
-                                    <span className="center-mobile-card-label">Available</span>
-                                    <span
-                                        className="center-mobile-card-value"
-                                        style={{ color: item.available_quantity > 0 ? "#7DC542" : "#9E9E9E" }}
-                                    >
-                                        {item.available_quantity}
-                                    </span>
-                                </div>
-                                <div className="center-mobile-card-row">
-                                    <span className="center-mobile-card-label">Collected On</span>
-                                    <span className="center-mobile-card-value" style={{ color: "rgba(240,235,225,0.5)" }}>
-                                        {item.collection_date}
-                                    </span>
-                                </div>
-                                <div style={{ marginTop: "10px" }}>
+
+                                {[
+                                    { label: "Collected", value: item.collected_quantity },
+                                    { label: "Distributed", value: item.distributed_quantity },
+                                    { label: "Available", value: item.available_quantity, style: { color: item.available_quantity > 0 ? "#7DC542" : "#9E9E9E" } },
+                                    { label: "Collected On", value: item.collection_date, style: { color: "rgba(240,235,225,0.5)" } },
+                                ].map(({ label, value, style }) => (
+                                    <div key={label} className="flex justify-between items-center py-1.5 text-[0.82rem]">
+                                        <span className="text-[rgba(240,235,225,0.5)] font-semibold">{label}</span>
+                                        <span className="text-[#F0EBE1] font-bold" style={style}>{value}</span>
+                                    </div>
+                                ))}
+
+                                <div className="mt-2.5">
                                     <button
                                         type="button"
-                                        className="center-action-btn"
-                                        style={{
-                                            background: "rgba(125,197,66,0.12)",
-                                            color: "#7DC542",
-                                            width: "100%",
-                                            padding: "10px",
-                                        }}
+                                        className="center-action-btn w-full py-2.5"
+                                        style={{ background: "rgba(125,197,66,0.12)", color: "#7DC542" }}
                                         onClick={() => startEdit(item)}
                                     >
                                         Edit Quantities

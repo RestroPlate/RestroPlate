@@ -1,13 +1,4 @@
-import React, { useState } from 'react';
-
-const TOKEN = {
-    bgFooter: '#060C05',
-    accent: '#7DC542',
-    textPrimary: '#F0EBE1',
-    textMuted: 'rgba(240,235,225,0.45)',
-    fontDisplay: "'Roboto', sans-serif",
-    fontBody: "'Nunito', sans-serif",
-} as const;
+import { useState } from 'react';
 
 const FOOTER_LINKS: { label: string; href: string }[] = [
     { label: 'Privacy', href: '#privacy' },
@@ -16,101 +7,46 @@ const FOOTER_LINKS: { label: string; href: string }[] = [
 ];
 
 export function Footer() {
-    const [hoveredLink, setHoveredLink] = useState<string | null>(null);
     const [hoveredLogo, setHoveredLogo] = useState(false);
-
-    const footerStyle: React.CSSProperties = {
-        background: TOKEN.bgFooter,
-        borderTop: '1px solid rgba(125,197,66,0.1)',
-        padding: '48px 5vw',
-    };
-
-    const innerStyle: React.CSSProperties = {
-        maxWidth: '1200px',
-        margin: '0 auto',
-    };
-
-    const logoStyle: React.CSSProperties = {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '10px',
-        color: TOKEN.accent,
-        fontFamily: TOKEN.fontDisplay,
-        fontSize: '1.2rem',
-        fontWeight: 700,
-        textDecoration: 'none',
-        cursor: 'pointer',
-    };
-
-    const leafStyle: React.CSSProperties = {
-        display: 'inline-block',
-        transition: 'transform 0.3s ease',
-        transform: hoveredLogo ? 'rotate(-15deg) scale(1.15)' : 'rotate(0deg) scale(1)',
-    };
-
-    const copyrightStyle: React.CSSProperties = {
-        fontFamily: TOKEN.fontBody,
-        fontSize: '0.82rem',
-        color: TOKEN.textMuted,
-        textAlign: 'center',
-    };
-
-    const navStyle: React.CSSProperties = {
-        display: 'flex',
-        gap: '28px',
-    };
-
-    const getLinkStyle = (label: string): React.CSSProperties => ({
-        fontFamily: TOKEN.fontBody,
-        fontSize: '0.82rem',
-        fontWeight: 600,
-        color: hoveredLink === label ? TOKEN.accent : TOKEN.textMuted,
-        textDecoration: 'none',
-        cursor: 'pointer',
-        transform: hoveredLink === label ? 'translateY(-2px)' : 'translateY(0)',
-        display: 'inline-block',
-        transition: 'color 0.2s ease, transform 0.2s ease',
-    });
 
     return (
         <>
-            <style>{`
-                @keyframes expandLine {
-                    from { width: 0; }
-                    to   { width: 100%; }
-                }
-                .footer-top-line {
-                    height: 1px;
-                    background: #7DC542;
-                    animation: expandLine 0.8s ease forwards;
-                    opacity: 0.4;
-                }
-            `}</style>
             <div className="footer-top-line" aria-hidden="true" />
-            <footer style={footerStyle} aria-label="Footer">
-                <div style={innerStyle} className="footer-inner">
+            <footer
+                aria-label="Footer"
+                className="bg-[#060C05] border-t border-[rgba(125,197,66,0.1)] py-12 px-[5vw]"
+            >
+                <div className="max-w-[1200px] mx-auto flex flex-wrap sm:flex-row flex-col justify-between items-center gap-5 sm:gap-5 text-center sm:text-left">
+                    {/* Logo */}
                     <a
                         href="#"
-                        style={logoStyle}
+                        className="flex items-center gap-2.5 text-[#7DC542] text-[1.2rem] font-bold no-underline cursor-pointer group"
                         onMouseEnter={() => setHoveredLogo(true)}
                         onMouseLeave={() => setHoveredLogo(false)}
                     >
-                        <span role="img" aria-label="leaf" style={leafStyle}>🍃</span>
+                        <span
+                            role="img"
+                            aria-label="leaf"
+                            className="inline-block transition-transform duration-300"
+                            style={{ transform: hoveredLogo ? 'rotate(-15deg) scale(1.15)' : 'rotate(0deg) scale(1)' }}
+                        >
+                            🍃
+                        </span>
                         RestroPlate
                     </a>
 
-                    <p style={copyrightStyle}>
+                    {/* Copyright */}
+                    <p className="text-[0.82rem] text-[rgba(240,235,225,0.45)]">
                         © 2026 FoodShare Connect · RestroPlate. All rights reserved.
                     </p>
 
-                    <nav style={navStyle} aria-label="Footer navigation">
+                    {/* Nav links */}
+                    <nav aria-label="Footer navigation" className="flex gap-7">
                         {FOOTER_LINKS.map(({ label, href }) => (
                             <a
                                 key={label}
                                 href={href}
-                                style={getLinkStyle(label)}
-                                onMouseEnter={() => setHoveredLink(label)}
-                                onMouseLeave={() => setHoveredLink(null)}
+                                className="text-[0.82rem] font-semibold text-[rgba(240,235,225,0.45)] no-underline cursor-pointer inline-block transition-[color,transform] duration-200 hover:text-[#7DC542] hover:-translate-y-0.5"
                             >
                                 {label}
                             </a>

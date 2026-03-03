@@ -13,7 +13,7 @@ function App() {
       <Route
         path="/dashboard/donor"
         element={
-          <ProtectedRoute allowedRole="donator">
+          <ProtectedRoute allowedRole="DONOR">
             <DonorDashboard />
           </ProtectedRoute>
         }
@@ -21,7 +21,7 @@ function App() {
       <Route
         path="/dashboard/center"
         element={
-          <ProtectedRoute allowedRole="distributing_center">
+          <ProtectedRoute allowedRole="DISTRIBUTION_CENTER">
             <CenterDashboard />
           </ProtectedRoute>
         }

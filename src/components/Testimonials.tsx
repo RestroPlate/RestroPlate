@@ -1,26 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useReveal } from './hooks/useReveal';
+import React from 'react';
 
-const TOKEN = {
-    bgSurface: '#111A0F',
-    accent: '#7DC542',
-    textPrimary: '#F0EBE1',
-    textMuted: 'rgba(240,235,225,0.55)',
-    border: 'rgba(125,197,66,0.13)',
-    bgCard: 'rgba(255,255,255,0.03)',
-    bgDeep: '#0B1A08',
-    fontDisplay: "'Roboto', sans-serif",
-    fontBody: "'Nunito', sans-serif",
-} as const;
-
-interface Testimonial {
-    name: string;
-    role: string;
-    quote: string;
-    initials: string;
-}
-
-const TESTIMONIALS: Testimonial[] = [
+const TESTIMONIALS = [
     {
         name: 'Chef Amara Silva',
         role: 'Executive Chef, The Garden Table',
@@ -45,147 +27,76 @@ export function Testimonials() {
     const [ref, visible] = useReveal(0.1);
     const [hoveredCard, setHoveredCard] = useState<number | null>(null);
 
-    const sectionStyle: React.CSSProperties = {
-        background: TOKEN.bgSurface,
-        padding: '100px 5vw',
-    };
-
-    const headerStyle: React.CSSProperties = {
-        textAlign: 'center',
-        marginBottom: '60px',
-    };
-
-    const eyebrowStyle: React.CSSProperties = {
-        fontFamily: TOKEN.fontBody,
-        fontSize: '0.75rem',
-        fontWeight: 600,
-        letterSpacing: '0.22em',
-        color: TOKEN.accent,
-        textTransform: 'uppercase' as const,
-        display: 'block',
-        marginBottom: '16px',
-    };
-
-    const h2Style: React.CSSProperties = {
-        fontFamily: TOKEN.fontDisplay,
-        fontSize: 'clamp(1.9rem, 3.5vw, 2.8rem)',
-        fontWeight: 800,
-        letterSpacing: '-0.02em',
-        lineHeight: 1.08,
-        color: TOKEN.textPrimary,
-    };
-
-    const gridStyle: React.CSSProperties = {
-        maxWidth: '1200px',
-        margin: '0 auto',
-    };
-
-    const getCardStyle = (i: number): React.CSSProperties => ({
-        background: hoveredCard === i ? 'rgba(125,197,66,0.06)' : TOKEN.bgCard,
-        border: `1px solid ${hoveredCard === i ? 'rgba(125,197,66,0.35)' : TOKEN.border}`,
-        borderRadius: '12px',
-        padding: '36px 32px',
-        display: 'flex',
-        flexDirection: 'column' as const,
-        gap: '24px',
-        cursor: 'default',
-        opacity: visible ? 1 : 0,
-        transform: visible
-            ? (hoveredCard === i ? 'translateY(-5px)' : 'translateY(0)')
-            : 'translateY(32px)',
-        boxShadow: hoveredCard === i ? '0 20px 50px rgba(0,0,0,0.25)' : '0 0 0 rgba(0,0,0,0)',
-        transition: `opacity 0.7s ease ${i * 0.12}s, transform 0.35s ease, background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease`,
-    });
-
-    const getQuoteMarkStyle = (i: number): React.CSSProperties => ({
-        fontFamily: TOKEN.fontDisplay,
-        fontSize: '3rem',
-        fontWeight: 900,
-        color: hoveredCard === i ? 'rgba(125,197,66,0.9)' : TOKEN.accent,
-        lineHeight: 1,
-        display: 'block',
-        marginBottom: '-16px',
-        transition: 'color 0.35s ease',
-    });
-
-    const quoteStyle: React.CSSProperties = {
-        fontFamily: TOKEN.fontBody,
-        fontSize: '0.97rem',
-        lineHeight: 1.75,
-        color: TOKEN.textMuted,
-        fontStyle: 'italic',
-        flexGrow: 1,
-    };
-
-    const authorRowStyle: React.CSSProperties = {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '14px',
-        marginTop: 'auto',
-    };
-
-    const getAvatarStyle = (i: number): React.CSSProperties => ({
-        width: '44px',
-        height: '44px',
-        borderRadius: '50%',
-        background: TOKEN.accent,
-        color: TOKEN.bgDeep,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontFamily: TOKEN.fontBody,
-        fontSize: '0.85rem',
-        fontWeight: 800,
-        flexShrink: 0,
-        transform: hoveredCard === i ? 'scale(1.1)' : 'scale(1)',
-        transition: 'transform 0.3s ease',
-    });
-
-    const nameStyle: React.CSSProperties = {
-        fontFamily: TOKEN.fontBody,
-        fontSize: '0.92rem',
-        fontWeight: 700,
-        color: TOKEN.textPrimary,
-        display: 'block',
-    };
-
-    const roleStyle: React.CSSProperties = {
-        fontFamily: TOKEN.fontBody,
-        fontSize: '0.78rem',
-        color: TOKEN.textMuted,
-        display: 'block',
-        marginTop: '2px',
-    };
-
     return (
         <section
             ref={ref as React.RefObject<HTMLElement>}
-            style={sectionStyle}
             id="stories"
             aria-label="Testimonials"
+            className="bg-[#111A0F] py-[100px] px-[5vw]"
         >
-            <div style={headerStyle}>
-                <span style={eyebrowStyle}>SUCCESS STORIES</span>
-                <h2 style={h2Style} className="section-heading">Voices from Our Community</h2>
+            {/* Header */}
+            <div className="text-center mb-[60px]">
+                <span className="text-[0.75rem] font-semibold tracking-[0.22em] text-[#7DC542] uppercase block mb-4">
+                    SUCCESS STORIES
+                </span>
+                <h2
+                    className="font-extrabold tracking-[-0.02em] leading-[1.08] text-[#F0EBE1]"
+                    style={{ fontSize: 'clamp(1.9rem, 3.5vw, 2.8rem)' }}
+                >
+                    Voices from Our Community
+                </h2>
             </div>
 
-            <div style={gridStyle} className="testimonials-grid">
+            {/* Cards grid */}
+            <div className="max-w-[1200px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {TESTIMONIALS.map((t, i) => (
                     <div
                         key={t.name}
-                        style={getCardStyle(i)}
+                        className="rounded-xl flex flex-col gap-6 cursor-default transition-[background,border-color,box-shadow,transform] duration-[350ms]"
                         onMouseEnter={() => setHoveredCard(i)}
                         onMouseLeave={() => setHoveredCard(null)}
                         onTouchStart={() => setHoveredCard(i)}
                         onTouchEnd={() => setHoveredCard(null)}
+                        style={{
+                            background: hoveredCard === i ? 'rgba(125,197,66,0.06)' : 'rgba(255,255,255,0.03)',
+                            border: `1px solid ${hoveredCard === i ? 'rgba(125,197,66,0.35)' : 'rgba(125,197,66,0.13)'}`,
+                            padding: '36px 32px',
+                            opacity: visible ? 1 : 0,
+                            transform: visible
+                                ? (hoveredCard === i ? 'translateY(-5px)' : 'translateY(0)')
+                                : 'translateY(32px)',
+                            boxShadow: hoveredCard === i ? '0 20px 50px rgba(0,0,0,0.25)' : '0 0 0 rgba(0,0,0,0)',
+                            transition: `opacity 0.7s ease ${i * 0.12}s, transform 0.35s ease, background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease`,
+                        }}
                     >
-                        <span style={getQuoteMarkStyle(i)} aria-hidden="true">"</span>
-                        <p style={quoteStyle}>{t.quote}</p>
-                        <div style={authorRowStyle}>
-                            <div style={getAvatarStyle(i)} aria-hidden="true">{t.initials}</div>
+                        {/* Quote mark */}
+                        <span
+                            aria-hidden="true"
+                            className="text-[3rem] font-black leading-none block -mb-4 transition-colors duration-[350ms]"
+                            style={{ color: hoveredCard === i ? 'rgba(125,197,66,0.9)' : '#7DC542' }}
+                        >
+                            "
+                        </span>
+                        <p className="text-[0.97rem] leading-[1.75] text-[rgba(240,235,225,0.55)] italic flex-grow">
+                            {t.quote}
+                        </p>
+
+                        {/* Author row */}
+                        <div className="flex items-center gap-3.5 mt-auto">
+                            <div
+                                className="w-11 h-11 rounded-full bg-[#7DC542] text-[#0B1A08] flex items-center justify-center text-[0.85rem] font-extrabold flex-shrink-0 transition-transform duration-300"
+                                aria-hidden="true"
+                                style={{ transform: hoveredCard === i ? 'scale(1.1)' : 'scale(1)' }}
+                            >
+                                {t.initials}
+                            </div>
                             <div>
-                                <span style={nameStyle}>{t.name}</span>
-                                <span style={roleStyle}>{t.role}</span>
+                                <span className="text-[0.92rem] font-bold text-[#F0EBE1] block">
+                                    {t.name}
+                                </span>
+                                <span className="text-[0.78rem] text-[rgba(240,235,225,0.55)] block mt-0.5">
+                                    {t.role}
+                                </span>
                             </div>
                         </div>
                     </div>
