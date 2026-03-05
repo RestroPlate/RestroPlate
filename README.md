@@ -24,6 +24,34 @@ Before you do anything, read AGENT_RULES.md, understand our tech stack (specific
 
 ---
 
+## 📁 Project Structure
+
+```text
+restroplate-frontend/
+├── .github/               # GitHub Actions CI/CD workflows
+├── public/                # Static assets
+├── src/
+│   ├── api/               # Axios configuration and interceptors
+│   ├── components/        # Reusable UI components (NavBar, Hero, etc.)
+│   │   ├── dashboard/     # Dashboard-specific components
+│   │   └── hooks/         # Custom React hooks
+│   ├── pages/             # Route components (Home, Auth, Dashboards)
+│   ├── services/          # API services and business logic (authService.ts)
+│   ├── types/             # TypeScript interfaces and types
+│   ├── App.tsx            # Application root and router configuration
+│   ├── main.tsx           # React entry point
+│   └── index.css          # Global styling and Tailwind imports
+├── tests/                 # Automated test suite (Pytest, UI, API)
+│   ├── api/               # API integration tests
+│   └── ui/                # UI end-to-end tests (Playwright)
+├── index.html             # Vite HTML entry point
+├── package.json           # Dependencies and npm scripts
+├── tsconfig.json          # TypeScript configurations
+└── vite.config.ts         # Vite bundler configuration
+```
+
+---
+
 ## 📦 Getting Started
 
 ### 1️⃣ Install dependencies

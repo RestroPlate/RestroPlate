@@ -36,10 +36,7 @@ Keep all files strictly within these boundaries. Do not create nested module fol
 - **Imports:** Organize imports cleanly. Biome is configured to auto-organize them.
 
 ## 5. Styling Paradigm (CRITICAL)
-
-- **Context:** The project currently contains legacy inline styles (`React.CSSProperties`) and injected `<style>` tags (e.g., in `Hero.tsx`, `CtaSection.tsx`). However, Tailwind CSS v4 is installed and configured.
 - **Rule for NEW components:** Strictly use **Tailwind CSS** utility classes via the `className` attribute. Do not write new inline styles.
-- **Rule for EXISTING components:** If modifying an existing component, you may maintain its inline `style={{...}}` objects to prevent breaking the layout, UNLESS explicitly instructed to "refactor to Tailwind."
 
 ## 6. Routing & API Guidelines
 
