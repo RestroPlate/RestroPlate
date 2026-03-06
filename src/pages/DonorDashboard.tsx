@@ -1,194 +1,336 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import StatusNotice from "../components/StatusNotice";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
-import type { Donation } from "../types/Dashboard";
+import { createDonation } from "../services/donationService";
+import type { CreateDonationPayload, Donation } from "../types/Dashboard";
 
-// TODO: Replace with API call to GET /api/donations?provider=current_user
-const mockDonations: Donation[] = [
-    {
-        donation_id: 1,
-        food_type: "Fresh Bread",
-        description: "20 loaves of whole wheat bread, baked this morning",
-        quantity: 20,
-        unit: "loaves",
-        expiry_date: "2026-02-27",
-        pickup_location: "Main Street Bakery, Colombo 03",
-        status: "AVAILABLE",
-        created_at: "2026-02-25T10:30:00Z",
-    },
-    {
-        donation_id: 2,
-        food_type: "Rice & Curry",
-        description: "Bulk prepared rice with mixed vegetable curry, sealed containers",
-        quantity: 50,
-        unit: "servings",
-        expiry_date: "2026-02-26",
-        pickup_location: "Hilton Colombo, Colombo 01",
-        status: "REQUESTED",
-        created_at: "2026-02-24T14:15:00Z",
-    },
-    {
-        donation_id: 3,
-        food_type: "Fresh Vegetables",
-        description: "Assorted vegetables — carrots, beans, tomatoes, leafy greens",
-        quantity: 30,
-        unit: "kg",
-        expiry_date: "2026-02-28",
-        pickup_location: "Pettah Market Stall 12, Colombo 11",
-        status: "COLLECTED",
-        created_at: "2026-02-23T08:00:00Z",
-    },
-    {
-        donation_id: 4,
-        food_type: "Pastries & Cakes",
-        description: "Leftover pastries from today's display — croissants, muffins, slices",
-        quantity: 15,
-        unit: "boxes",
-        expiry_date: "2026-02-26",
-        pickup_location: "Sugar & Spice Café, Colombo 07",
-        status: "COMPLETED",
-        created_at: "2026-02-20T17:45:00Z",
-    },
-    {
-        donation_id: 5,
-        food_type: "Canned Goods",
-        description: "Canned lentils, chickpeas, and coconut milk — long shelf life",
-        quantity: 40,
-        unit: "cans",
-        expiry_date: "2027-06-15",
-        pickup_location: "Keells Super, Colombo 05",
-        status: "AVAILABLE",
-        created_at: "2026-02-25T09:00:00Z",
-    },
-];
+interface DonationFormState {
+	foodType: string;
+	quantity: string;
+	unit: string;
+	expirationDate: string;
+	pickupAddress: string;
+	availabilityTime: string;
+}
 
-const STATUS_COLORS: Record<Donation["status"], { bg: string; text: string; label: string }> = {
-    AVAILABLE: { bg: "rgba(125,197,66,0.15)", text: "#7DC542", label: "Available" },
-    REQUESTED: { bg: "rgba(255,193,7,0.15)", text: "#FFC107", label: "Requested" },
-    COLLECTED: { bg: "rgba(66,165,245,0.15)", text: "#42A5F5", label: "Collected" },
-    COMPLETED: { bg: "rgba(158,158,158,0.15)", text: "#9E9E9E", label: "Completed" },
+type FormErrors = Partial<Record<keyof DonationFormState, string>>;
+
+const INITIAL_FORM: DonationFormState = {
+	foodType: "",
+	quantity: "",
+	unit: "",
+	expirationDate: "",
+	pickupAddress: "",
+	availabilityTime: "",
 };
 
+const mockDonations: Donation[] = [
+	{
+		donation_id: 1,
+		food_type: "Fresh Bread",
+		description: "20 loaves of whole wheat bread baked today.",
+		quantity: 20,
+		unit: "Loaves",
+		expiry_date: "2026-03-06",
+		pickup_location: "Main Street Bakery, Colombo 03",
+		availability_time: "14:00",
+		status: "AVAILABLE",
+		created_at: "2026-03-05T08:30:00Z",
+	},
+	{
+		donation_id: 2,
+		food_type: "Rice and Curry",
+		description: "Packed meal boxes from lunch service.",
+		quantity: 45,
+		unit: "Servings",
+		expiry_date: "2026-03-05",
+		pickup_location: "Hilton Colombo, Colombo 01",
+		availability_time: "16:30",
+		status: "REQUESTED",
+		created_at: "2026-03-04T10:15:00Z",
+	},
+	{
+		donation_id: 3,
+		food_type: "Mixed Vegetables",
+		description: "Unsold fresh produce in good condition.",
+		quantity: 30,
+		unit: "Kg",
+		expiry_date: "2026-03-07",
+		pickup_location: "Pettah Market Stall 12, Colombo 11",
+		availability_time: "11:00",
+		status: "COLLECTED",
+		created_at: "2026-03-03T06:45:00Z",
+	},
+];
+
+const STATUS_CLASSES: Record<Donation["status"], string> = {
+	AVAILABLE: "bg-emerald-500/15 text-emerald-300",
+	REQUESTED: "bg-amber-500/15 text-amber-300",
+	COLLECTED: "bg-sky-500/15 text-sky-300",
+};
+
+function validateDonationForm(values: DonationFormState): FormErrors {
+	const errors: FormErrors = {};
+	const quantity = Number(values.quantity);
+	const today = new Date();
+	today.setHours(0, 0, 0, 0);
+
+	if (!values.foodType.trim()) errors.foodType = "Food type is required.";
+	if (!values.unit.trim()) errors.unit = "Unit is required.";
+	if (!values.expirationDate) {
+		errors.expirationDate = "Expiration date is required.";
+	} else {
+		const expiration = new Date(`${values.expirationDate}T00:00:00`);
+		if (Number.isNaN(expiration.getTime()) || expiration < today) {
+			errors.expirationDate = "Expiration date must be today or later.";
+		}
+	}
+	if (!values.pickupAddress.trim()) errors.pickupAddress = "Pickup address is required.";
+	if (!values.availabilityTime) errors.availabilityTime = "Availability time is required.";
+	if (!values.quantity.trim()) {
+		errors.quantity = "Quantity is required.";
+	} else if (!Number.isFinite(quantity) || quantity <= 0) {
+		errors.quantity = "Quantity must be greater than 0.";
+	}
+
+	return errors;
+}
+
+function toPayload(values: DonationFormState): CreateDonationPayload {
+	return {
+		foodType: values.foodType.trim(),
+		quantity: Number(values.quantity),
+		unit: values.unit.trim(),
+		expirationDate: values.expirationDate,
+		pickupAddress: values.pickupAddress.trim(),
+		availabilityTime: values.availabilityTime,
+	};
+}
+
 export default function DonorDashboard() {
-    const [loading, setLoading] = useState(true);
-    const [donations, setDonations] = useState<Donation[]>([]);
-    const [hoveredCard, setHoveredCard] = useState<number | null>(null);
+	const [loading, setLoading] = useState(true);
+	const [donations, setDonations] = useState<Donation[]>([]);
+	const [form, setForm] = useState<DonationFormState>(INITIAL_FORM);
+	const [errors, setErrors] = useState<FormErrors>({});
+	const [submitting, setSubmitting] = useState(false);
+	const [notice, setNotice] = useState<{ type: "success" | "error"; message: string } | null>(null);
+	const formSectionRef = useRef<HTMLElement | null>(null);
 
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setDonations(mockDonations);
-            setLoading(false);
-        }, 500);
-        return () => clearTimeout(timer);
-    }, []);
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setDonations(mockDonations);
+			setLoading(false);
+		}, 350);
+		return () => clearTimeout(timer);
+	}, []);
 
-    const stats = [
-        { label: "Total Donations", value: donations.length, icon: "📦", accent: "#7DC542" },
-        { label: "Active Listings", value: donations.filter((d) => d.status === "AVAILABLE" || d.status === "REQUESTED").length, icon: "🟢", accent: "#66BB6A" },
-        { label: "Completed", value: donations.filter((d) => d.status === "COMPLETED").length, icon: "✅", accent: "#42A5F5" },
-    ];
+	const stats = useMemo(
+		() => [
+			{ label: "Total Donations", value: donations.length },
+			{ label: "Available", value: donations.filter((d) => d.status === "AVAILABLE").length },
+			{ label: "Collected", value: donations.filter((d) => d.status === "COLLECTED").length },
+		],
+		[donations],
+	);
 
-    return (
-        <DashboardLayout>
-            {/* ── Loading Skeleton ── */}
-            {loading && (
-                <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
-                        {[1, 2, 3].map((i) => (
-                            <div key={i} className="skeleton-shimmer h-[100px]" />
-                        ))}
-                    </div>
-                    <div className="flex flex-col gap-3">
-                        {[1, 2, 3].map((i) => (
-                            <div key={i} className="skeleton-shimmer h-[120px]" />
-                        ))}
-                    </div>
-                </>
-            )}
+	function handleFieldChange(field: keyof DonationFormState, value: string): void {
+		setForm((prev) => ({ ...prev, [field]: value }));
+		setErrors((prev) => ({ ...prev, [field]: undefined }));
+	}
 
-            {/* ── Stats + Content ── */}
-            {!loading && (
-                <>
-                    {/* Stats grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
-                        {stats.map(({ label, value, icon, accent }) => (
-                            <div
-                                key={label}
-                                className="rounded-xl p-6 border border-[rgba(125,197,66,0.12)] transition-[border-color,transform] duration-[250ms] hover:border-[rgba(125,197,66,0.3)] hover:-translate-y-0.5"
-                                style={{ background: "rgba(255,255,255,0.03)" }}
-                            >
-                                <div className="flex items-center justify-between">
-                                    <span className="text-[1.8rem]">{icon}</span>
-                                    <span className="text-[2rem] font-black" style={{ color: accent }}>
-                                        {value}
-                                    </span>
-                                </div>
-                                <div className="mt-2 text-[0.82rem] font-semibold text-[rgba(240,235,225,0.5)] tracking-[0.04em] uppercase">
-                                    {label}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+	async function handleCreateDonation(event: FormEvent<HTMLFormElement>): Promise<void> {
+		event.preventDefault();
+		setNotice(null);
 
-                    {/* Action bar */}
-                    <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-                        <h2 className="text-[1.15rem] font-bold text-[#F0EBE1]">
-                            Your Donations
-                        </h2>
-                        {/* TODO: Replace with modal/form to POST /api/donations */}
-                        <button
-                            type="button"
-                            className="inline-flex items-center gap-2 bg-[#7DC542] text-[#0B1A08] border-none rounded-[10px] px-7 py-[14px] text-[0.9rem] font-extrabold tracking-[0.06em] cursor-pointer transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_28px_rgba(125,197,66,0.35)]"
-                        >
-                            <span className="text-[1.1rem]">➕</span>
-                            Create New Donation
-                        </button>
-                    </div>
+		const nextErrors = validateDonationForm(form);
+		setErrors(nextErrors);
+		if (Object.keys(nextErrors).length > 0) {
+			setNotice({ type: "error", message: "Please fix the highlighted fields." });
+			return;
+		}
 
-                    {/* Donations list */}
-                    <div className="flex flex-col gap-3">
-                        {donations.map((donation) => {
-                            const statusStyle = STATUS_COLORS[donation.status];
-                            return (
-                                <div
-                                    key={donation.donation_id}
-                                    className="rounded-xl px-6 py-5 border cursor-pointer transition-[border-color,background,transform] duration-[250ms]"
-                                    onMouseEnter={() => setHoveredCard(donation.donation_id)}
-                                    onMouseLeave={() => setHoveredCard(null)}
-                                    style={{
-                                        background: hoveredCard === donation.donation_id ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.03)",
-                                        border: `1px solid ${hoveredCard === donation.donation_id ? "rgba(125,197,66,0.25)" : "rgba(125,197,66,0.1)"}`,
-                                        transform: hoveredCard === donation.donation_id ? "translateY(-1px)" : "none",
-                                    }}
-                                >
-                                    <div className="flex items-start justify-between gap-4 flex-wrap">
-                                        <div className="flex-1 min-w-[200px]">
-                                            <div className="flex items-center gap-2.5 mb-1.5">
-                                                <span className="text-[1.05rem] font-bold text-[#F0EBE1]">
-                                                    {donation.food_type}
-                                                </span>
-                                                <span
-                                                    className="text-[0.72rem] font-bold px-2.5 py-[3px] rounded-xl tracking-[0.04em]"
-                                                    style={{ color: statusStyle.text, background: statusStyle.bg }}
-                                                >
-                                                    {statusStyle.label}
-                                                </span>
-                                            </div>
-                                            <p className="text-[0.84rem] text-[rgba(240,235,225,0.6)] leading-[1.5] mb-2.5">
-                                                {donation.description}
-                                            </p>
-                                            <div className="flex gap-5 flex-wrap text-[0.78rem] text-[rgba(240,235,225,0.45)]">
-                                                <span>📦 {donation.quantity} {donation.unit}</span>
-                                                <span>📍 {donation.pickup_location}</span>
-                                                <span>⏰ Expires {donation.expiry_date}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </>
-            )}
-        </DashboardLayout>
-    );
+		setSubmitting(true);
+		try {
+			const createdDonation = await createDonation(toPayload(form));
+			setDonations((prev) => [createdDonation, ...prev]);
+			setForm(INITIAL_FORM);
+			setNotice({ type: "success", message: "Donation listing created successfully." });
+		} catch (err) {
+			const message = err instanceof Error ? err.message : "Failed to create donation.";
+			setNotice({ type: "error", message });
+		} finally {
+			setSubmitting(false);
+		}
+	}
+
+	return (
+		<DashboardLayout>
+			{loading ? (
+				<div className="space-y-3">
+					<div className="skeleton-shimmer h-[100px]" />
+					<div className="skeleton-shimmer h-[100px]" />
+					<div className="skeleton-shimmer h-[220px]" />
+				</div>
+			) : (
+				<div className="space-y-6">
+					<div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+						{stats.map((item) => (
+							<div key={item.label} className="rounded-xl border border-white/10 bg-white/5 px-5 py-4">
+								<p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#F0EBE1]/60">{item.label}</p>
+								<p className="mt-1 text-3xl font-black text-[#7DC542]">{item.value}</p>
+							</div>
+						))}
+					</div>
+
+					<div className="flex flex-wrap items-center justify-between gap-3">
+						<h2 className="text-xl font-bold text-[#F0EBE1]">Your Donations</h2>
+						<button
+							type="button"
+							className="rounded-lg bg-[#7DC542] px-5 py-2.5 text-sm font-extrabold text-[#0B1A08] transition hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(125,197,66,0.3)]"
+							onClick={() => formSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+						>
+							Create New Donation
+						</button>
+					</div>
+
+					<section ref={formSectionRef} className="rounded-xl border border-white/10 bg-white/5 p-5">
+						<h3 className="text-lg font-bold text-[#F0EBE1]">Create Donation Listing</h3>
+						<p className="mt-1 text-sm text-[#F0EBE1]/65">
+							Add your surplus food details so distribution centers can request a pickup.
+						</p>
+
+						{notice ? (
+							<div className="mt-4">
+								<StatusNotice type={notice.type} message={notice.message} onClose={() => setNotice(null)} />
+							</div>
+						) : null}
+
+						<form className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2" onSubmit={handleCreateDonation} noValidate>
+							<div>
+								<label htmlFor="foodType" className="mb-1.5 block text-xs font-bold uppercase tracking-[0.08em] text-[#F0EBE1]/70">
+									Food Type
+								</label>
+								<input
+									id="foodType"
+									type="text"
+									value={form.foodType}
+									onChange={(event) => handleFieldChange("foodType", event.target.value)}
+									className="w-full rounded-lg border border-white/15 bg-[#111F0F] px-3 py-2 text-sm text-[#F0EBE1] outline-none transition focus:border-[#7DC542]"
+									placeholder="Fresh bread"
+								/>
+								{errors.foodType ? <p className="mt-1 text-xs font-semibold text-rose-300">{errors.foodType}</p> : null}
+							</div>
+
+							<div>
+								<label htmlFor="quantity" className="mb-1.5 block text-xs font-bold uppercase tracking-[0.08em] text-[#F0EBE1]/70">
+									Quantity
+								</label>
+								<input
+									id="quantity"
+									type="number"
+									min="0.01"
+									step="0.01"
+									value={form.quantity}
+									onChange={(event) => handleFieldChange("quantity", event.target.value)}
+									className="w-full rounded-lg border border-white/15 bg-[#111F0F] px-3 py-2 text-sm text-[#F0EBE1] outline-none transition focus:border-[#7DC542]"
+									placeholder="20"
+								/>
+								{errors.quantity ? <p className="mt-1 text-xs font-semibold text-rose-300">{errors.quantity}</p> : null}
+							</div>
+
+							<div>
+								<label htmlFor="unit" className="mb-1.5 block text-xs font-bold uppercase tracking-[0.08em] text-[#F0EBE1]/70">
+									Unit
+								</label>
+								<input
+									id="unit"
+									type="text"
+									value={form.unit}
+									onChange={(event) => handleFieldChange("unit", event.target.value)}
+									className="w-full rounded-lg border border-white/15 bg-[#111F0F] px-3 py-2 text-sm text-[#F0EBE1] outline-none transition focus:border-[#7DC542]"
+									placeholder="kg, servings, boxes"
+								/>
+								{errors.unit ? <p className="mt-1 text-xs font-semibold text-rose-300">{errors.unit}</p> : null}
+							</div>
+
+							<div>
+								<label htmlFor="expirationDate" className="mb-1.5 block text-xs font-bold uppercase tracking-[0.08em] text-[#F0EBE1]/70">
+									Expiration Date
+								</label>
+								<input
+									id="expirationDate"
+									type="date"
+									value={form.expirationDate}
+									onChange={(event) => handleFieldChange("expirationDate", event.target.value)}
+									className="w-full rounded-lg border border-white/15 bg-[#111F0F] px-3 py-2 text-sm text-[#F0EBE1] outline-none transition focus:border-[#7DC542]"
+								/>
+								{errors.expirationDate ? <p className="mt-1 text-xs font-semibold text-rose-300">{errors.expirationDate}</p> : null}
+							</div>
+
+							<div className="md:col-span-2">
+								<label htmlFor="pickupAddress" className="mb-1.5 block text-xs font-bold uppercase tracking-[0.08em] text-[#F0EBE1]/70">
+									Pickup Address
+								</label>
+								<input
+									id="pickupAddress"
+									type="text"
+									value={form.pickupAddress}
+									onChange={(event) => handleFieldChange("pickupAddress", event.target.value)}
+									className="w-full rounded-lg border border-white/15 bg-[#111F0F] px-3 py-2 text-sm text-[#F0EBE1] outline-none transition focus:border-[#7DC542]"
+									placeholder="No. 12, Main Street, Colombo"
+								/>
+								{errors.pickupAddress ? <p className="mt-1 text-xs font-semibold text-rose-300">{errors.pickupAddress}</p> : null}
+							</div>
+
+							<div>
+								<label htmlFor="availabilityTime" className="mb-1.5 block text-xs font-bold uppercase tracking-[0.08em] text-[#F0EBE1]/70">
+									Availability Time
+								</label>
+								<input
+									id="availabilityTime"
+									type="time"
+									value={form.availabilityTime}
+									onChange={(event) => handleFieldChange("availabilityTime", event.target.value)}
+									className="w-full rounded-lg border border-white/15 bg-[#111F0F] px-3 py-2 text-sm text-[#F0EBE1] outline-none transition focus:border-[#7DC542]"
+								/>
+								{errors.availabilityTime ? <p className="mt-1 text-xs font-semibold text-rose-300">{errors.availabilityTime}</p> : null}
+							</div>
+
+							<div className="md:col-span-2">
+								<button
+									type="submit"
+									disabled={submitting}
+									className="inline-flex items-center rounded-lg bg-[#7DC542] px-6 py-2.5 text-sm font-extrabold text-[#0B1A08] transition hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(125,197,66,0.3)] disabled:cursor-not-allowed disabled:opacity-60"
+								>
+									{submitting ? "CREATING..." : "CREATE DONATION"}
+								</button>
+							</div>
+						</form>
+					</section>
+
+					<section className="space-y-3">
+						{donations.map((donation) => (
+							<article key={donation.donation_id} className="rounded-xl border border-white/10 bg-white/5 p-4">
+								<div className="flex flex-wrap items-center justify-between gap-3">
+									<div>
+										<p className="text-base font-bold text-[#F0EBE1]">{donation.food_type}</p>
+										<p className="mt-0.5 text-sm text-[#F0EBE1]/65">{donation.description}</p>
+									</div>
+									<span className={`rounded-full px-3 py-1 text-xs font-extrabold tracking-wide ${STATUS_CLASSES[donation.status]}`}>
+										{donation.status}
+									</span>
+								</div>
+								<div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-[#F0EBE1]/70">
+									<span>Quantity: {donation.quantity} {donation.unit}</span>
+									<span>Pickup: {donation.pickup_location}</span>
+									<span>Expires: {donation.expiry_date}</span>
+									<span>Available At: {donation.availability_time}</span>
+								</div>
+							</article>
+						))}
+					</section>
+				</div>
+			)}
+		</DashboardLayout>
+	);
 }
