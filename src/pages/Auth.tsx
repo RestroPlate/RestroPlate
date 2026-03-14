@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { AccountType, LoginFormData, RegisterFormData } from "../types/Auth";
-import { login, register } from "../services/authService";
+import { login, register, logout } from "../services/authService";
 
 type AuthMode = "login" | "register";
 type RegisterStep = "selectType" | "form";
@@ -45,9 +45,11 @@ export default function Auth() {
     const [loginLoading, setLoginLoading] = useState(false);
     const [registerError, setRegisterError] = useState<string | null>(null);
     const [registerLoading, setRegisterLoading] = useState(false);
+    const [registrationSuccess, setRegistrationSuccess] = useState<string | null>(null);
 
     const switchMode = (next: AuthMode) => {
         setMode(next);
+        setRegistrationSuccess(null);
         setRegisterStep("selectType");
         setSelectedType(null);
         setLoginData(INITIAL_LOGIN);
@@ -94,9 +96,18 @@ export default function Auth() {
         setRegisterError(null);
         setRegisterLoading(true);
         try {
-            const user = await register(registerData);
-            const dashboardPath = user.role === "DONOR" ? "/dashboard/donor" : "/dashboard/center";
-            navigate(dashboardPath);
+            await register(registerData);
+            
+            // Clear the auto-saved session to force manual login
+            logout();
+            
+            // Switch to login mode
+            setMode("login");
+            setRegistrationSuccess("Account created successfully! Please log in.");
+            
+            // Pre-fill login email with the newly registered one
+            setLoginData(prev => ({ ...prev, email: registerData.email }));
+            
         } catch (err) {
             setRegisterError(err instanceof Error ? err.message : "Registration failed. Please try again.");
         } finally {
@@ -143,7 +154,14 @@ export default function Auth() {
 
                     {/* ── LOGIN FORM ── */}
                     {mode === "login" && (
-                        <form onSubmit={handleLoginSubmit} className="flex flex-col gap-4">
+                        <div className="flex flex-col gap-4">
+                            {registrationSuccess && (
+                                <div className="rounded-lg px-[14px] py-2.5 text-[0.82rem] text-[#7DC542] mb-2 text-center"
+                                    style={{ background: "rgba(125,197,66,0.1)", border: "1px solid rgba(125,197,66,0.3)" }}>
+                                    {registrationSuccess}
+                                </div>
+                            )}
+                            <form onSubmit={handleLoginSubmit} className="flex flex-col gap-4">
                             <div className="flex flex-col gap-1">
                                 <label className="text-[rgba(240,235,225,0.65)] text-[0.8rem] font-semibold">
                                     EMAIL ADDRESS
@@ -184,6 +202,7 @@ export default function Auth() {
                                 {loginLoading ? "LOGGING IN..." : "LOG IN"}
                             </button>
                         </form>
+                        </div>
                     )}
 
                     {/* ── REGISTER — STEP 1: Select Account Type ── */}
