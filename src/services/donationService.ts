@@ -32,6 +32,7 @@ function extractErrorMessage(err: unknown, fallback: string): string {
 }
 
 function normalizeStatus(status: string | undefined): DonationStatus {
+	if (status === "COMPLETED") return "COMPLETED";
 	if (status === "REQUESTED") return "REQUESTED";
 	if (status === "COLLECTED") return "COLLECTED";
 	return "AVAILABLE";

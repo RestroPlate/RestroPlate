@@ -1,6 +1,6 @@
 import type { AccountType } from "./Auth";
 
-export type DonationStatus = "AVAILABLE" | "REQUESTED" | "COLLECTED";
+export type DonationStatus = "AVAILABLE" | "REQUESTED" | "COLLECTED" | "COMPLETED";
 
 export interface Donation {
 	donation_id: number;

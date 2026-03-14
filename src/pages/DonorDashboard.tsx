@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import DonationList from "../components/DonationList";
 import StatusNotice from "../components/StatusNotice";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
 import { createDonation } from "../services/donationService";
@@ -62,12 +63,6 @@ const mockDonations: Donation[] = [
 		created_at: "2026-03-03T06:45:00Z",
 	},
 ];
-
-const STATUS_CLASSES: Record<Donation["status"], string> = {
-	AVAILABLE: "bg-emerald-500/15 text-emerald-300",
-	REQUESTED: "bg-amber-500/15 text-amber-300",
-	COLLECTED: "bg-sky-500/15 text-sky-300",
-};
 
 function validateDonationForm(values: DonationFormState): FormErrors {
 	const errors: FormErrors = {};
@@ -308,27 +303,7 @@ export default function DonorDashboard() {
 						</form>
 					</section>
 
-					<section className="space-y-3">
-						{donations.map((donation) => (
-							<article key={donation.donation_id} className="rounded-xl border border-white/10 bg-white/5 p-4">
-								<div className="flex flex-wrap items-center justify-between gap-3">
-									<div>
-										<p className="text-base font-bold text-[#F0EBE1]">{donation.food_type}</p>
-										<p className="mt-0.5 text-sm text-[#F0EBE1]/65">{donation.description}</p>
-									</div>
-									<span className={`rounded-full px-3 py-1 text-xs font-extrabold tracking-wide ${STATUS_CLASSES[donation.status]}`}>
-										{donation.status}
-									</span>
-								</div>
-								<div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-[#F0EBE1]/70">
-									<span>Quantity: {donation.quantity} {donation.unit}</span>
-									<span>Pickup: {donation.pickup_location}</span>
-									<span>Expires: {donation.expiry_date}</span>
-									<span>Available At: {donation.availability_time}</span>
-								</div>
-							</article>
-						))}
-					</section>
+					<DonationList donations={donations} />
 				</div>
 			)}
 		</DashboardLayout>
