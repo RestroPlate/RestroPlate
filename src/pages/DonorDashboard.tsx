@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import StatusNotice from "../components/StatusNotice";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
-import { createDonation } from "../services/donationService";
+import { createDonation, getMyDonations } from "../services/donationService";
 import type { CreateDonationPayload, Donation } from "../types/Dashboard";
 
 interface DonationFormState {
@@ -23,45 +23,6 @@ const INITIAL_FORM: DonationFormState = {
 	pickupAddress: "",
 	availabilityTime: "",
 };
-
-const mockDonations: Donation[] = [
-	{
-		donation_id: 1,
-		food_type: "Fresh Bread",
-		description: "20 loaves of whole wheat bread baked today.",
-		quantity: 20,
-		unit: "Loaves",
-		expiry_date: "2026-03-06",
-		pickup_location: "Main Street Bakery, Colombo 03",
-		availability_time: "14:00",
-		status: "AVAILABLE",
-		created_at: "2026-03-05T08:30:00Z",
-	},
-	{
-		donation_id: 2,
-		food_type: "Rice and Curry",
-		description: "Packed meal boxes from lunch service.",
-		quantity: 45,
-		unit: "Servings",
-		expiry_date: "2026-03-05",
-		pickup_location: "Hilton Colombo, Colombo 01",
-		availability_time: "16:30",
-		status: "REQUESTED",
-		created_at: "2026-03-04T10:15:00Z",
-	},
-	{
-		donation_id: 3,
-		food_type: "Mixed Vegetables",
-		description: "Unsold fresh produce in good condition.",
-		quantity: 30,
-		unit: "Kg",
-		expiry_date: "2026-03-07",
-		pickup_location: "Pettah Market Stall 12, Colombo 11",
-		availability_time: "11:00",
-		status: "COLLECTED",
-		created_at: "2026-03-03T06:45:00Z",
-	},
-];
 
 const STATUS_CLASSES: Record<Donation["status"], string> = {
 	AVAILABLE: "bg-emerald-500/15 text-emerald-300",
@@ -117,21 +78,34 @@ export default function DonorDashboard() {
 	const formSectionRef = useRef<HTMLElement | null>(null);
 
 	useEffect(() => {
-		const timer = setTimeout(() => {
-			setDonations(mockDonations);
-			setLoading(false);
-		}, 350);
-		return () => clearTimeout(timer);
+		let active = true;
+
+		async function loadDonations(): Promise<void> {
+			try {
+				const data = await getMyDonations();
+				if (!active) return;
+				setDonations(data);
+			} catch (err) {
+				if (!active) return;
+				const message = err instanceof Error ? err.message : "Failed to load donations.";
+				setNotice({ type: "error", message });
+			} finally {
+				if (active) setLoading(false);
+			}
+		}
+
+		void loadDonations();
+
+		return () => {
+			active = false;
+		};
 	}, []);
 
-	const stats = useMemo(
-		() => [
-			{ label: "Total Donations", value: donations.length },
-			{ label: "Available", value: donations.filter((d) => d.status === "AVAILABLE").length },
-			{ label: "Collected", value: donations.filter((d) => d.status === "COLLECTED").length },
-		],
-		[donations],
-	);
+	const stats = [
+		{ label: "Total Donations", value: donations.length },
+		{ label: "Available", value: donations.filter((donation) => donation.status === "AVAILABLE").length },
+		{ label: "Collected", value: donations.filter((donation) => donation.status === "COLLECTED").length },
+	];
 
 	function handleFieldChange(field: keyof DonationFormState, value: string): void {
 		setForm((prev) => ({ ...prev, [field]: value }));
@@ -152,7 +126,21 @@ export default function DonorDashboard() {
 		setSubmitting(true);
 		try {
 			const createdDonation = await createDonation(toPayload(form));
-			setDonations((prev) => [createdDonation, ...prev]);
+			setDonations((prev) => {
+				const withoutDuplicate = prev.filter((donation) => donation.donation_id !== createdDonation.donation_id);
+				return [createdDonation, ...withoutDuplicate];
+			});
+
+			try {
+				const refreshedDonations = await getMyDonations();
+				setDonations((current) => {
+					if (refreshedDonations.length === 0) return current;
+					return refreshedDonations;
+				});
+			} catch {
+				// Keep the newly created donation visible even if the refresh request fails.
+			}
+
 			setForm(INITIAL_FORM);
 			setNotice({ type: "success", message: "Donation listing created successfully." });
 		} catch (err) {
@@ -309,25 +297,31 @@ export default function DonorDashboard() {
 					</section>
 
 					<section className="space-y-3">
-						{donations.map((donation) => (
-							<article key={donation.donation_id} className="rounded-xl border border-white/10 bg-white/5 p-4">
-								<div className="flex flex-wrap items-center justify-between gap-3">
-									<div>
-										<p className="text-base font-bold text-[#F0EBE1]">{donation.food_type}</p>
-										<p className="mt-0.5 text-sm text-[#F0EBE1]/65">{donation.description}</p>
+						{donations.length === 0 ? (
+							<div className="rounded-xl border border-dashed border-white/15 bg-white/5 p-6 text-sm text-[#F0EBE1]/65">
+								No donations found for this account yet.
+							</div>
+						) : (
+							donations.map((donation) => (
+								<article key={donation.donation_id} className="rounded-xl border border-white/10 bg-white/5 p-4">
+									<div className="flex flex-wrap items-center justify-between gap-3">
+										<div>
+											<p className="text-base font-bold text-[#F0EBE1]">{donation.food_type}</p>
+											<p className="mt-0.5 text-sm text-[#F0EBE1]/65">{donation.description}</p>
+										</div>
+										<span className={`rounded-full px-3 py-1 text-xs font-extrabold tracking-wide ${STATUS_CLASSES[donation.status]}`}>
+											{donation.status}
+										</span>
 									</div>
-									<span className={`rounded-full px-3 py-1 text-xs font-extrabold tracking-wide ${STATUS_CLASSES[donation.status]}`}>
-										{donation.status}
-									</span>
-								</div>
-								<div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-[#F0EBE1]/70">
-									<span>Quantity: {donation.quantity} {donation.unit}</span>
-									<span>Pickup: {donation.pickup_location}</span>
-									<span>Expires: {donation.expiry_date}</span>
-									<span>Available At: {donation.availability_time}</span>
-								</div>
-							</article>
-						))}
+									<div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-[#F0EBE1]/70">
+										<span>Quantity: {donation.quantity} {donation.unit}</span>
+										<span>Pickup: {donation.pickup_location}</span>
+										<span>Expires: {donation.expiry_date}</span>
+										<span>Available At: {donation.availability_time}</span>
+									</div>
+								</article>
+							))
+						)}
 					</section>
 				</div>
 			)}
