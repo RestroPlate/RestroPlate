@@ -1,11 +1,6 @@
 import axios from "axios";
 import apiClient from "../api/axiosSetup";
-<<<<<<< Updated upstream
-import type { CreateDonationPayload, Donation, DonationStatus } from "../types/Dashboard";
-=======
-import { getCurrentUser } from "./authService";
 import type { CreateDonationPayload, Donation, DonationStatus, UpdateDonationPayload } from "../types/Dashboard";
->>>>>>> Stashed changes
 
 interface DonationApiResponse {
 	donation_id?: number;
@@ -44,23 +39,47 @@ function normalizeStatus(status: string | undefined): DonationStatus {
 	return "AVAILABLE";
 }
 
-function mapDonationResponse(data: DonationApiResponse, payload: CreateDonationPayload): Donation {
+function mapDonationResponse(data: DonationApiResponse, payload?: Partial<CreateDonationPayload>): Donation {
 	return {
 		donation_id: data.donation_id ?? data.donationId ?? Date.now(),
-		food_type: data.food_type ?? data.foodType ?? payload.foodType,
-		description: data.description ?? `Surplus ${payload.foodType}`,
-		quantity: data.quantity ?? payload.quantity,
-		unit: data.unit ?? payload.unit,
-		expiry_date: data.expiry_date ?? data.expirationDate ?? payload.expirationDate,
-		pickup_location: data.pickup_location ?? data.pickupAddress ?? payload.pickupAddress,
-		availability_time: data.availability_time ?? data.availabilityTime ?? payload.availabilityTime,
+		food_type: data.food_type ?? data.foodType ?? payload?.foodType ?? "Unknown",
+		description: data.description ?? `Surplus ${payload?.foodType ?? "Food"}`,
+		quantity: data.quantity ?? payload?.quantity ?? 1,
+		unit: data.unit ?? payload?.unit ?? "Unit",
+		expiry_date: data.expiry_date ?? data.expirationDate ?? payload?.expirationDate ?? new Date().toISOString(),
+		pickup_location: data.pickup_location ?? data.pickupAddress ?? payload?.pickupAddress ?? "Unknown",
+		availability_time: data.availability_time ?? data.availabilityTime ?? payload?.availabilityTime ?? "Unknown",
 		status: normalizeStatus(data.status),
 		created_at: data.created_at ?? data.createdAt ?? new Date().toISOString(),
 	};
 }
 
-<<<<<<< Updated upstream
-=======
+interface DonationsListResponse {
+	items?: DonationApiResponse[];
+	donations?: DonationApiResponse[];
+	data?: DonationApiResponse[];
+}
+
+const CACHE_KEY = "donations_cache";
+
+function readCachedDonations(): Donation[] {
+	try {
+		return JSON.parse(localStorage.getItem(CACHE_KEY) || "[]");
+	} catch {
+		return [];
+	}
+}
+
+function writeCachedDonations(donations: Donation[]): void {
+	localStorage.setItem(CACHE_KEY, JSON.stringify(donations));
+}
+
+function mergeDonations(server: Donation[], cached: Donation[]): Donation[] {
+	const map = new Map(cached.map((d) => [d.donation_id, d]));
+	server.forEach((d) => map.set(d.donation_id, d));
+	return Array.from(map.values());
+}
+
 function extractDonationsList(data: DonationApiResponse[] | DonationsListResponse): DonationApiResponse[] {
 	if (Array.isArray(data)) return data;
 	if (Array.isArray(data.items)) return data.items;
@@ -94,7 +113,6 @@ export async function getAllDonations(status?: string): Promise<Donation[]> {
 	}
 }
 
->>>>>>> Stashed changes
 export async function createDonation(payload: CreateDonationPayload): Promise<Donation> {
 	try {
 		const { data } = await apiClient.post<DonationApiResponse>("/api/donations", payload);
