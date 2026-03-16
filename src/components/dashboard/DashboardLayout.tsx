@@ -18,7 +18,7 @@ const SIDEBAR_LINKS_DONOR = [
 const SIDEBAR_LINKS_CENTER = [
     { label: "Dashboard", icon: "📊", path: "/dashboard/center" },
     { label: "Inventory", icon: "📦", path: "/dashboard/center" },
-    { label: "Browse Donations", icon: "🔍", path: "/dashboard/center" },
+    { label: "Browse Donations", icon: "🔍", path: "/dashboard/center/explore" },
 ];
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {

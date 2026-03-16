@@ -113,6 +113,23 @@ export async function getAllDonations(status?: string): Promise<Donation[]> {
 	}
 }
 
+export interface AvailableDonationsParams {
+	location?: string;
+	foodType?: string;
+	sortBy?: string;
+	status?: string;
+}
+
+export async function getAvailableDonations(params?: AvailableDonationsParams): Promise<Donation[]> {
+	try {
+		const queryParams = { status: "AVAILABLE", ...params };
+		const { data } = await apiClient.get<DonationApiResponse[] | DonationsListResponse>("/api/donations/available", { params: queryParams });
+		return extractDonationsList(data).map((item) => mapDonationResponse(item));
+	} catch (err) {
+		throw new Error(extractErrorMessage(err, "Failed to load available donations. Please try again."));
+	}
+}
+
 export async function createDonation(payload: CreateDonationPayload): Promise<Donation> {
 	try {
 		const { data } = await apiClient.post<DonationApiResponse>("/api/donations", payload);
