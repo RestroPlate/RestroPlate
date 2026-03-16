@@ -24,6 +24,15 @@ export interface CreateDonationPayload {
 	availabilityTime: string;
 }
 
+export interface UpdateDonationPayload {
+	foodType: string;
+	quantity: number;
+	unit: string;
+	expirationDate: string;
+	pickupAddress: string;
+	availabilityTime: string;
+}
+
 export interface DistributionInventory {
 	inventory_id: number;
 	donation_id: number;
