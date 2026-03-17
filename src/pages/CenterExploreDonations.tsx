@@ -1,222 +1,360 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
 import { getAvailableDonations } from "../services/donationService";
+import { submitDonationRequest } from "../services/donationRequestService";
 import type { Donation } from "../types/Dashboard";
+
+function formatDate(value: string): string {
+	const parsed = new Date(value);
+	if (Number.isNaN(parsed.getTime())) return value;
+	return parsed.toLocaleDateString("en-US", {
+		month: "short",
+		day: "numeric",
+		year: "numeric",
+	});
+}
 
 export default function CenterExploreDonations() {
 	const [donations, setDonations] = useState<Donation[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
-
-	// Filter states
 	const [foodTypeFilter, setFoodTypeFilter] = useState("");
 	const [locationFilter, setLocationFilter] = useState("");
 	const [sortBy, setSortBy] = useState("expirationDate");
+	const [selectedDonation, setSelectedDonation] = useState<Donation | null>(null);
+	const [requestedQuantity, setRequestedQuantity] = useState("");
+	const [requesting, setRequesting] = useState(false);
+	const [requestError, setRequestError] = useState<string | null>(null);
+	const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-	const fetchDonations = async () => {
-		setLoading(true);
-		setError(null);
-		try {
-			const data = await getAvailableDonations({
-				foodType: foodTypeFilter || undefined,
-				location: locationFilter || undefined,
-				sortBy: sortBy || undefined,
-			});
-			setDonations(data);
-		} catch (err) {
-			setError(err instanceof Error ? err.message : "Failed to load donations");
-		} finally {
-			setLoading(false);
-		}
-	};
-
-	// Refetch when filters/sort change
 	useEffect(() => {
-		// Debounce fetching if needed, but for simplicity we fetch right away
-		const timer = setTimeout(() => {
-			fetchDonations();
-		}, 500);
-		return () => clearTimeout(timer);
+		const timeoutId = window.setTimeout(async () => {
+			setLoading(true);
+			setError(null);
+			try {
+				const data = await getAvailableDonations({
+					foodType: foodTypeFilter || undefined,
+					location: locationFilter || undefined,
+					sortBy: sortBy || undefined,
+				});
+				setDonations(data);
+			} catch (err) {
+				setError(
+					err instanceof Error
+						? err.message
+						: "Failed to load available donations.",
+				);
+			} finally {
+				setLoading(false);
+			}
+		}, 250);
+
+		return () => window.clearTimeout(timeoutId);
 	}, [foodTypeFilter, locationFilter, sortBy]);
 
-	const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-		setSortBy(e.target.value);
-	};
+	useEffect(() => {
+		if (!successMessage) return undefined;
+		const timeoutId = window.setTimeout(() => {
+			setSuccessMessage(null);
+		}, 4000);
+
+		return () => window.clearTimeout(timeoutId);
+	}, [successMessage]);
+
+	function openRequestModal(donation: Donation): void {
+		setSelectedDonation(donation);
+		setRequestedQuantity(String(donation.quantity));
+		setRequestError(null);
+	}
+
+	function closeRequestModal(): void {
+		if (requesting) return;
+		setSelectedDonation(null);
+		setRequestedQuantity("");
+		setRequestError(null);
+	}
+
+	async function handleRequestSubmit(
+		event: React.FormEvent<HTMLFormElement>,
+	): Promise<void> {
+		event.preventDefault();
+		if (!selectedDonation) return;
+
+		const quantity = Number(requestedQuantity);
+		if (Number.isNaN(quantity) || quantity <= 0) {
+			setRequestError("Enter a requested quantity greater than 0.");
+			return;
+		}
+
+		if (quantity > selectedDonation.quantity) {
+			setRequestError(
+				`Requested quantity cannot exceed ${selectedDonation.quantity} ${selectedDonation.unit}.`,
+			);
+			return;
+		}
+
+		setRequesting(true);
+		setRequestError(null);
+
+		try {
+			const response = await submitDonationRequest({
+				donationId: selectedDonation.donation_id,
+				requestedQuantity: quantity,
+			});
+
+			setDonations((current) =>
+				current.filter(
+					(donation) => donation.donation_id !== selectedDonation.donation_id,
+				),
+			);
+			setSuccessMessage(
+				`Request #${response.donationRequestId} submitted with ${response.status} status.`,
+			);
+			setSelectedDonation(null);
+			setRequestedQuantity("");
+		} catch (err) {
+			setRequestError(
+				err instanceof Error
+					? err.message
+					: "Failed to submit donation request.",
+			);
+		} finally {
+			setRequesting(false);
+		}
+	}
 
 	return (
 		<DashboardLayout>
-			<div className="flex flex-col gap-6">
-				<div>
-					<h2 className="text-[1.5rem] font-bold text-[#F0EBE1] tracking-tight mb-2">
-						Available Donations
-					</h2>
-					<p className="text-[0.95rem] text-[rgba(240,235,225,0.6)]">
-						Browse and filter currently available food donations.
-					</p>
-				</div>
-
-				{/* Filters Row */}
-				<div className="flex flex-col md:flex-row gap-4 mb-2">
-					<div className="flex-1">
-						<label className="block text-[0.85rem] font-bold text-[rgba(240,235,225,0.8)] mb-1.5 ml-1">
-							Search by Food Type
-						</label>
-						<div className="relative">
-							<span className="absolute left-4 top-1/2 -translate-y-1/2 text-[1.1rem] opacity-60">
-								🔍
-							</span>
-							<input
-								type="text"
-								className="auth-input pl-11 py-3 text-[0.95rem] w-full"
-								placeholder="e.g. Bread, Vegetables..."
-								value={foodTypeFilter}
-								onChange={(e) => setFoodTypeFilter(e.target.value)}
-							/>
-						</div>
-					</div>
-					<div className="flex-1">
-						<label className="block text-[0.85rem] font-bold text-[rgba(240,235,225,0.8)] mb-1.5 ml-1">
-							Filter by Location
-						</label>
-						<div className="relative">
-							<span className="absolute left-4 top-1/2 -translate-y-1/2 text-[1.1rem] opacity-60">
-								📍
-							</span>
-							<input
-								type="text"
-								className="auth-input pl-11 py-3 text-[0.95rem] w-full"
-								placeholder="e.g. Colombo, Kandy..."
-								value={locationFilter}
-								onChange={(e) => setLocationFilter(e.target.value)}
-							/>
-						</div>
-					</div>
-					<div className="w-full md:w-[200px]">
-						<label className="block text-[0.85rem] font-bold text-[rgba(240,235,225,0.8)] mb-1.5 ml-1">
-							Sort By
-						</label>
-						<select
-							className="auth-input py-3 text-[0.95rem] w-full cursor-pointer appearance-none"
-							value={sortBy}
-							onChange={handleSortChange}
-							style={{
-								backgroundImage:
-									'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%237DC542%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")',
-								backgroundRepeat: "no-repeat",
-								backgroundPosition: "right 1rem top 50%",
-								backgroundSize: "0.65rem auto",
-								paddingRight: "40px",
-							}}
-						>
-							<option value="expirationDate">Expiration Date</option>
-							<option value="createdAt">Creation Date</option>
-						</select>
-					</div>
-				</div>
-
-				{/* Status/Error */}
-				{error && (
-					<div className="p-4 rounded-xl bg-[rgba(255,80,80,0.1)] border border-[rgba(255,80,80,0.2)] flex items-center gap-3">
-						<span className="text-[1.2rem]">⚠️</span>
-						<p className="text-[#ff6b6b] text-[0.9rem] font-medium">{error}</p>
-					</div>
-				)}
-
-				{/* Loading Skeleton */}
-				{loading && (
-					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-						{[1, 2, 3, 4, 5, 6].map((i) => (
-							<div key={i} className="skeleton-shimmer h-[220px]" />
-						))}
-					</div>
-				)}
-
-				{/* Donations Grid */}
-				{!loading && !error && donations.length === 0 && (
-					<div
-						className="flex flex-col items-center justify-center py-16 px-4 text-center rounded-2xl border border-[rgba(125,197,66,0.1)]"
-						style={{ background: "rgba(255,255,255,0.02)" }}
-					>
-						<span className="text-[3rem] mb-4 opacity-50">🍽️</span>
-						<h3 className="text-[1.2rem] font-bold text-[#F0EBE1] mb-2">
-							No donations found
-						</h3>
-						<p className="text-[0.95rem] text-[rgba(240,235,225,0.5)] max-w-[400px]">
-							We couldn't find any available donations matching your current
-							filters. Try adjusting your search criteria.
+			<div className="space-y-6">
+				<div className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-white/5 p-6 lg:flex-row lg:items-end lg:justify-between">
+					<div className="max-w-2xl">
+						<p className="text-xs font-bold uppercase tracking-[0.16em] text-[#7DC542]">
+							Request Donation
+						</p>
+						<h2 className="mt-2 text-2xl font-black text-[#F0EBE1]">
+							Browse provider listings and request the quantity your center can collect.
+						</h2>
+						<p className="mt-2 text-sm text-[#F0EBE1]/65">
+							Creating a request uses the backend `POST /api/donation-requests`
+							endpoint and moves that donation into the requested state for the provider.
 						</p>
 					</div>
-				)}
 
-				{!loading && !error && donations.length > 0 && (
-					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+					<Link
+						to="/dashboard/center/requests"
+						className="inline-flex items-center justify-center rounded-xl border border-[#7DC542]/35 bg-[#7DC542]/10 px-4 py-3 text-sm font-bold text-[#7DC542] transition hover:border-[#7DC542]/60 hover:bg-[#7DC542]/15"
+					>
+						View Outgoing Requests
+					</Link>
+				</div>
+
+				<div className="grid gap-4 md:grid-cols-3">
+					<label className="space-y-2">
+						<span className="text-sm font-bold text-[#F0EBE1]">Food Type</span>
+						<input
+							type="text"
+							value={foodTypeFilter}
+							onChange={(event) => setFoodTypeFilter(event.target.value)}
+							placeholder="Rice, bread, vegetables"
+							className="auth-input w-full"
+						/>
+					</label>
+
+					<label className="space-y-2">
+						<span className="text-sm font-bold text-[#F0EBE1]">Location</span>
+						<input
+							type="text"
+							value={locationFilter}
+							onChange={(event) => setLocationFilter(event.target.value)}
+							placeholder="Colombo, Kandy"
+							className="auth-input w-full"
+						/>
+					</label>
+
+					<label className="space-y-2">
+						<span className="text-sm font-bold text-[#F0EBE1]">Sort By</span>
+						<select
+							value={sortBy}
+							onChange={(event) => setSortBy(event.target.value)}
+							className="auth-input w-full cursor-pointer"
+						>
+							<option value="expirationDate">Expiration Date</option>
+							<option value="createdAt">Newest First</option>
+						</select>
+					</label>
+				</div>
+
+				{successMessage ? (
+					<div className="rounded-xl border border-[#7DC542]/30 bg-[#7DC542]/10 px-4 py-3 text-sm font-semibold text-[#D6F2BE]">
+						{successMessage}
+					</div>
+				) : null}
+
+				{error ? (
+					<div className="rounded-xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm font-semibold text-rose-100">
+						{error}
+					</div>
+				) : null}
+
+				{loading ? (
+					<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+						{[1, 2, 3, 4, 5, 6].map((item) => (
+							<div key={item} className="skeleton-shimmer h-[240px]" />
+						))}
+					</div>
+				) : donations.length === 0 ? (
+					<div className="rounded-2xl border border-dashed border-white/15 bg-white/5 px-6 py-12 text-center">
+						<h3 className="text-lg font-bold text-[#F0EBE1]">
+							No available donations match these filters
+						</h3>
+						<p className="mt-2 text-sm text-[#F0EBE1]/55">
+							Adjust the food type or location filters, or check back after providers post
+							new donations.
+						</p>
+					</div>
+				) : (
+					<div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
 						{donations.map((donation) => (
-							<div
+							<article
 								key={donation.donation_id}
-								className="rounded-xl overflow-hidden border border-[rgba(125,197,66,0.12)] transition-[border-color,transform] duration-300 hover:border-[rgba(125,197,66,0.3)] hover:-translate-y-1 flex flex-col h-full bg-[rgba(255,255,255,0.03)]"
+								className="flex h-full flex-col rounded-2xl border border-white/10 bg-white/5 p-5 transition hover:border-[#7DC542]/30 hover:bg-white/[0.06]"
 							>
-								<div className="p-5 flex-1 flex flex-col">
-									<div className="flex justify-between items-start mb-3 gap-3">
-										<h3 className="text-[1.15rem] font-bold text-[#F0EBE1] leading-tight">
+								<div className="flex items-start justify-between gap-3">
+									<div>
+										<p className="text-xs font-bold uppercase tracking-[0.16em] text-[#7DC542]">
+											Donation #{donation.donation_id}
+										</p>
+										<h3 className="mt-2 text-xl font-bold text-[#F0EBE1]">
 											{donation.food_type}
 										</h3>
-										<span className="shrink-0 text-[0.7rem] font-bold uppercase tracking-[0.05em] px-2 py-1 rounded bg-[rgba(125,197,66,0.12)] text-[#7DC542]">
-											Available
-										</span>
 									</div>
 
-									<div className="flex items-center gap-2 text-[0.95rem] font-bold text-[#7DC542] mb-4">
-										<span className="text-[rgba(240,235,225,0.4)] font-normal text-[0.85rem]">
-											Quantity:
-										</span>
-										{donation.quantity} {donation.unit}
-									</div>
+									<span className="rounded-full bg-[#7DC542]/15 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-[#7DC542]">
+										{donation.status}
+									</span>
+								</div>
 
-									<div className="flex flex-col gap-2.5 mt-auto text-[0.85rem]">
-										<div className="flex items-start gap-2.5">
-											<span className="text-[1.05rem] opacity-70 shrink-0">
-												📍
-											</span>
-											<span className="text-[rgba(240,235,225,0.7)] leading-snug">
-												{donation.pickup_location}
-											</span>
-										</div>
-										<div className="flex items-center gap-2.5">
-											<span className="text-[1.05rem] opacity-70 shrink-0">
-												⏳
-											</span>
-											<span className="text-[rgba(240,235,225,0.7)] font-medium">
-												Expires:{" "}
-												{new Date(donation.expiry_date).toLocaleDateString()}
-											</span>
-										</div>
-										<div className="flex items-center gap-2.5">
-											<span className="text-[1.05rem] opacity-70 shrink-0">
-												⏰
-											</span>
-											<span className="text-[rgba(240,235,225,0.7)]">
-												Available: {donation.availability_time}
-											</span>
-										</div>
+								<div className="mt-5 space-y-3 text-sm text-[#F0EBE1]/70">
+									<div className="flex items-center justify-between gap-3">
+										<span>Quantity</span>
+										<span className="font-bold text-[#F0EBE1]">
+											{donation.quantity} {donation.unit}
+										</span>
+									</div>
+									<div className="flex items-center justify-between gap-3">
+										<span>Pickup Address</span>
+										<span className="max-w-[13rem] text-right font-medium text-[#F0EBE1]">
+											{donation.pickup_location}
+										</span>
+									</div>
+									<div className="flex items-center justify-between gap-3">
+										<span>Availability</span>
+										<span className="font-medium text-[#F0EBE1]">
+											{donation.availability_time}
+										</span>
+									</div>
+									<div className="flex items-center justify-between gap-3">
+										<span>Expires</span>
+										<span className="font-medium text-[#F0EBE1]">
+											{formatDate(donation.expiry_date)}
+										</span>
 									</div>
 								</div>
 
-								<div className="p-4 border-t border-[rgba(125,197,66,0.08)] bg-[rgba(0,0,0,0.2)]">
-									<button
-										type="button"
-										className="w-full py-2.5 rounded-lg font-bold text-[0.9rem] transition-all duration-200 bg-[rgba(125,197,66,0.15)] text-[#7DC542] hover:bg-[#7DC542] hover:text-[#0B1A08]"
-										onClick={() =>
-											console.log("Request donation", donation.donation_id)
-										}
-									>
-										Request Pickup
-									</button>
-								</div>
-							</div>
+								<button
+									type="button"
+									onClick={() => openRequestModal(donation)}
+									className="mt-6 inline-flex items-center justify-center rounded-xl bg-[#7DC542] px-4 py-3 text-sm font-black text-[#0B1A08] transition hover:bg-[#90D85A]"
+								>
+									Request Donation
+								</button>
+							</article>
 						))}
 					</div>
 				)}
 			</div>
+
+			{selectedDonation ? (
+				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-6">
+					<div className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#10170D] shadow-2xl">
+						<div className="border-b border-white/10 px-6 py-5">
+							<p className="text-xs font-bold uppercase tracking-[0.16em] text-[#7DC542]">
+								Confirm Request
+							</p>
+							<h3 className="mt-2 text-xl font-black text-[#F0EBE1]">
+								Request donation #{selectedDonation.donation_id}
+							</h3>
+							<p className="mt-2 text-sm text-[#F0EBE1]/60">
+								This creates a donation request for your distribution center and marks
+								the donation as requested on the provider side.
+							</p>
+						</div>
+
+						<form onSubmit={handleRequestSubmit} className="space-y-5 px-6 py-6">
+							<div className="grid gap-3 rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-[#F0EBE1]/70">
+								<div className="flex items-center justify-between gap-3">
+									<span>Food Type</span>
+									<span className="font-bold text-[#F0EBE1]">
+										{selectedDonation.food_type}
+									</span>
+								</div>
+								<div className="flex items-center justify-between gap-3">
+									<span>Available Quantity</span>
+									<span className="font-bold text-[#F0EBE1]">
+										{selectedDonation.quantity} {selectedDonation.unit}
+									</span>
+								</div>
+								<div className="flex items-center justify-between gap-3">
+									<span>Pickup Address</span>
+									<span className="max-w-[14rem] text-right font-medium text-[#F0EBE1]">
+										{selectedDonation.pickup_location}
+									</span>
+								</div>
+							</div>
+
+							<label className="space-y-2">
+								<span className="text-sm font-bold text-[#F0EBE1]">
+									Requested Quantity ({selectedDonation.unit})
+								</span>
+								<input
+									type="number"
+									min="0.01"
+									step="0.01"
+									value={requestedQuantity}
+									onChange={(event) => setRequestedQuantity(event.target.value)}
+									className="auth-input w-full"
+									required
+								/>
+							</label>
+
+							{requestError ? (
+								<div className="rounded-xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm font-semibold text-rose-100">
+									{requestError}
+								</div>
+							) : null}
+
+							<div className="flex gap-3">
+								<button
+									type="button"
+									onClick={closeRequestModal}
+									disabled={requesting}
+									className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold text-[#F0EBE1] transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+								>
+									Cancel
+								</button>
+								<button
+									type="submit"
+									disabled={requesting}
+									className="flex-1 rounded-xl bg-[#7DC542] px-4 py-3 text-sm font-black text-[#0B1A08] transition hover:bg-[#90D85A] disabled:cursor-not-allowed disabled:opacity-60"
+								>
+									{requesting ? "Submitting..." : "Confirm Request"}
+								</button>
+							</div>
+						</form>
+					</div>
+				</div>
+			) : null}
 		</DashboardLayout>
 	);
 }

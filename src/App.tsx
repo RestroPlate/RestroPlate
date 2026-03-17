@@ -7,6 +7,7 @@ import DonorMyDonations from "./pages/DonorMyDonations";
 import DonorExploreRequests from "./pages/DonorExploreRequests";
 import CenterDashboard from "./pages/CenterDashboard";
 import CenterExploreDonations from "./pages/CenterExploreDonations";
+import CenterOutgoingRequests from "./pages/CenterOutgoingRequests";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -59,6 +60,14 @@ function App() {
         element={
           <ProtectedRoute allowedRole="DISTRIBUTION_CENTER">
             <CenterExploreDonations />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/center/requests"
+        element={
+          <ProtectedRoute allowedRole="DISTRIBUTION_CENTER">
+            <CenterOutgoingRequests />
           </ProtectedRoute>
         }
       />

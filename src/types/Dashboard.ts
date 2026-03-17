@@ -49,3 +49,22 @@ export interface MockUser {
 	name: string;
 	role: AccountType;
 }
+
+export type DonationRequestStatus = "pending" | "approved" | "rejected";
+
+export interface DonationRequest {
+	donationRequestId: number;
+	donationId: number;
+	providerUserId: number;
+	distributionCenterUserId: number;
+	requestedQuantity: number;
+	status: DonationRequestStatus;
+	createdAt: string;
+	foodType: string;
+	unit: string;
+}
+
+export interface SubmitDonationRequestPayload {
+	donationId: number;
+	requestedQuantity: number;
+}

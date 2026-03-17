@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
-import { getProviderRequests } from "../services/donationRequestService";
+import { getCenterOutgoingRequests } from "../services/donationRequestService";
 import type { DonationRequest, DonationRequestStatus } from "../types/Dashboard";
 
 type RequestFilter = "all" | DonationRequestStatus;
@@ -30,7 +31,7 @@ function getStatusClasses(status: DonationRequestStatus): string {
 	}
 }
 
-export default function DonorExploreRequests() {
+export default function CenterOutgoingRequests() {
 	const [requests, setRequests] = useState<DonationRequest[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
@@ -44,7 +45,7 @@ export default function DonorExploreRequests() {
 			setError(null);
 
 			try {
-				const data = await getProviderRequests(
+				const data = await getCenterOutgoingRequests(
 					statusFilter === "all" ? undefined : statusFilter,
 				);
 				if (active) {
@@ -55,7 +56,7 @@ export default function DonorExploreRequests() {
 					setError(
 						err instanceof Error
 							? err.message
-							: "Failed to load donation requests.",
+							: "Failed to load outgoing donation requests.",
 					);
 				}
 			} finally {
@@ -72,7 +73,6 @@ export default function DonorExploreRequests() {
 		};
 	}, [statusFilter]);
 
-	const totalRequests = requests.length;
 	const pendingRequests = requests.filter((request) => request.status === "pending").length;
 	const approvedRequests = requests.filter((request) => request.status === "approved").length;
 	const rejectedRequests = requests.filter((request) => request.status === "rejected").length;
@@ -83,38 +83,47 @@ export default function DonorExploreRequests() {
 				<div className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-white/5 p-6 lg:flex-row lg:items-end lg:justify-between">
 					<div className="max-w-2xl">
 						<p className="text-xs font-bold uppercase tracking-[0.16em] text-[#7DC542]">
-							Provider Requests
+							Outgoing Requests
 						</p>
 						<h2 className="mt-2 text-2xl font-black text-[#F0EBE1]">
-							View requests submitted against your donations.
+							Track every donation request your center has sent to providers.
 						</h2>
 						<p className="mt-2 text-sm text-[#F0EBE1]/65">
-							This page reads `GET /api/donation-requests` so providers can monitor
-							pending, approved, and rejected requests.
+							This page reads `GET /api/donation-requests/outgoing` so your center can
+							follow request status changes from pending through approval or rejection.
 						</p>
 					</div>
 
-					<label className="space-y-2">
-						<span className="text-sm font-bold text-[#F0EBE1]">Status Filter</span>
-						<select
-							value={statusFilter}
-							onChange={(event) => setStatusFilter(event.target.value as RequestFilter)}
-							className="auth-input min-w-[12rem] cursor-pointer"
+					<div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+						<label className="space-y-2">
+							<span className="text-sm font-bold text-[#F0EBE1]">Status Filter</span>
+							<select
+								value={statusFilter}
+								onChange={(event) => setStatusFilter(event.target.value as RequestFilter)}
+								className="auth-input min-w-[12rem] cursor-pointer"
+							>
+								{FILTERS.map((filter) => (
+									<option key={filter} value={filter}>
+										{filter === "all"
+											? "All statuses"
+											: `${filter.charAt(0).toUpperCase()}${filter.slice(1)}`}
+									</option>
+								))}
+							</select>
+						</label>
+
+						<Link
+							to="/dashboard/center/explore"
+							className="inline-flex items-center justify-center rounded-xl bg-[#7DC542] px-4 py-3 text-sm font-black text-[#0B1A08] transition hover:bg-[#90D85A]"
 						>
-							{FILTERS.map((filter) => (
-								<option key={filter} value={filter}>
-									{filter === "all"
-										? "All statuses"
-										: `${filter.charAt(0).toUpperCase()}${filter.slice(1)}`}
-								</option>
-							))}
-						</select>
-					</label>
+							Request Another Donation
+						</Link>
+					</div>
 				</div>
 
 				<div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
 					{[
-						{ label: "Total", value: totalRequests },
+						{ label: "Total", value: requests.length },
 						{ label: "Pending", value: pendingRequests },
 						{ label: "Approved", value: approvedRequests },
 						{ label: "Rejected", value: rejectedRequests },
@@ -146,11 +155,10 @@ export default function DonorExploreRequests() {
 				) : requests.length === 0 ? (
 					<div className="rounded-2xl border border-dashed border-white/15 bg-white/5 px-6 py-12 text-center">
 						<h3 className="text-lg font-bold text-[#F0EBE1]">
-							No requests found for this filter
+							No outgoing requests yet
 						</h3>
 						<p className="mt-2 text-sm text-[#F0EBE1]/55">
-							Requests created by distribution centers will appear here once they target
-							one of your donations.
+							Start from the browse donations page to create your first provider request.
 						</p>
 					</div>
 				) : (
@@ -161,7 +169,7 @@ export default function DonorExploreRequests() {
 									<tr className="text-left text-xs font-bold uppercase tracking-[0.12em] text-[#F0EBE1]/55">
 										<th className="px-5 py-4">Request</th>
 										<th className="px-5 py-4">Donation</th>
-										<th className="px-5 py-4">Center</th>
+										<th className="px-5 py-4">Provider</th>
 										<th className="px-5 py-4">Quantity</th>
 										<th className="px-5 py-4">Food</th>
 										<th className="px-5 py-4">Status</th>
@@ -178,9 +186,7 @@ export default function DonorExploreRequests() {
 												#{request.donationRequestId}
 											</td>
 											<td className="px-5 py-4">#{request.donationId}</td>
-											<td className="px-5 py-4">
-												User #{request.distributionCenterUserId}
-											</td>
+											<td className="px-5 py-4">User #{request.providerUserId}</td>
 											<td className="px-5 py-4">
 												{request.requestedQuantity} {request.unit}
 											</td>
@@ -229,9 +235,9 @@ export default function DonorExploreRequests() {
 											</span>
 										</div>
 										<div className="flex items-center justify-between gap-3">
-											<span>Distribution Center</span>
+											<span>Provider</span>
 											<span className="font-medium text-[#F0EBE1]">
-												User #{request.distributionCenterUserId}
+												User #{request.providerUserId}
 											</span>
 										</div>
 										<div className="flex items-center justify-between gap-3">
