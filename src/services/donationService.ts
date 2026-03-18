@@ -1,5 +1,6 @@
 import axios from "axios";
 import apiClient from "../api/axiosSetup";
+import { getCurrentUser } from "./authService";
 import type { CreateDonationPayload, Donation, DonationStatus, UpdateDonationPayload } from "../types/Dashboard";
 
 interface DonationApiResponse {
@@ -22,14 +23,10 @@ interface DonationApiResponse {
 	createdAt?: string;
 }
 
-function extractErrorMessage(err: unknown, fallback: string): string {
-	if (axios.isAxiosError(err)) {
-		const data = err.response?.data as { message?: string; title?: string } | undefined;
-		if (data?.message) return data.message;
-		if (data?.title) return data.title;
-	}
-	if (err instanceof Error) return err.message;
-	return fallback;
+interface DonationsListResponse {
+    items?: DonationApiResponse[];
+    donations?: DonationApiResponse[];
+    data?: DonationApiResponse[];
 }
 
 function normalizeStatus(status: string | undefined): DonationStatus {
@@ -61,10 +58,14 @@ function mapDonationResponse(data: DonationApiResponse | undefined | null, paylo
 	};
 }
 
-interface DonationsListResponse {
-	items?: DonationApiResponse[];
-	donations?: DonationApiResponse[];
-	data?: DonationApiResponse[];
+function writeCachedDonations(donations: Donation[]): void {
+    try {
+        const key = getDonationCacheKey();
+        if (!key) return;
+        localStorage.setItem(key, JSON.stringify(donations));
+    } catch {
+        // ignore
+    }
 }
 
 const CACHE_KEY = "donations_cache";
@@ -81,8 +82,11 @@ function readCachedDonations(): Donation[] {
 	}
 }
 
-function writeCachedDonations(donations: Donation[]): void {
-	localStorage.setItem(CACHE_KEY, JSON.stringify(donations));
+function normalizeStatus(status: string | undefined): DonationStatus {
+    if (status === "COMPLETED") return "COMPLETED";
+    if (status === "REQUESTED") return "REQUESTED";
+    if (status === "COLLECTED") return "COLLECTED";
+    return "AVAILABLE";
 }
 
 function mergeDonations(server: Donation[], cached: Donation[]): Donation[] {
@@ -106,28 +110,28 @@ function extractDonationsList(data: any): DonationApiResponse[] {
 }
 
 export async function getMyDonations(): Promise<Donation[]> {
-	try {
-		const { data } = await apiClient.get<DonationApiResponse[] | DonationsListResponse>("/api/donations/me");
-		const serverDonations = extractDonationsList(data).map((item) => mapDonationResponse(item));
-		const mergedDonations = mergeDonations(serverDonations, readCachedDonations());
-		writeCachedDonations(mergedDonations);
-		return mergedDonations;
-	} catch (err) {
-		if (axios.isAxiosError(err) && err.response?.status === 405) {
-			return readCachedDonations();
-		}
-		throw new Error(extractErrorMessage(err, "Failed to load donations. Please try again."));
-	}
+    try {
+        const { data } = await apiClient.get<DonationApiResponse[] | DonationsListResponse>("/api/donations/me");
+        const serverDonations = parseDonationsResponse(data).map((item) => mapDonationResponse(item));
+        const merged = mergeDonations(serverDonations, readCachedDonations());
+        writeCachedDonations(merged);
+        return merged;
+    } catch (err) {
+        if (axios.isAxiosError(err) && err.response?.status === 405) {
+            return readCachedDonations();
+        }
+        throw new Error(extractErrorMessage(err, "Failed to load donations. Please try again."));
+    }
 }
 
 export async function getAllDonations(status?: string): Promise<Donation[]> {
-	try {
-		const params = status ? { status } : {};
-		const { data } = await apiClient.get<DonationApiResponse[] | DonationsListResponse>("/api/donations", { params });
-		return extractDonationsList(data).map((item) => mapDonationResponse(item));
-	} catch (err) {
-		throw new Error(extractErrorMessage(err, "Failed to load donations. Please try again."));
-	}
+    try {
+        const params = status ? { status } : {};
+        const { data } = await apiClient.get<DonationApiResponse[] | DonationsListResponse>("/api/donations", { params });
+        return parseDonationsResponse(data).map((item) => mapDonationResponse(item));
+    } catch (err) {
+        throw new Error(extractErrorMessage(err, "Failed to load donations. Please try again."));
+    }
 }
 
 export interface AvailableDonationsParams {
@@ -148,12 +152,14 @@ export async function getAvailableDonations(params?: AvailableDonationsParams): 
 }
 
 export async function createDonation(payload: CreateDonationPayload): Promise<Donation> {
-	try {
-		const { data } = await apiClient.post<DonationApiResponse>("/api/donations", payload);
-		return mapDonationResponse(data, payload);
-	} catch (err) {
-		throw new Error(extractErrorMessage(err, "Failed to create donation. Please try again."));
-	}
+    try {
+        const { data } = await apiClient.post<DonationApiResponse>("/api/donations", payload);
+        const createdDonation = mapDonationResponse(data, payload);
+        writeCachedDonations(mergeDonations([createdDonation], readCachedDonations()));
+        return createdDonation;
+    } catch (err) {
+        throw new Error(extractErrorMessage(err, "Failed to create donation. Please try again."));
+    }
 }
 
 export async function updateDonation(id: number, payload: UpdateDonationPayload): Promise<Donation> {
