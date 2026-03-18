@@ -52,11 +52,14 @@ export interface MockUser {
 	role: AccountType;
 }
 
-export type DonationRequestStatus = "pending" | "approved" | "rejected";
+export type DonationRequestStatus = "pending" | "completed";
+
 
 export interface DonationRequest {
 	donationRequestId: number;
 	distributionCenterUserId: number;
+	distributionCenterName: string | null;
+	distributionCenterAddress: string | null;
 	requestedQuantity: number;
 	status: DonationRequestStatus;
 	createdAt: string;

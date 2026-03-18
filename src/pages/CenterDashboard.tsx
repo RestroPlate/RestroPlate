@@ -13,12 +13,20 @@ export default function CenterDashboard() {
 		available: number;
 	}>({ distributed: 0, available: 0 });
 
+	function isCurrentPath(
+	currentPath: string,
+	targetPath: string,
+	): string {
+		if (currentPath === targetPath) return targetPath;
+		const prefixMatch = currentPath.match(/^\/[^/]+/); 
+		const prefix = prefixMatch ? prefixMatch[0] : "";
+		return `${prefix}${targetPath}`;
+	}
+
 	useEffect(() => {
-		// TODO: Replace with actual API call
 		const fetchInventory = async () => {
 			try {
-				// const data = await getInventory();
-				setInventory([]); // Empty array as placeholder until API is implemented
+				setInventory([]);
 			} catch (error) {
 				console.error("Failed to load inventory:", error);
 			} finally {
@@ -152,7 +160,10 @@ export default function CenterDashboard() {
 						<h2 className="mb-4 text-[1.15rem] font-bold text-[#F0EBE1]">Quick Actions</h2>
 						<div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 							<a
-								href="/dashboard/center/explore"
+								href={isCurrentPath(
+									location.pathname,
+									"/dashboard/center/explore",
+								)}
 								className="group rounded-xl border border-[rgba(125,197,66,0.12)] bg-[rgba(255,255,255,0.03)] p-5 text-left transition hover:border-[rgba(125,197,66,0.3)] hover:bg-[rgba(125,197,66,0.05)]"
 							>
 								<span className="text-2xl">📦</span>
@@ -162,7 +173,10 @@ export default function CenterDashboard() {
 								<p className="mt-1 text-sm text-[rgba(240,235,225,0.5)]">View available standalone donations.</p>
 							</a>
 							<a
-								href="/dashboard/center/create-request"
+								href={isCurrentPath(
+									location.pathname,
+									"/dashboard/center/create-request",
+								)}
 								className="group rounded-xl border border-[rgba(125,197,66,0.12)] bg-[rgba(255,255,255,0.03)] p-5 text-left transition hover:border-[rgba(125,197,66,0.3)] hover:bg-[rgba(125,197,66,0.05)]"
 							>
 								<span className="text-2xl">📝</span>
@@ -172,7 +186,10 @@ export default function CenterDashboard() {
 								<p className="mt-1 text-sm text-[rgba(240,235,225,0.5)]">Submit a new requirement to donors.</p>
 							</a>
 							<a
-								href="/dashboard/center/requests"
+								href={isCurrentPath(
+									location.pathname,
+									"/dashboard/center/requests",
+								)}
 								className="group rounded-xl border border-[rgba(125,197,66,0.12)] bg-[rgba(255,255,255,0.03)] p-5 text-left transition hover:border-[rgba(125,197,66,0.3)] hover:bg-[rgba(125,197,66,0.05)]"
 							>
 								<span className="text-2xl">📨</span>

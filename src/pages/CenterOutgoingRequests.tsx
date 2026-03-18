@@ -6,7 +6,7 @@ import type { DonationRequest, DonationRequestStatus } from "../types/Dashboard"
 
 type RequestFilter = "all" | DonationRequestStatus;
 
-const FILTERS: RequestFilter[] = ["all", "pending", "approved", "rejected"];
+const FILTERS: RequestFilter[] = ["all", "pending", "completed"];
 
 function formatDate(value: string): string {
 	const parsed = new Date(value);
@@ -22,10 +22,8 @@ function formatDate(value: string): string {
 
 function getStatusClasses(status: DonationRequestStatus): string {
 	switch (status) {
-		case "approved":
+		case "completed":
 			return "bg-emerald-500/15 text-emerald-300";
-		case "rejected":
-			return "bg-rose-500/15 text-rose-300";
 		default:
 			return "bg-amber-500/15 text-amber-300";
 	}
@@ -73,10 +71,6 @@ export default function CenterOutgoingRequests() {
 		};
 	}, [statusFilter]);
 
-	const pendingRequests = requests.filter((request) => request.status === "pending").length;
-	const approvedRequests = requests.filter((request) => request.status === "approved").length;
-	const rejectedRequests = requests.filter((request) => request.status === "rejected").length;
-
 	return (
 		<DashboardLayout>
 			<div className="space-y-6">
@@ -90,7 +84,7 @@ export default function CenterOutgoingRequests() {
 						</h2>
 						<p className="mt-2 text-sm text-[#F0EBE1]/65">
 							This page reads `GET /api/donation-requests/outgoing` so your center can
-							follow request status changes from pending through approval or rejection.
+							follow request status changes from pending to completed.
 						</p>
 					</div>
 
@@ -119,25 +113,6 @@ export default function CenterOutgoingRequests() {
 							Request Another Donation
 						</Link>
 					</div>
-				</div>
-
-				<div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-					{[
-						{ label: "Total", value: requests.length },
-						{ label: "Pending", value: pendingRequests },
-						{ label: "Approved", value: approvedRequests },
-						{ label: "Rejected", value: rejectedRequests },
-					].map((item) => (
-						<div
-							key={item.label}
-							className="rounded-xl border border-white/10 bg-white/5 px-5 py-4"
-						>
-							<p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#F0EBE1]/60">
-								{item.label}
-							</p>
-							<p className="mt-1 text-3xl font-black text-[#7DC542]">{item.value}</p>
-						</div>
-					))}
 				</div>
 
 				{error ? (

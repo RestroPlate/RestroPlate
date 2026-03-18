@@ -18,7 +18,7 @@ interface SidebarLink {
 const SIDEBAR_LINKS_DONOR: SidebarLink[] = [
 	{ label: "Dashboard", icon: "D", path: "/dashboard/donor" },
 	{ label: "My Donations", icon: "M", path: "/dashboard/donor/my-donations" },
-	{ label: "Create Donation", icon: "+", path: "/dashboard/donor/create" },
+	{ label: "Create Donation", icon: "C", path: "/dashboard/donor/create" },
 	{
 		label: "Incoming Requests",
 		icon: "R",

@@ -36,13 +36,18 @@ function normalizeStatus(status: string | undefined): DonationStatus {
 	if (status === "COMPLETED") return "COMPLETED";
 	if (status === "REQUESTED") return "REQUESTED";
 	if (status === "COLLECTED") return "COLLECTED";
-	if (status === "COMPLETED") return "COMPLETED";
 	return "AVAILABLE";
 }
 
-function mapDonationResponse(data: DonationApiResponse, payload?: Partial<CreateDonationPayload>): Donation {
+let mockIdCounter = Date.now();
+function generateMockId() {
+	return mockIdCounter++;
+}
+
+function mapDonationResponse(data: DonationApiResponse | undefined | null, payload?: Partial<CreateDonationPayload>): Donation {
+	if (!data) data = {};
 	return {
-		donationId: data.donation_id ?? data.donationId ?? Date.now(),
+		donationId: data.donation_id ?? data.donationId ?? generateMockId(),
 		donationRequestId: data.donationRequestId,
 		providerUserId: data.providerUserId ?? 0,
 		foodType: data.foodType ?? payload?.foodType ?? "Unknown",
@@ -66,7 +71,11 @@ const CACHE_KEY = "donations_cache";
 
 function readCachedDonations(): Donation[] {
 	try {
-		return JSON.parse(localStorage.getItem(CACHE_KEY) || "[]");
+		const parsed = JSON.parse(localStorage.getItem(CACHE_KEY) || "[]");
+		if (Array.isArray(parsed)) {
+			return parsed.filter(d => d && d.donationId != null && d.foodType);
+		}
+		return [];
 	} catch {
 		return [];
 	}
@@ -77,12 +86,18 @@ function writeCachedDonations(donations: Donation[]): void {
 }
 
 function mergeDonations(server: Donation[], cached: Donation[]): Donation[] {
-	const map = new Map(cached.map((d) => [d.donationId, d]));
-	server.forEach((d) => map.set(d.donationId, d));
+	const map = new Map<number, Donation>();
+	cached.forEach(d => {
+		if (d && d.donationId != null) map.set(d.donationId, d);
+	});
+	server.forEach(d => {
+		if (d && d.donationId != null) map.set(d.donationId, d);
+	});
 	return Array.from(map.values());
 }
 
-function extractDonationsList(data: DonationApiResponse[] | DonationsListResponse): DonationApiResponse[] {
+function extractDonationsList(data: any): DonationApiResponse[] {
+	if (!data) return [];
 	if (Array.isArray(data)) return data;
 	if (Array.isArray(data.items)) return data.items;
 	if (Array.isArray(data.donations)) return data.donations;

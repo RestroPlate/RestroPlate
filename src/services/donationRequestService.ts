@@ -12,6 +12,8 @@ interface DonationRequestApiResponse {
 	donationId?: number;
 	providerUserId?: number;
 	distributionCenterUserId?: number;
+	distributionCenterName?: string | null;
+	distributionCenterAddress?: string | null;
 	requestedQuantity?: number;
 	status?: string | null;
 	createdAt?: string;
@@ -34,10 +36,8 @@ function extractErrorMessage(err: unknown, fallback: string): string {
 
 function normalizeRequestStatus(status: string | null | undefined): DonationRequestStatus {
 	switch (status?.toLowerCase()) {
-		case "approved":
-			return "approved";
-		case "rejected":
-			return "rejected";
+		case "completed":
+			return "completed";
 		default:
 			return "pending";
 	}
@@ -47,6 +47,8 @@ function mapDonationRequestResponse(data: DonationRequestApiResponse): DonationR
 	return {
 		donationRequestId: data.donationRequestId ?? data.requestId ?? 0,
 		distributionCenterUserId: data.distributionCenterUserId ?? 0,
+		distributionCenterName: data.distributionCenterName ?? null,
+		distributionCenterAddress: data.distributionCenterAddress ?? null,
 		requestedQuantity: data.requestedQuantity ?? 0,
 		status: normalizeRequestStatus(data.status),
 		createdAt: data.createdAt ?? new Date().toISOString(),
