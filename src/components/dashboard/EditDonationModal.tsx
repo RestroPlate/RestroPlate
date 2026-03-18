@@ -59,12 +59,12 @@ const LABEL_CLASS =
 
 export default function EditDonationModal({ donation, onSave, onClose }: EditDonationModalProps) {
     const [form, setForm] = useState<EditFormState>({
-        foodType: donation.food_type,
+        foodType: donation.foodType,
         quantity: String(donation.quantity),
         unit: donation.unit,
-        expirationDate: toDateInputValue(donation.expiry_date),
-        pickupAddress: donation.pickup_location,
-        availabilityTime: donation.availability_time,
+        expirationDate: toDateInputValue(donation.expirationDate),
+        pickupAddress: donation.pickupAddress,
+        availabilityTime: donation.availabilityTime,
     });
     const [errors, setErrors] = useState<FormErrors>({});
     const [saving, setSaving] = useState(false);
@@ -85,7 +85,7 @@ export default function EditDonationModal({ donation, onSave, onClose }: EditDon
 
         setSaving(true);
         try {
-            await onSave(donation.donation_id, {
+            await onSave(donation.donationId, {
                 foodType: form.foodType.trim(),
                 quantity: Number(form.quantity),
                 unit: form.unit.trim(),

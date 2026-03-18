@@ -5,7 +5,8 @@ import type { CreateDonationPayload, Donation, DonationStatus, UpdateDonationPay
 interface DonationApiResponse {
 	donation_id?: number;
 	donationId?: number;
-	food_type?: string;
+	donationRequestId?: number;
+	providerUserId?: number;
 	foodType?: string;
 	description?: string;
 	quantity?: number;
@@ -41,16 +42,17 @@ function normalizeStatus(status: string | undefined): DonationStatus {
 
 function mapDonationResponse(data: DonationApiResponse, payload?: Partial<CreateDonationPayload>): Donation {
 	return {
-		donation_id: data.donation_id ?? data.donationId ?? Date.now(),
-		food_type: data.food_type ?? data.foodType ?? payload?.foodType ?? "Unknown",
-		description: data.description ?? `Surplus ${payload?.foodType ?? "Food"}`,
+		donationId: data.donation_id ?? data.donationId ?? Date.now(),
+		donationRequestId: data.donationRequestId,
+		providerUserId: data.providerUserId ?? 0,
+		foodType: data.foodType ?? payload?.foodType ?? "Unknown",
 		quantity: data.quantity ?? payload?.quantity ?? 1,
 		unit: data.unit ?? payload?.unit ?? "Unit",
-		expiry_date: data.expiry_date ?? data.expirationDate ?? payload?.expirationDate ?? new Date().toISOString(),
-		pickup_location: data.pickup_location ?? data.pickupAddress ?? payload?.pickupAddress ?? "Unknown",
-		availability_time: data.availability_time ?? data.availabilityTime ?? payload?.availabilityTime ?? "Unknown",
+		expirationDate: data.expiry_date ?? data.expirationDate ?? payload?.expirationDate ?? new Date().toISOString(),
+		pickupAddress: data.pickup_location ?? data.pickupAddress ?? payload?.pickupAddress ?? "Unknown",
+		availabilityTime: data.availability_time ?? data.availabilityTime ?? payload?.availabilityTime ?? "Unknown",
 		status: normalizeStatus(data.status),
-		created_at: data.created_at ?? data.createdAt ?? new Date().toISOString(),
+		createdAt: data.created_at ?? data.createdAt ?? new Date().toISOString(),
 	};
 }
 
@@ -75,8 +77,8 @@ function writeCachedDonations(donations: Donation[]): void {
 }
 
 function mergeDonations(server: Donation[], cached: Donation[]): Donation[] {
-	const map = new Map(cached.map((d) => [d.donation_id, d]));
-	server.forEach((d) => map.set(d.donation_id, d));
+	const map = new Map(cached.map((d) => [d.donationId, d]));
+	server.forEach((d) => map.set(d.donationId, d));
 	return Array.from(map.values());
 }
 
@@ -144,7 +146,7 @@ export async function updateDonation(id: number, payload: UpdateDonationPayload)
 		const { data } = await apiClient.put<DonationApiResponse>(`/api/donations/${id}`, payload);
 		const updatedDonation = mapDonationResponse(data);
 		const cached = readCachedDonations().map((d) =>
-			d.donation_id === id ? updatedDonation : d,
+			d.donationId === id ? updatedDonation : d,
 		);
 		writeCachedDonations(cached);
 		return updatedDonation;
@@ -156,7 +158,7 @@ export async function updateDonation(id: number, payload: UpdateDonationPayload)
 export async function deleteDonation(id: number): Promise<void> {
 	try {
 		await apiClient.delete(`/api/donations/${id}`);
-		const cached = readCachedDonations().filter((d) => d.donation_id !== id);
+		const cached = readCachedDonations().filter((d) => d.donationId !== id);
 		writeCachedDonations(cached);
 	} catch (err) {
 		throw new Error(extractErrorMessage(err, "Failed to delete donation. Please try again."));

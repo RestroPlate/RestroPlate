@@ -98,13 +98,12 @@ export default function DonationHistory({ donations, onRefresh }: DonationHistor
                 ) : (
                     filtered.map((donation) => (
                         <article
-                            key={donation.donation_id}
+                            key={donation.donationId}
                             className="rounded-xl border border-white/10 bg-white/5 p-4 transition hover:border-white/15"
                         >
                             <div className="flex flex-wrap items-center justify-between gap-3">
                                 <div>
-                                    <p className="text-base font-bold text-[#F0EBE1]">{donation.food_type}</p>
-                                    <p className="mt-0.5 text-sm text-[#F0EBE1]/65">{donation.description}</p>
+                                    <p className="text-base font-bold text-[#F0EBE1]">{donation.foodType}</p>
                                 </div>
                                 <span
                                     className={`rounded-full px-3 py-1 text-xs font-extrabold tracking-wide ${STATUS_CLASSES[donation.status]}`}
@@ -115,10 +114,10 @@ export default function DonationHistory({ donations, onRefresh }: DonationHistor
 
                             <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-[#F0EBE1]/70">
                                 <span>Quantity: {donation.quantity} {donation.unit}</span>
-                                <span>Pickup: {donation.pickup_location}</span>
-                                <span>Expires: {formatDate(donation.expiry_date)}</span>
-                                <span>Available At: {donation.availability_time}</span>
-                                <span>Created: {formatDate(donation.created_at)}</span>
+                                <span>Pickup: {donation.pickupAddress}</span>
+                                <span>Expires: {formatDate(donation.expirationDate)}</span>
+                                <span>Available At: {donation.availabilityTime}</span>
+                                <span>Created: {formatDate(donation.createdAt)}</span>
                             </div>
 
                             {/* ── Action Buttons (only for AVAILABLE) ── */}
@@ -136,14 +135,14 @@ export default function DonationHistory({ donations, onRefresh }: DonationHistor
                                     </button>
                                     <button
                                         type="button"
-                                        disabled={deletingId === donation.donation_id}
-                                        onClick={() => handleDelete(donation.donation_id)}
+                                        disabled={deletingId === donation.donationId}
+                                        onClick={() => handleDelete(donation.donationId)}
                                         className="inline-flex items-center gap-1.5 rounded-lg border border-rose-400/30 bg-rose-500/10 px-4 py-2 text-xs font-bold text-rose-300 transition hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-50"
                                     >
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                                             <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
                                         </svg>
-                                        {deletingId === donation.donation_id ? "Deleting..." : "Delete"}
+                                        {deletingId === donation.donationId ? "Deleting..." : "Delete"}
                                     </button>
                                 </div>
                             ) : null}

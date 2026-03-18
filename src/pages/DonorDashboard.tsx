@@ -45,8 +45,8 @@ export default function DonorDashboard() {
 			path: "/dashboard/donor/my-donations",
 		},
 		{
-			title: "Incoming Requests",
-			description: "Review requests submitted by distribution centers against your donations.",
+			title: "Explore Requests",
+			description: "Browse requirements from distribution centers and accept them to supply food.",
 			icon: "🔍",
 			path: "/dashboard/donor/explore",
 		},

@@ -46,8 +46,6 @@ function normalizeRequestStatus(status: string | null | undefined): DonationRequ
 function mapDonationRequestResponse(data: DonationRequestApiResponse): DonationRequest {
 	return {
 		donationRequestId: data.donationRequestId ?? data.requestId ?? 0,
-		donationId: data.donationId ?? 0,
-		providerUserId: data.providerUserId ?? 0,
 		distributionCenterUserId: data.distributionCenterUserId ?? 0,
 		requestedQuantity: data.requestedQuantity ?? 0,
 		status: normalizeRequestStatus(data.status),
@@ -98,5 +96,38 @@ export async function getCenterOutgoingRequests(
 		return data.map(mapDonationRequestResponse);
 	} catch (err) {
 		throw new Error(extractErrorMessage(err, "Failed to load outgoing requests."));
+	}
+}
+
+export async function getAvailableRequests(
+	status?: DonationRequestStatus,
+): Promise<DonationRequest[]> {
+	try {
+		const params = status ? { status } : undefined;
+		const { data } = await apiClient.get<DonationRequestApiResponse[]>(
+			"/api/donation-requests/available",
+			{ params },
+		);
+		return data.map(mapDonationRequestResponse);
+	} catch (err) {
+		throw new Error(extractErrorMessage(err, "Failed to load available requests."));
+	}
+}
+export interface UpdateDonationRequestQuantityPayload {
+	donatedQuantity: number;
+}
+
+export async function updateDonationRequestQuantity(
+	donationRequestId: number,
+	payload: UpdateDonationRequestQuantityPayload,
+): Promise<DonationRequest> {
+	try {
+		const { data } = await apiClient.put<DonationRequestApiResponse>(
+			`/api/donation-requests/${donationRequestId}/quantity`,
+			payload,
+		);
+		return mapDonationRequestResponse(data);
+	} catch (err) {
+		throw new Error(extractErrorMessage(err, "Failed to update donation request quantity."));
 	}
 }

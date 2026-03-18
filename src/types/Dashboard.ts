@@ -3,19 +3,21 @@ import type { AccountType } from "./Auth";
 export type DonationStatus = "AVAILABLE" | "REQUESTED" | "COLLECTED" | "COMPLETED";
 
 export interface Donation {
-	donation_id: number;
-	food_type: string;
-	description: string;
+	donationId: number;
+	donationRequestId?: number | null;
+	providerUserId: number;
+	foodType: string;
 	quantity: number;
 	unit: string;
-	expiry_date: string;
-	pickup_location: string;
-	availability_time: string;
+	expirationDate: string;
+	pickupAddress: string;
+	availabilityTime: string;
 	status: DonationStatus;
-	created_at: string;
+	createdAt: string;
 }
 
 export interface CreateDonationPayload {
+	donationRequestId?: number | null;
 	foodType: string;
 	quantity: number;
 	unit: string;
@@ -54,8 +56,6 @@ export type DonationRequestStatus = "pending" | "approved" | "rejected";
 
 export interface DonationRequest {
 	donationRequestId: number;
-	donationId: number;
-	providerUserId: number;
 	distributionCenterUserId: number;
 	requestedQuantity: number;
 	status: DonationRequestStatus;
@@ -65,6 +65,7 @@ export interface DonationRequest {
 }
 
 export interface SubmitDonationRequestPayload {
-	donationId: number;
+	foodType: string;
 	requestedQuantity: number;
+	unit: string;
 }

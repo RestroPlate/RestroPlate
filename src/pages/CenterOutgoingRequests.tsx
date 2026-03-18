@@ -168,8 +168,6 @@ export default function CenterOutgoingRequests() {
 								<thead className="bg-white/5">
 									<tr className="text-left text-xs font-bold uppercase tracking-[0.12em] text-[#F0EBE1]/55">
 										<th className="px-5 py-4">Request</th>
-										<th className="px-5 py-4">Donation</th>
-										<th className="px-5 py-4">Provider</th>
 										<th className="px-5 py-4">Quantity</th>
 										<th className="px-5 py-4">Food</th>
 										<th className="px-5 py-4">Status</th>
@@ -185,8 +183,6 @@ export default function CenterOutgoingRequests() {
 											<td className="px-5 py-4 font-bold text-[#F0EBE1]">
 												#{request.donationRequestId}
 											</td>
-											<td className="px-5 py-4">#{request.donationId}</td>
-											<td className="px-5 py-4">User #{request.providerUserId}</td>
 											<td className="px-5 py-4">
 												{request.requestedQuantity} {request.unit}
 											</td>
@@ -228,18 +224,6 @@ export default function CenterOutgoingRequests() {
 									</div>
 
 									<div className="mt-4 space-y-2 text-sm text-[#F0EBE1]/70">
-										<div className="flex items-center justify-between gap-3">
-											<span>Donation</span>
-											<span className="font-medium text-[#F0EBE1]">
-												#{request.donationId}
-											</span>
-										</div>
-										<div className="flex items-center justify-between gap-3">
-											<span>Provider</span>
-											<span className="font-medium text-[#F0EBE1]">
-												User #{request.providerUserId}
-											</span>
-										</div>
 										<div className="flex items-center justify-between gap-3">
 											<span>Requested Quantity</span>
 											<span className="font-medium text-[#F0EBE1]">

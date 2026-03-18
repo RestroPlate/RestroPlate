@@ -147,6 +147,43 @@ export default function CenterDashboard() {
 						))}
 					</div>
 
+					{/* ── Quick Actions ── */}
+					<div className="mb-8">
+						<h2 className="mb-4 text-[1.15rem] font-bold text-[#F0EBE1]">Quick Actions</h2>
+						<div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+							<a
+								href="/dashboard/center/explore"
+								className="group rounded-xl border border-[rgba(125,197,66,0.12)] bg-[rgba(255,255,255,0.03)] p-5 text-left transition hover:border-[rgba(125,197,66,0.3)] hover:bg-[rgba(125,197,66,0.05)]"
+							>
+								<span className="text-2xl">📦</span>
+								<h3 className="mt-2 text-base font-bold text-[#F0EBE1] transition group-hover:text-[#7DC542]">
+									Browse Donations
+								</h3>
+								<p className="mt-1 text-sm text-[rgba(240,235,225,0.5)]">View available standalone donations.</p>
+							</a>
+							<a
+								href="/dashboard/center/create-request"
+								className="group rounded-xl border border-[rgba(125,197,66,0.12)] bg-[rgba(255,255,255,0.03)] p-5 text-left transition hover:border-[rgba(125,197,66,0.3)] hover:bg-[rgba(125,197,66,0.05)]"
+							>
+								<span className="text-2xl">📝</span>
+								<h3 className="mt-2 text-base font-bold text-[#F0EBE1] transition group-hover:text-[#7DC542]">
+									Create Request
+								</h3>
+								<p className="mt-1 text-sm text-[rgba(240,235,225,0.5)]">Submit a new requirement to donors.</p>
+							</a>
+							<a
+								href="/dashboard/center/requests"
+								className="group rounded-xl border border-[rgba(125,197,66,0.12)] bg-[rgba(255,255,255,0.03)] p-5 text-left transition hover:border-[rgba(125,197,66,0.3)] hover:bg-[rgba(125,197,66,0.05)]"
+							>
+								<span className="text-2xl">📨</span>
+								<h3 className="mt-2 text-base font-bold text-[#F0EBE1] transition group-hover:text-[#7DC542]">
+									Outgoing Requests
+								</h3>
+								<p className="mt-1 text-sm text-[rgba(240,235,225,0.5)]">Track status of your submitted requests.</p>
+							</a>
+						</div>
+					</div>
+
 					{/* Section header */}
 					<h2 className="text-[1.15rem] font-bold text-[#F0EBE1] mb-5">
 						Inventory Management
