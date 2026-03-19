@@ -158,7 +158,7 @@ export default function DonorExploreRequests() {
 	/* ── Modal handlers ── */
 	function openAcceptModal(request: DonationRequest): void {
 		setSelectedRequest(request);
-		setAcceptedQuantity(String(request.requestedQuantity));
+		setAcceptedQuantity(String(request.requestedQuantity - request.donatedQuantity));
 		setExpirationDate("");
 		setPickupAddress("");
 		setAvailabilityTime("");
@@ -206,11 +206,11 @@ export default function DonorExploreRequests() {
 			setRequests(current => {
 				return current.map(r => {
 					if (r.donationRequestId === selectedRequest.donationRequestId) {
-						const newQty = r.requestedQuantity - quantity;
-						return { ...r, requestedQuantity: newQty > 0 ? newQty : 0 };
+						const newDonated = r.donatedQuantity + quantity;
+						return { ...r, donatedQuantity: newDonated };
 					}
 					return r;
-				}).filter(r => r.requestedQuantity > 0);
+				}).filter(r => (r.requestedQuantity - r.donatedQuantity) > 0);
 			});
 
 			closeAcceptModal();
@@ -414,9 +414,9 @@ export default function DonorExploreRequests() {
 								{/* Card Body */}
 								<div className="mt-5 flex-1 space-y-3 text-sm text-[#F0EBE1]/70">
 									<div className="flex items-center justify-between gap-3">
-										<span>Requested Quantity</span>
+										<span>Need Quantity</span>
 										<span className="font-bold text-[#F0EBE1]">
-											{request.requestedQuantity} {request.unit}
+											{request.requestedQuantity - request.donatedQuantity} {request.unit}
 										</span>
 									</div>
 									<div className="flex items-center justify-between gap-3">
@@ -485,9 +485,9 @@ export default function DonorExploreRequests() {
 									</span>
 								</div>
 								<div className="flex items-center justify-between gap-3">
-									<span>Requested Quantity</span>
+									<span>Need Quantity</span>
 									<span className="font-bold text-[#F0EBE1]">
-										{selectedRequest.requestedQuantity} {selectedRequest.unit}
+										{selectedRequest.requestedQuantity - selectedRequest.donatedQuantity} {selectedRequest.unit}
 									</span>
 								</div>
 								<div className="flex items-center justify-between gap-3">

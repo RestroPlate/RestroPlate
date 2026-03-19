@@ -61,6 +61,7 @@ export interface DonationRequest {
 	distributionCenterName: string | null;
 	distributionCenterAddress: string | null;
 	requestedQuantity: number;
+	donatedQuantity: number;
 	status: DonationRequestStatus;
 	createdAt: string;
 	foodType: string;

@@ -19,6 +19,7 @@ interface DonationRequestApiResponse {
 	createdAt?: string;
 	foodType?: string | null;
 	unit?: string | null;
+	donatedQuantity?: number;
 }
 
 function extractErrorMessage(err: unknown, fallback: string): string {
@@ -50,6 +51,7 @@ function mapDonationRequestResponse(data: DonationRequestApiResponse): DonationR
 		distributionCenterName: data.distributionCenterName ?? null,
 		distributionCenterAddress: data.distributionCenterAddress ?? null,
 		requestedQuantity: data.requestedQuantity ?? 0,
+		donatedQuantity: data.donatedQuantity ?? 0,
 		status: normalizeRequestStatus(data.status),
 		createdAt: data.createdAt ?? new Date().toISOString(),
 		foodType: data.foodType ?? "Unknown",

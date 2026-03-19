@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Donation, DonationStatus, UpdateDonationPayload } from "../../types/Dashboard";
 import { updateDonation, deleteDonation } from "../../services/donationService";
+import { updateDonationRequestQuantity } from "../../services/donationRequestService";
 import EditDonationModal from "./EditDonationModal";
 import StatusNotice from "../StatusNotice";
 
@@ -42,15 +43,44 @@ export default function DonationHistory({ donations, onRefresh }: DonationHistor
     const filtered = filter === "ALL" ? donations : donations.filter((d) => d.status === filter);
 
     async function handleEdit(id: number, payload: UpdateDonationPayload): Promise<void> {
+        const originalDonation = donations.find((d) => d.donationId === id);
         await updateDonation(id, payload);
+
+        // If this donation is linked to a request, update the request's remaining quantity
+        if (originalDonation?.donationRequestId) {
+            const quantityDiff = payload.quantity - originalDonation.quantity;
+            if (quantityDiff !== 0) {
+                try {
+                    await updateDonationRequestQuantity(originalDonation.donationRequestId, {
+                        donatedQuantity: quantityDiff,
+                    });
+                } catch (err) {
+                    console.error("Failed to sync donation request quantity:", err);
+                }
+            }
+        }
+
         setNotice({ type: "success", message: "Donation updated successfully." });
         await onRefresh();
     }
 
     async function handleDelete(id: number): Promise<void> {
+        const donationToDelete = donations.find((d) => d.donationId === id);
         setDeletingId(id);
         try {
             await deleteDonation(id);
+
+            // If this donation was linked to a request, restore the quantity to the request
+            if (donationToDelete?.donationRequestId) {
+                try {
+                    await updateDonationRequestQuantity(donationToDelete.donationRequestId, {
+                        donatedQuantity: -donationToDelete.quantity,
+                    });
+                } catch (err) {
+                    console.error("Failed to restore donation request quantity:", err);
+                }
+            }
+
             setNotice({ type: "success", message: "Donation deleted successfully." });
             await onRefresh();
         } catch (err) {
