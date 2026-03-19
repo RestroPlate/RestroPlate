@@ -120,3 +120,63 @@ def seed_donations():
                           headers=headers, timeout=10)
         except requests.RequestException:
             pass
+
+
+# -----------------------------
+# explore_page fixture
+# Logs in as the known DONOR and navigates to /dashboard/donor/explore.
+# Returns the driver object, already on the explore page.
+# -----------------------------
+@pytest.fixture(scope="function")
+def explore_page(driver, base_url):
+    from selenium.webdriver.common.by import By
+    from selenium.webdriver.support.ui import WebDriverWait
+    from selenium.webdriver.support import expected_conditions as EC
+
+    api_base = os.getenv("VITE_API_BASE_URL", "http://localhost:5053").rstrip("/")
+
+    try:
+        login_res = requests.post(
+            f"{api_base}/api/auth/login",
+            json={"email": "theertha@gmail.com", "password": "123456"},
+            timeout=10,
+        )
+        login_res.raise_for_status()
+    except Exception:
+        pytest.skip("Backend not reachable — skipping explore_page fixture")
+
+    # Clear any existing session before logging in
+    driver.get(base_url.rstrip("/") + "/join")
+    driver.execute_script("window.localStorage.clear();")
+    driver.execute_script("window.sessionStorage.clear();")
+    driver.delete_all_cookies()
+    driver.refresh()
+
+    wait = WebDriverWait(driver, 20)
+
+    email_el = wait.until(
+        EC.element_to_be_clickable((By.CSS_SELECTOR, "input[name='email']"))
+    )
+    password_el = wait.until(
+        EC.element_to_be_clickable((By.CSS_SELECTOR, "input[name='password']"))
+    )
+    email_el.clear()
+    email_el.send_keys("theertha@gmail.com")
+    password_el.clear()
+    password_el.send_keys("123456")
+
+    wait.until(
+        EC.element_to_be_clickable((By.CSS_SELECTOR, "button[type='submit']"))
+    ).click()
+    wait.until(EC.url_contains("/dashboard/"))
+
+    driver.get(base_url.rstrip("/") + "/dashboard/donor/explore")
+    wait.until(
+        lambda d: (
+            "available requests" in d.page_source.lower()
+            or "no requests" in d.page_source.lower()
+            or "donation" in d.page_source.lower()
+        )
+    )
+
+    return driver

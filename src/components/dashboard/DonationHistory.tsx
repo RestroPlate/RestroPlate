@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Donation, DonationStatus, UpdateDonationPayload } from "../../types/Dashboard";
 import { updateDonation, deleteDonation } from "../../services/donationService";
+import { updateDonationRequestQuantity } from "../../services/donationRequestService";
 import EditDonationModal from "./EditDonationModal";
 import StatusNotice from "../StatusNotice";
 
@@ -42,15 +43,44 @@ export default function DonationHistory({ donations, onRefresh }: DonationHistor
     const filtered = filter === "ALL" ? donations : donations.filter((d) => d.status === filter);
 
     async function handleEdit(id: number, payload: UpdateDonationPayload): Promise<void> {
+        const originalDonation = donations.find((d) => d.donationId === id);
         await updateDonation(id, payload);
+
+        // If this donation is linked to a request, update the request's remaining quantity
+        if (originalDonation?.donationRequestId) {
+            const quantityDiff = payload.quantity - originalDonation.quantity;
+            if (quantityDiff !== 0) {
+                try {
+                    await updateDonationRequestQuantity(originalDonation.donationRequestId, {
+                        donatedQuantity: quantityDiff,
+                    });
+                } catch (err) {
+                    console.error("Failed to sync donation request quantity:", err);
+                }
+            }
+        }
+
         setNotice({ type: "success", message: "Donation updated successfully." });
         await onRefresh();
     }
 
     async function handleDelete(id: number): Promise<void> {
+        const donationToDelete = donations.find((d) => d.donationId === id);
         setDeletingId(id);
         try {
             await deleteDonation(id);
+
+            // If this donation was linked to a request, restore the quantity to the request
+            if (donationToDelete?.donationRequestId) {
+                try {
+                    await updateDonationRequestQuantity(donationToDelete.donationRequestId, {
+                        donatedQuantity: -donationToDelete.quantity,
+                    });
+                } catch (err) {
+                    console.error("Failed to restore donation request quantity:", err);
+                }
+            }
+
             setNotice({ type: "success", message: "Donation deleted successfully." });
             await onRefresh();
         } catch (err) {
@@ -98,13 +128,12 @@ export default function DonationHistory({ donations, onRefresh }: DonationHistor
                 ) : (
                     filtered.map((donation) => (
                         <article
-                            key={donation.donation_id}
+                            key={donation.donationId}
                             className="rounded-xl border border-white/10 bg-white/5 p-4 transition hover:border-white/15"
                         >
                             <div className="flex flex-wrap items-center justify-between gap-3">
                                 <div>
-                                    <p className="text-base font-bold text-[#F0EBE1]">{donation.food_type}</p>
-                                    <p className="mt-0.5 text-sm text-[#F0EBE1]/65">{donation.description}</p>
+                                    <p className="text-base font-bold text-[#F0EBE1]">{donation.foodType}</p>
                                 </div>
                                 <span
                                     className={`rounded-full px-3 py-1 text-xs font-extrabold tracking-wide ${STATUS_CLASSES[donation.status]}`}
@@ -115,10 +144,10 @@ export default function DonationHistory({ donations, onRefresh }: DonationHistor
 
                             <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-[#F0EBE1]/70">
                                 <span>Quantity: {donation.quantity} {donation.unit}</span>
-                                <span>Pickup: {donation.pickup_location}</span>
-                                <span>Expires: {formatDate(donation.expiry_date)}</span>
-                                <span>Available At: {donation.availability_time}</span>
-                                <span>Created: {formatDate(donation.created_at)}</span>
+                                <span>Pickup: {donation.pickupAddress}</span>
+                                <span>Expires: {formatDate(donation.expirationDate)}</span>
+                                <span>Available At: {donation.availabilityTime}</span>
+                                <span>Created: {formatDate(donation.createdAt)}</span>
                             </div>
 
                             {/* ── Action Buttons (only for AVAILABLE) ── */}
@@ -136,14 +165,14 @@ export default function DonationHistory({ donations, onRefresh }: DonationHistor
                                     </button>
                                     <button
                                         type="button"
-                                        disabled={deletingId === donation.donation_id}
-                                        onClick={() => handleDelete(donation.donation_id)}
+                                        disabled={deletingId === donation.donationId}
+                                        onClick={() => handleDelete(donation.donationId)}
                                         className="inline-flex items-center gap-1.5 rounded-lg border border-rose-400/30 bg-rose-500/10 px-4 py-2 text-xs font-bold text-rose-300 transition hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-50"
                                     >
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                                             <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
                                         </svg>
-                                        {deletingId === donation.donation_id ? "Deleting..." : "Delete"}
+                                        {deletingId === donation.donationId ? "Deleting..." : "Delete"}
                                     </button>
                                 </div>
                             ) : null}

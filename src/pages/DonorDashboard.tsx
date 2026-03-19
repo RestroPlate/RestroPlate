@@ -46,7 +46,7 @@ export default function DonorDashboard() {
 		},
 		{
 			title: "Explore Requests",
-			description: "Browse requests from distribution centers and fulfill their needs.",
+			description: "Browse requirements from distribution centers and accept them to supply food.",
 			icon: "🔍",
 			path: "/dashboard/donor/explore",
 		},
