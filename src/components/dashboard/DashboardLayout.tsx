@@ -41,6 +41,12 @@ const SIDEBAR_LINKS_CENTER: SidebarLink[] = [
 		path: "/dashboard/center/requests",
 		matchPrefixes: ["/dashboard/center/requests"],
 	},
+	{
+		label: "Inventory",
+		icon: "I",
+		path: "/dashboard/center/inventory",
+		matchPrefixes: ["/dashboard/center/inventory"],
+	},
 ];
 
 function isCurrentPath(

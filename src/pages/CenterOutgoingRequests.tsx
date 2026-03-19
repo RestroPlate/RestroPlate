@@ -3,10 +3,11 @@ import { Link } from "react-router-dom";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
 import { getCenterOutgoingRequests } from "../services/donationRequestService";
 import type { DonationRequest, DonationRequestStatus } from "../types/Dashboard";
+import CollectionConfirmationModal from "../components/dashboard/CollectionConfirmationModal";
 
 type RequestFilter = "all" | DonationRequestStatus;
 
-const FILTERS: RequestFilter[] = ["all", "pending", "completed"];
+const FILTERS: RequestFilter[] = ["all", "pending", "completed", "collected"];
 
 function formatDate(value: string): string {
 	const parsed = new Date(value);
@@ -34,6 +35,10 @@ export default function CenterOutgoingRequests() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [statusFilter, setStatusFilter] = useState<RequestFilter>("all");
+	const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+	const [selectedRequest, setSelectedRequest] = useState<DonationRequest | null>(null);
+	const [isModalOpen, setIsModalOpen] = useState(false);
 
 	useEffect(() => {
 		let active = true;
@@ -69,7 +74,16 @@ export default function CenterOutgoingRequests() {
 		return () => {
 			active = false;
 		};
-	}, [statusFilter]);
+	}, [statusFilter, refreshTrigger]);
+
+	function handleCollectionSuccess() {
+		setRefreshTrigger((prev) => prev + 1);
+	}
+
+	function openCollectionModal(request: DonationRequest) {
+		setSelectedRequest(request);
+		setIsModalOpen(true);
+	}
 
 	return (
 		<DashboardLayout>
@@ -147,6 +161,7 @@ export default function CenterOutgoingRequests() {
 										<th className="px-5 py-4">Food</th>
 										<th className="px-5 py-4">Status</th>
 										<th className="px-5 py-4">Created</th>
+										<th className="px-5 py-4 text-right">Actions</th>
 									</tr>
 								</thead>
 								<tbody>
@@ -170,6 +185,17 @@ export default function CenterOutgoingRequests() {
 												</span>
 											</td>
 											<td className="px-5 py-4">{formatDate(request.createdAt)}</td>
+											<td className="px-5 py-4 text-right">
+												{request.status === "completed" && (
+													<button
+														type="button"
+														onClick={() => openCollectionModal(request)}
+														className="rounded-lg bg-[#7DC542]/10 px-3 py-1.5 text-xs font-bold text-[#7DC542] transition hover:bg-[#7DC542]/20"
+													>
+														Mark Collected
+													</button>
+												)}
+											</td>
 										</tr>
 									))}
 								</tbody>
@@ -212,12 +238,36 @@ export default function CenterOutgoingRequests() {
 											</span>
 										</div>
 									</div>
+
+									{request.status === "completed" && (
+										<div className="mt-4 pt-4 border-t border-white/10">
+											<button
+												type="button"
+												onClick={() => openCollectionModal(request)}
+												className="w-full rounded-xl bg-[#7DC542]/10 px-4 py-2.5 text-sm font-bold text-[#7DC542] transition hover:bg-[#7DC542]/20"
+											>
+												Mark Collected
+											</button>
+										</div>
+									)}
 								</article>
 							))}
 						</div>
 					</>
 				)}
 			</div>
+
+			{selectedRequest && (
+				<CollectionConfirmationModal
+					isOpen={isModalOpen}
+					onClose={() => setIsModalOpen(false)}
+					onSuccess={handleCollectionSuccess}
+					donationRequestId={selectedRequest.donationRequestId}
+					defaultQuantity={selectedRequest.requestedQuantity}
+					unit={selectedRequest.unit}
+					foodType={selectedRequest.foodType}
+				/>
+			)}
 		</DashboardLayout>
 	);
 }

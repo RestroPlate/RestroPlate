@@ -52,7 +52,7 @@ export interface MockUser {
 	role: AccountType;
 }
 
-export type DonationRequestStatus = "pending" | "completed";
+export type DonationRequestStatus = "pending" | "completed" | "collected";
 
 
 export interface DonationRequest {
@@ -67,6 +67,25 @@ export interface DonationRequest {
 	foodType: string;
 	unit: string;
 }
+
+export interface SubmitDonationRequestPayload {
+	foodType: string;
+	requestedQuantity: number;
+	unit: string;
+}
+
+export interface DistributionInventoryResponseDto {
+	inventoryId: number;
+	donationRequestId: number;
+	collectedQuantity: number;
+	collectionDate: string;
+	status: string | null;
+}
+
+export interface UpdateCollectedQuantityDto {
+	collectedQuantity: number;
+}
+
 
 export interface SubmitDonationRequestPayload {
 	foodType: string;
