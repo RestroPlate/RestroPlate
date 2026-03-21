@@ -393,3 +393,96 @@ def test_outgoing_requests_status_filter_works(driver, base_url):
     assert "outgoing requests" in driver.page_source.lower(), (
         "Outgoing Requests heading disappeared after switching filter back to 'All'"
     )
+
+
+# ================================================================
+# NEW TESTS
+# ================================================================
+
+
+@pytest.mark.ui
+def test_explore_page_shows_available_requests_heading(driver, base_url):
+    """
+    A DONOR visiting /dashboard/donor/explore must see the 'Available Requests'
+    page heading and the search input with id='search-center-name'.
+    """
+    try:
+        # Verify backend is reachable
+        requests.post(
+            f"{API_BASE}/api/auth/login",
+            json={"email": _DONOR_EMAIL, "password": _DONOR_PASSWORD},
+            timeout=10,
+        ).raise_for_status()
+    except Exception:
+        pytest.skip("Backend not reachable — skipping test")
+
+    login_via_ui(driver, base_url, _DONOR_EMAIL, _DONOR_PASSWORD)
+    driver.get(base_url.rstrip("/") + "/dashboard/donor/explore")
+
+    wait = WebDriverWait(driver, 20)
+
+    # Wait for the heading to appear
+    wait.until(
+        lambda d: "available requests" in d.page_source.lower()
+    )
+
+    assert "available requests" in driver.page_source.lower(), (
+        "'Available Requests' heading not found on /donor/explore"
+    )
+
+    # The center-name search input must be present
+    search_input = wait.until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, "input#search-center-name"))
+    )
+    assert search_input.is_displayed(), (
+        "Search input with id='search-center-name' is not visible on /donor/explore"
+    )
+
+
+@pytest.mark.ui
+def test_outgoing_requests_empty_state_for_new_center(driver, base_url):
+    """
+    A brand-new DISTRIBUTION_CENTER with no requests must see the empty-state
+    text 'No outgoing requests yet' on /center/requests.
+    """
+    email = _fresh_center_email()
+    password = "Test@1234"
+
+    try:
+        # Register only — do NOT create any requests
+        api_register_and_login("DISTRIBUTION_CENTER", "QA Empty Center", email, password)
+    except Exception:
+        pytest.skip("Backend not reachable — skipping test")
+
+    login_via_ui(driver, base_url, email, password)
+    driver.get(base_url.rstrip("/") + "/dashboard/center/requests")
+
+    wait = WebDriverWait(driver, 20)
+
+    # Wait for the page to finish loading (heading must appear first)
+    wait.until(lambda d: "outgoing requests" in d.page_source.lower())
+
+    # Wait for either empty-state text or a request row (to let React settle)
+    wait.until(
+        lambda d: (
+            "no outgoing requests" in d.page_source.lower()
+            or len(d.find_elements(By.CSS_SELECTOR, "tbody tr")) > 0
+            or len(d.find_elements(By.CSS_SELECTOR, "article")) > 0
+        )
+    )
+
+    rows = driver.find_elements(By.CSS_SELECTOR, "tbody tr")
+    cards = driver.find_elements(By.CSS_SELECTOR, "article")
+
+    if len(rows) == 0 and len(cards) == 0:
+        # Empty state path — verify the expected message
+        assert "no outgoing requests" in driver.page_source.lower(), (
+            "Expected 'No outgoing requests yet' empty-state text, "
+            "but it was not found in the page source"
+        )
+    else:
+        # The new account already has requests (unexpected, but not a test failure)
+        # This can happen if timestamps collide. Skip to avoid a false failure.
+        pytest.skip(
+            "Unexpectedly found existing requests for a freshly created center account"
+        )

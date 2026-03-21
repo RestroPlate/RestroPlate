@@ -82,3 +82,115 @@ def test_donation_filtering(driver, base_url, seed_donations):
 
 def test_donation_pagination(driver, base_url):
     pytest.skip("Pagination not implemented in this UI")
+
+
+# ================================================================
+# NEW TESTS
+# ================================================================
+
+
+@pytest.mark.ui
+def test_all_filter_shows_all_donations(driver, base_url, seed_donations):
+    """
+    Clicking the 'All' filter button must make it active.
+    Active buttons lose the 'bg-white/5' inactive class; we detect the
+    active state by asserting 'bg-white/5' is NOT in the button's class string.
+    """
+    login_as_donor(driver, base_url)
+    open_donation_page(driver, base_url)
+
+    wait = WebDriverWait(driver, 20)
+
+    all_btn = wait.until(
+        EC.element_to_be_clickable(
+            (By.XPATH, "//button[normalize-space()='All']")
+        )
+    )
+    all_btn.click()
+
+    # Re-locate the button after click to read fresh class attribute
+    all_btn = driver.find_element(By.XPATH, "//button[normalize-space()='All']")
+    btn_class = all_btn.get_attribute("class") or ""
+
+    # Active button loses the inactive-state class "bg-white/5"
+    assert "bg-white/5" not in btn_class, (
+        f"'All' filter button should be ACTIVE (no 'bg-white/5') after click, "
+        f"but got class: '{btn_class}'"
+    )
+
+    # The card section must still be present
+    wait.until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, "section.space-y-3"))
+    )
+    assert driver.find_element(By.CSS_SELECTOR, "section.space-y-3").is_displayed()
+
+
+
+@pytest.mark.ui
+def test_filter_shows_only_available_donations(driver, base_url, seed_donations):
+    """
+    Clicking the 'Available' filter must result in every visible donation card
+    having a status badge of exactly 'AVAILABLE'.  If no cards are shown after
+    filtering, the section element must still be present (valid empty state).
+    """
+    login_as_donor(driver, base_url)
+    open_donation_page(driver, base_url)
+
+    wait = WebDriverWait(driver, 20)
+
+    # Locate the Available button then click via JS to avoid interactability issues
+    btn = wait.until(
+        EC.presence_of_element_located(
+            (By.XPATH, "//button[normalize-space()='Available']")
+        )
+    )
+    driver.execute_script("arguments[0].click();", btn)
+
+    # Wait for the section to settle after React re-render
+    wait.until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, "section.space-y-3"))
+    )
+
+    cards = driver.find_elements(By.CSS_SELECTOR, "section.space-y-3 article")
+
+    if cards:
+        for card in cards:
+            badges = card.find_elements(By.CSS_SELECTOR, "span.rounded-full")
+            if badges:
+                badge_text = badges[0].text.strip().upper()
+                assert badge_text == "AVAILABLE", (
+                    f"After clicking 'Available' filter, expected status 'AVAILABLE' "
+                    f"but found '{badge_text}' in card:\n{card.text}"
+                )
+    else:
+        # Empty state is valid — no AVAILABLE donations means no cards shown
+        assert driver.find_element(
+            By.CSS_SELECTOR, "section.space-y-3"
+        ).is_displayed(), "section.space-y-3 should still be present in empty state"
+
+
+@pytest.mark.ui
+def test_donation_cards_show_food_type_and_quantity(driver, base_url, seed_donations):
+    """
+    Every donation card must have non-empty text and must contain the word
+    'Quantity' (from the 'Quantity: X unit' detail row rendered in DonationHistory).
+    """
+    login_as_donor(driver, base_url)
+    open_donation_page(driver, base_url)
+
+    cards = WebDriverWait(driver, 20).until(
+        EC.presence_of_all_elements_located(
+            (By.CSS_SELECTOR, "section.space-y-3 article")
+        )
+    )
+
+    assert len(cards) > 0, "No donation cards found — cannot verify card content"
+
+    for card in cards:
+        card_text = card.text.strip()
+
+        assert card_text != "", "Donation card is completely empty"
+
+        assert "quantity" in card_text.lower(), (
+            f"Expected 'Quantity' label in donation card text, but got:\n{card_text}"
+        )

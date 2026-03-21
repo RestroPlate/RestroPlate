@@ -179,4 +179,4 @@ def explore_page(driver, base_url):
         )
     )
 
-    return driver
+    return driver

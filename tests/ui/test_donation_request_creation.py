@@ -389,3 +389,116 @@ def test_donor_cannot_access_create_request_page(driver, base_url):
     assert redirected or "/center/create-request" not in driver.current_url, (
         "DONOR was not redirected away from /dashboard/center/create-request"
     )
+
+
+# ================================================================
+# NEW TESTS
+# ================================================================
+
+
+@pytest.mark.ui
+def test_create_request_page_has_three_input_fields(driver, base_url):
+    """
+    The create-request form must have exactly 3 inputs:
+    1 number input (requestedQuantity) and 2 text inputs (foodType + unit).
+    The Submit Request button must also be present.
+    """
+    email = _fresh_center_email()
+    password = "Test@1234"
+
+    try:
+        api_register_and_login("DISTRIBUTION_CENTER", "QA Center", email, password)
+    except Exception:
+        pytest.skip("Backend not reachable — skipping test")
+
+    login_via_ui(driver, base_url, email, password)
+    navigate_to_create_request(driver, base_url)
+
+    number_inputs = driver.find_elements(By.CSS_SELECTOR, "input[type='number']")
+    text_inputs = driver.find_elements(By.CSS_SELECTOR, "input[type='text']")
+
+    assert len(number_inputs) == 1, (
+        f"Expected 1 number input on create-request form, found {len(number_inputs)}"
+    )
+    assert len(text_inputs) == 2, (
+        f"Expected 2 text inputs on create-request form, found {len(text_inputs)}"
+    )
+
+    submit_btn = driver.find_elements(By.CSS_SELECTOR, "button[type='submit']")
+    assert len(submit_btn) > 0, "Submit Request button not found on create-request page"
+
+
+@pytest.mark.ui
+def test_create_request_success_message_contains_request_id(driver, base_url):
+    """
+    After submitting a valid request, the success message must match the pattern
+    'Request #N submitted' where N is a numeric request ID.
+    """
+    email = _fresh_center_email()
+    password = "Test@1234"
+
+    try:
+        api_register_and_login("DISTRIBUTION_CENTER", "QA Center", email, password)
+    except Exception:
+        pytest.skip("Backend not reachable — skipping test")
+
+    login_via_ui(driver, base_url, email, password)
+    navigate_to_create_request(driver, base_url)
+
+    fill_create_form(driver, "QA ID Test", "5", "kg")
+    click_submit(driver)
+
+    wait = WebDriverWait(driver, 20)
+
+    # Wait for the success message to appear
+    wait.until(
+        lambda d: "submitted" in d.page_source.lower()
+    )
+
+    # The success message must match "Request #<digits> submitted"
+    match = re.search(r"Request #\d+ submitted", driver.page_source)
+    assert match is not None, (
+        "Success message did not match pattern 'Request #N submitted'. "
+        f"Page source excerpt: {driver.page_source[:500]}"
+    )
+
+
+@pytest.mark.ui
+def test_outgoing_requests_page_has_status_filter_select(driver, base_url):
+    """
+    After creating 1 request via API, the /center/requests page must have:
+    - A <select> status filter element
+    - Options: value='all', value='pending', value='completed'
+    """
+    email = _fresh_center_email()
+    password = "Test@1234"
+
+    try:
+        token = api_register_and_login("DISTRIBUTION_CENTER", "QA Center", email, password)
+        api_create_request(token, "QA Select Test", 3, "kg")
+    except Exception:
+        pytest.skip("Backend not reachable — skipping test")
+
+    login_via_ui(driver, base_url, email, password)
+    driver.get(base_url.rstrip("/") + "/dashboard/center/requests")
+
+    wait = WebDriverWait(driver, 20)
+    wait.until(lambda d: "outgoing requests" in d.page_source.lower())
+
+    # The <select> must be present
+    filter_select_el = wait.until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, "select"))
+    )
+    filter_select = Select(filter_select_el)
+
+    option_values = [opt.get_attribute("value") for opt in filter_select.options]
+
+    assert "all" in option_values, (
+        f"Status filter missing 'all' option. Found: {option_values}"
+    )
+    assert "pending" in option_values, (
+        f"Status filter missing 'pending' option. Found: {option_values}"
+    )
+    assert "completed" in option_values, (
+        f"Status filter missing 'completed' option. Found: {option_values}"
+    )
