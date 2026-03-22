@@ -194,3 +194,85 @@ def test_donation_cards_show_food_type_and_quantity(driver, base_url, seed_donat
         assert "quantity" in card_text.lower(), (
             f"Expected 'Quantity' label in donation card text, but got:\n{card_text}"
         )
+
+
+@pytest.mark.ui
+def test_collected_filter_button_is_clickable(driver, base_url):
+    """
+    Edge case: Clicking the 'Collected' filter (which may have zero matching
+    donations) must not crash the page.
+    After clicking, section.space-y-3 must still be present in the DOM.
+    """
+    login_as_donor(driver, base_url)
+    open_donation_page(driver, base_url)
+
+    wait = WebDriverWait(driver, 20)
+
+    # Locate the Collected filter button
+    btn = wait.until(
+        EC.presence_of_element_located(
+            (By.XPATH, "//button[normalize-space()='Collected']")
+        )
+    )
+
+    # Click via JS to guarantee React state update fires
+    driver.execute_script("arguments[0].click();", btn)
+
+    # The donations section must still be present after the filter click
+    wait.until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, "section.space-y-3"))
+    )
+
+    assert driver.find_element(
+        By.CSS_SELECTOR, "section.space-y-3"
+    ).is_displayed(), (
+        "section.space-y-3 disappeared after clicking the 'Collected' filter button"
+    )
+
+
+@pytest.mark.ui
+def test_completed_filter_shows_correct_empty_state(driver, base_url):
+    """
+    Edge case: Clicking the 'Completed' filter must result in either:
+    (a) the correct empty-state message for that filter, OR
+    (b) cards all carrying the expected COMPLETED badge.
+    Zero COMPLETED donations is the most likely outcome for this account,
+    making the empty-state assertion the primary pass path.
+    """
+    login_as_donor(driver, base_url)
+    open_donation_page(driver, base_url)
+
+    wait = WebDriverWait(driver, 20)
+
+    # Click the 'Completed' filter button via JS
+    btn = wait.until(
+        EC.presence_of_element_located(
+            (By.XPATH, "//button[normalize-space()='Completed']")
+        )
+    )
+    driver.execute_script("arguments[0].click();", btn)
+
+    # Wait for section to settle
+    wait.until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, "section.space-y-3"))
+    )
+
+    cards = driver.find_elements(By.CSS_SELECTOR, "section.space-y-3 article")
+
+    if not cards:
+        # Empty-state path — the exact text from DonationHistory.tsx line 126:
+        # `No donations with status "${filter}" found.`  →  filter = "COMPLETED"
+        assert 'No donations with status "COMPLETED" found.' in driver.page_source, (
+            "Expected empty-state message 'No donations with status \"COMPLETED\" found.' "
+            "but it was not found in page source"
+        )
+    else:
+        # Cards are present — every badge must be COMPLETED
+        for card in cards:
+            badges = card.find_elements(By.CSS_SELECTOR, "span.rounded-full")
+            if badges:
+                badge_text = badges[0].text.strip().upper()
+                assert badge_text == "COMPLETED", (
+                    f"After clicking 'Completed' filter, expected badge 'COMPLETED' "
+                    f"but found '{badge_text}'"
+                )

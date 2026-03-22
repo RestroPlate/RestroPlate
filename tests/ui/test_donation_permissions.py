@@ -174,3 +174,37 @@ def test_non_available_donation_has_no_delete_button(driver, base_url, seed_dona
         f"Non-AVAILABLE card should NOT have a 'Delete' button, "
         f"but {len(delete_buttons)} found"
     )
+
+
+@pytest.mark.ui
+def test_edit_and_delete_only_on_available_status(driver, base_url, seed_donations):
+    login_as_donor(driver, base_url)
+    open_donation_page(driver, base_url)
+
+    try:
+        cards = WebDriverWait(driver, 20).until(
+            EC.presence_of_all_elements_located(
+                (By.CSS_SELECTOR, "section.space-y-3 article")
+            )
+        )
+    except Exception:
+        cards = []
+
+    if len(cards) == 0:
+        container = driver.find_elements(By.CSS_SELECTOR, "section.space-y-3")
+        assert len(container) > 0
+    else:
+        for card in cards:
+            status = card.find_element(
+                By.CSS_SELECTOR, "span.rounded-full"
+            ).text.strip().upper()
+
+            edit_buttons = card.find_elements(By.XPATH, ".//button[contains(., 'Edit')]")
+            delete_buttons = card.find_elements(By.XPATH, ".//button[contains(., 'Delete')]")
+
+            if status == "AVAILABLE":
+                assert len(edit_buttons) > 0
+                assert len(delete_buttons) > 0
+            else:
+                assert len(edit_buttons) == 0
+                assert len(delete_buttons) == 0

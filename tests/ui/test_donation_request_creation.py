@@ -502,3 +502,120 @@ def test_outgoing_requests_page_has_status_filter_select(driver, base_url):
     assert "completed" in option_values, (
         f"Status filter missing 'completed' option. Found: {option_values}"
     )
+
+
+@pytest.mark.ui
+def test_create_request_negative_quantity_rejected(driver, base_url):
+    """
+    Edge case: Submitting the create-request form with a negative quantity (-5)
+    must either keep the user on the create-request page (HTML5/React validation)
+    OR surface a visible error element with a 'rose' class.
+    """
+    email = _fresh_center_email()
+    password = "Test@1234"
+
+    try:
+        api_register_and_login("DISTRIBUTION_CENTER", "QA Center", email, password)
+    except Exception:
+        pytest.skip("Backend not reachable — skipping test")
+
+    login_via_ui(driver, base_url, email, password)
+    navigate_to_create_request(driver, base_url)
+
+    fill_create_form(driver, "QA Test", "-5", "kg")
+
+    # Use JS click so React state updates are guaranteed to fire
+    btn = driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
+    driver.execute_script("arguments[0].click();", btn)
+
+    # Give React / HTML5 validation a short window to act
+    import time as _time
+    _time.sleep(1.0)
+
+    still_on_page = "/create-request" in driver.current_url
+    error_visible = len(
+        driver.find_elements(
+            By.XPATH,
+            "//*[contains(@class,'rose') or contains(@class,'red') or contains(@class,'error')]"
+            "[string-length(normalize-space()) > 0]",
+        )
+    ) > 0
+
+    assert still_on_page or error_visible, (
+        "Negative quantity (-5) was accepted without staying on the page "
+        "or showing a visible error element."
+    )
+
+
+@pytest.mark.ui
+def test_create_request_very_large_quantity_accepted(driver, base_url):
+    """
+    Edge case: A very large but valid quantity (999999) must be accepted by the
+    create-request form — a success message containing 'submitted' must appear.
+    """
+    email = _fresh_center_email()
+    password = "Test@1234"
+
+    try:
+        api_register_and_login("DISTRIBUTION_CENTER", "QA Center", email, password)
+    except Exception:
+        pytest.skip("Backend not reachable — skipping test")
+
+    login_via_ui(driver, base_url, email, password)
+    navigate_to_create_request(driver, base_url)
+
+    fill_create_form(driver, "QA Bulk Test", "999999", "kg")
+
+    # Use JS click so React state updates are guaranteed to fire
+    btn = driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
+    driver.execute_script("arguments[0].click();", btn)
+
+    wait = WebDriverWait(driver, 20)
+
+    # A success message containing "submitted" must appear
+    wait.until(
+        lambda d: "submitted" in d.page_source.lower()
+    )
+
+    assert "submitted" in driver.page_source.lower(), (
+        "Expected a success message containing 'submitted' after submitting "
+        "a very large quantity (999999), but none was found."
+    )
+
+
+@pytest.mark.ui
+def test_outgoing_requests_page_has_create_request_link(driver, base_url):
+    """
+    Edge case: The /center/requests page must contain a 'Request Another Donation'
+    link that navigates to /center/explore.  This guards against the link being
+    accidentally removed or its href being changed during refactoring.
+    """
+    email = _fresh_center_email()
+    password = "Test@1234"
+
+    try:
+        token = api_register_and_login("DISTRIBUTION_CENTER", "QA Center", email, password)
+        api_create_request(token, "QA Link Test", 3, "kg")
+    except Exception:
+        pytest.skip("Backend not reachable — skipping test")
+
+    login_via_ui(driver, base_url, email, password)
+    driver.get(base_url.rstrip("/") + "/dashboard/center/requests")
+
+    wait = WebDriverWait(driver, 20)
+
+    # Wait for the page heading to confirm the page loaded
+    wait.until(lambda d: "outgoing requests" in d.page_source.lower())
+
+    # The link must be present
+    link = wait.until(
+        EC.presence_of_element_located(
+            (By.XPATH, "//a[normalize-space()='Request Another Donation']")
+        )
+    )
+
+    href = link.get_attribute("href") or ""
+    assert "/center/explore" in href, (
+        f"'Request Another Donation' link href should contain '/center/explore', "
+        f"but got: '{href}'"
+    )

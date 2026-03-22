@@ -272,3 +272,96 @@ def test_center_explore_sort_select_has_correct_options(driver, base_url):
     assert "createdAt" in option_values, (
         f"Sort select missing 'createdAt' option. Found: {option_values}"
     )
+
+
+@pytest.mark.ui
+def test_center_explore_empty_state_with_no_match(driver, base_url):
+    """
+    Edge case: Typing a nonsense string into the food-type filter on
+    /center/explore must produce either a no-results message or zero cards.
+    This verifies the debounced client-side filter handles zero-match gracefully.
+    """
+    email = _fresh_center_email()
+    password = "Test@1234"
+
+    try:
+        api_register_and_login("DISTRIBUTION_CENTER", "QA Center", email, password)
+    except Exception:
+        pytest.skip("Backend not reachable — skipping test")
+
+    login_via_ui(driver, base_url, email, password)
+    driver.get(base_url.rstrip("/") + "/dashboard/center/explore")
+
+    wait = WebDriverWait(driver, 20)
+
+    # Wait for the page heading to confirm the page loaded
+    wait.until(lambda d: "browse donations" in d.page_source.lower())
+
+    # Find the Food Type text input (first input on the page)
+    food_input = wait.until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='text']"))
+    )
+    food_input.clear()
+    food_input.send_keys("ZZZNOMATCHXXX999")
+
+    # Wait 2 seconds to cover the component's 250 ms debounce + render cycle
+    time.sleep(2)
+
+    # Assert either: empty-state message present OR no article cards visible
+    no_results_msg = "no available donations match these filters" in driver.page_source.lower()
+    article_count = len(driver.find_elements(By.CSS_SELECTOR, "article"))
+
+    assert no_results_msg or article_count == 0, (
+        f"Expected zero results for nonsense filter 'ZZZNOMATCHXXX999', "
+        f"but found {article_count} article(s) and no empty-state message."
+    )
+
+
+@pytest.mark.ui
+def test_center_explore_has_location_filter_input(driver, base_url):
+    """
+    Edge case: The /center/explore page must expose a Location text input
+    (second input[type='text'] on the page, placeholder 'Colombo, Kandy').
+    Typing a location string must not crash the page — the 'Browse Donations'
+    heading must still be present after the debounce settles (1 s wait).
+    """
+    email = _fresh_center_email()
+    password = "Test@1234"
+
+    try:
+        api_register_and_login("DISTRIBUTION_CENTER", "QA Center", email, password)
+    except Exception:
+        pytest.skip("Backend not reachable — skipping test")
+
+    login_via_ui(driver, base_url, email, password)
+    driver.get(base_url.rstrip("/") + "/dashboard/center/explore")
+
+    wait = WebDriverWait(driver, 20)
+
+    # Wait for the page heading
+    wait.until(lambda d: "browse donations" in d.page_source.lower())
+
+    # The page has 2 text inputs: Food Type (first) and Location (second)
+    text_inputs = wait.until(
+        lambda d: d.find_elements(By.CSS_SELECTOR, "input[type='text']")
+        if len(d.find_elements(By.CSS_SELECTOR, "input[type='text']")) >= 2
+        else None
+    )
+
+    assert len(text_inputs) >= 2, (
+        f"Expected at least 2 text inputs on /center/explore (Food Type + Location), "
+        f"found {len(text_inputs)}"
+    )
+
+    # The second input is the Location filter
+    location_input = text_inputs[1]
+    location_input.clear()
+    location_input.send_keys("Colombo")
+
+    # Wait 1 second to cover the 250 ms debounce + render cycle
+    time.sleep(1)
+
+    # The heading must still be present — the page must not have crashed
+    assert "browse donations" in driver.page_source.lower(), (
+        "'Browse Donations' heading disappeared after typing into the Location filter"
+    )

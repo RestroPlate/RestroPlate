@@ -486,3 +486,85 @@ def test_outgoing_requests_empty_state_for_new_center(driver, base_url):
         pytest.skip(
             "Unexpectedly found existing requests for a freshly created center account"
         )
+
+
+@pytest.mark.ui
+def test_explore_page_search_input_is_present(driver, base_url):
+    """
+    Edge case: The /donor/explore page must render both search inputs
+    (search-center-name and search-location) for a logged-in donor.
+    This guards against regression where the search bar is conditionally
+    omitted when the request list is empty.
+    """
+    try:
+        requests.post(
+            f"{API_BASE}/api/auth/login",
+            json={"email": _DONOR_EMAIL, "password": _DONOR_PASSWORD},
+            timeout=10,
+        ).raise_for_status()
+    except Exception:
+        pytest.skip("Backend not reachable — skipping test")
+
+    login_via_ui(driver, base_url, _DONOR_EMAIL, _DONOR_PASSWORD)
+    driver.get(base_url.rstrip("/") + "/dashboard/donor/explore")
+
+    wait = WebDriverWait(driver, 20)
+
+    # Wait for the explore page to fully render
+    wait.until(lambda d: "available requests" in d.page_source.lower())
+
+    # Both search inputs must be present
+    center_name_input = wait.until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, "input#search-center-name"))
+    )
+    assert center_name_input.is_displayed(), (
+        "input#search-center-name is not visible on /donor/explore"
+    )
+
+    location_input = wait.until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, "input#search-location"))
+    )
+    assert location_input.is_displayed(), (
+        "input#search-location is not visible on /donor/explore"
+    )
+
+
+@pytest.mark.ui
+def test_donor_explore_sort_select_has_newest_and_oldest_options(driver, base_url):
+    """
+    Edge case: The sort-order <select id='sort-order'> on /donor/explore must
+    expose option values 'newest' and 'oldest'.
+    This guards against the sort options being renamed or removed.
+    """
+    try:
+        requests.post(
+            f"{API_BASE}/api/auth/login",
+            json={"email": _DONOR_EMAIL, "password": _DONOR_PASSWORD},
+            timeout=10,
+        ).raise_for_status()
+    except Exception:
+        pytest.skip("Backend not reachable — skipping test")
+
+    login_via_ui(driver, base_url, _DONOR_EMAIL, _DONOR_PASSWORD)
+    driver.get(base_url.rstrip("/") + "/dashboard/donor/explore")
+
+    wait = WebDriverWait(driver, 20)
+
+    # Wait for the page to render its heading
+    wait.until(lambda d: "available requests" in d.page_source.lower())
+
+    # The sort <select> must be present
+    sort_select_el = wait.until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, "select#sort-order"))
+    )
+
+    from selenium.webdriver.support.ui import Select
+    sort_select = Select(sort_select_el)
+    option_values = [opt.get_attribute("value") for opt in sort_select.options]
+
+    assert "newest" in option_values, (
+        f"Sort select#sort-order missing 'newest' option. Found: {option_values}"
+    )
+    assert "oldest" in option_values, (
+        f"Sort select#sort-order missing 'oldest' option. Found: {option_values}"
+    )
