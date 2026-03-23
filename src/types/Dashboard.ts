@@ -1,21 +1,32 @@
 import type { AccountType } from "./Auth";
 
-export type DonationStatus = "AVAILABLE" | "REQUESTED" | "COLLECTED";
+export type DonationStatus = "AVAILABLE" | "REQUESTED" | "COLLECTED" | "COMPLETED";
 
 export interface Donation {
-	donation_id: number;
-	food_type: string;
-	description: string;
+	donationId: number;
+	donationRequestId?: number | null;
+	providerUserId: number;
+	foodType: string;
 	quantity: number;
 	unit: string;
-	expiry_date: string;
-	pickup_location: string;
-	availability_time: string;
+	expirationDate: string;
+	pickupAddress: string;
+	availabilityTime: string;
 	status: DonationStatus;
-	created_at: string;
+	createdAt: string;
 }
 
 export interface CreateDonationPayload {
+	donationRequestId?: number | null;
+	foodType: string;
+	quantity: number;
+	unit: string;
+	expirationDate: string;
+	pickupAddress: string;
+	availabilityTime: string;
+}
+
+export interface UpdateDonationPayload {
 	foodType: string;
 	quantity: number;
 	unit: string;
@@ -39,4 +50,26 @@ export interface MockUser {
 	email: string;
 	name: string;
 	role: AccountType;
+}
+
+export type DonationRequestStatus = "pending" | "completed";
+
+
+export interface DonationRequest {
+	donationRequestId: number;
+	distributionCenterUserId: number;
+	distributionCenterName: string | null;
+	distributionCenterAddress: string | null;
+	requestedQuantity: number;
+	donatedQuantity: number;
+	status: DonationRequestStatus;
+	createdAt: string;
+	foodType: string;
+	unit: string;
+}
+
+export interface SubmitDonationRequestPayload {
+	foodType: string;
+	requestedQuantity: number;
+	unit: string;
 }
