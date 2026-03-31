@@ -39,6 +39,8 @@ function normalizeRequestStatus(status: string | null | undefined): DonationRequ
 	switch (status?.toLowerCase()) {
 		case "completed":
 			return "completed";
+		case "partially_filled":
+			return "partially_filled";
 		default:
 			return "pending";
 	}
@@ -135,3 +137,35 @@ export async function updateDonationRequestQuantity(
 		throw new Error(extractErrorMessage(err, "Failed to update donation request quantity."));
 	}
 }
+
+// new: fetch donations linked to a specific request (Flow 2 sub-list)
+import type { Donation } from "../types/Dashboard";
+
+export async function getDonationsForRequest(
+	requestId: number,
+): Promise<Donation[]> {
+	try {
+		const { data } = await apiClient.get(
+			`/api/donation-requests/${requestId}/donations`,
+		);
+		const items = Array.isArray(data) ? data : (data as Record<string, unknown>)?.donations ?? [];
+		return (items as Array<Record<string, unknown>>).map((item) => ({
+			donationId: (item.donation_id ?? item.donationId ?? 0) as number,
+			donationRequestId: requestId,
+			providerUserId: (item.providerUserId ?? 0) as number,
+			foodType: (item.foodType ?? "Unknown") as string,
+			description: (item.description ?? "") as string,
+			quantity: (item.quantity ?? 0) as number,
+			unit: (item.unit ?? "units") as string,
+			expirationDate: (item.expiry_date ?? item.expirationDate ?? new Date().toISOString()) as string,
+			pickupAddress: (item.pickup_location ?? item.pickupAddress ?? "") as string,
+			availabilityTime: (item.availability_time ?? item.availabilityTime ?? "") as string,
+			status: ((item.status as string)?.toUpperCase() === "COLLECTED" ? "COLLECTED" : (item.status as string)?.toUpperCase() === "ACCEPTED" ? "ACCEPTED" : (item.status as string)?.toUpperCase() === "REQUESTED" ? "REQUESTED" : "AVAILABLE") as Donation["status"],
+			createdAt: (item.created_at ?? item.createdAt ?? new Date().toISOString()) as string,
+			requesterName: (item.requesterName ?? item.donorName ?? null) as string | null,
+		}));
+	} catch (err) {
+		throw new Error(extractErrorMessage(err, "Failed to load donations for this request."));
+	}
+}
+

@@ -10,12 +10,15 @@ interface DonationHistoryProps {
     onRefresh: () => Promise<void>;
 }
 
-type FilterStatus = "ALL" | "AVAILABLE" | "COLLECTED" | "COMPLETED";
+// modified: added ACCEPTED and REQUESTED to filter options for Flow 1 lifecycle
+type FilterStatus = "ALL" | "AVAILABLE" | "REQUESTED" | "ACCEPTED" | "COLLECTED" | "COMPLETED";
 
 
 const FILTER_OPTIONS: { label: string; value: FilterStatus }[] = [
     { label: "All", value: "ALL" },
     { label: "Available", value: "AVAILABLE" },
+    { label: "Requested", value: "REQUESTED" },
+    { label: "Accepted", value: "ACCEPTED" },
     { label: "Collected", value: "COLLECTED" },
     { label: "Completed", value: "COMPLETED" },
 ];
@@ -23,6 +26,7 @@ const FILTER_OPTIONS: { label: string; value: FilterStatus }[] = [
 const STATUS_CLASSES: Record<DonationStatus, string> = {
     AVAILABLE: "bg-emerald-500/15 text-emerald-300",
     REQUESTED: "bg-amber-500/15 text-amber-300",
+    ACCEPTED: "bg-sky-500/15 text-sky-300",
     COLLECTED: "bg-sky-500/15 text-sky-300",
     COMPLETED: "bg-violet-500/15 text-violet-300",
 };

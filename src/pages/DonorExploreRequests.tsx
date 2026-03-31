@@ -1,5 +1,9 @@
+// modified: renamed button to "Fulfill", added inline validation capping quantity at remaining,
+// appends to "My Donations" with REQUESTED badge (no AVAILABLE phase in Flow 2),
+// shows toast "Donation submitted — deliver to [DC Name]"
 import { useEffect, useMemo, useState } from "react";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
+import StatusNotice from "../components/StatusNotice";
 import { getAvailableRequests } from "../services/donationRequestService";
 import { createDonation } from "../services/donationService";
 import { updateDonationRequestQuantity } from "../services/donationRequestService";
@@ -23,6 +27,8 @@ function getStatusClasses(status: DonationRequestStatus): string {
 	switch (status) {
 		case "completed":
 			return "bg-emerald-500/15 text-emerald-300";
+		case "partially_filled":
+			return "bg-sky-500/15 text-sky-300";
 		default:
 			return "bg-amber-500/15 text-amber-300";
 	}
@@ -74,13 +80,18 @@ export default function DonorExploreRequests() {
 
 	/* ── Modal state ── */
 	const [selectedRequest, setSelectedRequest] = useState<DonationRequest | null>(null);
-	const [acceptedQuantity, setAcceptedQuantity] = useState("");
+	const [providedQuantity, setProvidedQuantity] = useState("");
 	const [expirationDate, setExpirationDate] = useState("");
 	const [pickupAddress, setPickupAddress] = useState("");
 	const [availabilityTime, setAvailabilityTime] = useState("");
 	const [submitting, setSubmitting] = useState(false);
 	const [modalError, setModalError] = useState<string | null>(null);
-	const [successMessage, setSuccessMessage] = useState<string | null>(null);
+	const [notice, setNotice] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
+	/* ── Computed ── */
+	const remainingQuantity = selectedRequest
+		? selectedRequest.requestedQuantity - selectedRequest.donatedQuantity
+		: 0;
 
 	/* ── Data fetching ── */
 	useEffect(() => {
@@ -112,10 +123,10 @@ export default function DonorExploreRequests() {
 
 	/* ── Auto-dismiss success toast ── */
 	useEffect(() => {
-		if (!successMessage) return undefined;
-		const timeoutId = window.setTimeout(() => setSuccessMessage(null), 4000);
+		if (!notice) return undefined;
+		const timeoutId = window.setTimeout(() => setNotice(null), 4000);
 		return () => window.clearTimeout(timeoutId);
-	}, [successMessage]);
+	}, [notice]);
 
 	/* ── Client-side filtering & sorting ── */
 	const filteredRequests = useMemo(() => {
@@ -156,32 +167,41 @@ export default function DonorExploreRequests() {
 	}
 
 	/* ── Modal handlers ── */
-	function openAcceptModal(request: DonationRequest): void {
+	function openFulfillModal(request: DonationRequest): void {
 		setSelectedRequest(request);
-		setAcceptedQuantity(String(request.requestedQuantity - request.donatedQuantity));
+		const remaining = request.requestedQuantity - request.donatedQuantity;
+		setProvidedQuantity(String(remaining));
 		setExpirationDate("");
 		setPickupAddress("");
 		setAvailabilityTime("");
 		setModalError(null);
 	}
 
-	function closeAcceptModal(): void {
+	function closeFulfillModal(): void {
 		if (submitting) return;
 		setSelectedRequest(null);
 	}
 
-	async function handleAcceptSubmit(event: React.FormEvent<HTMLFormElement>): Promise<void> {
+	async function handleFulfillSubmit(event: React.FormEvent<HTMLFormElement>): Promise<void> {
 		event.preventDefault();
 		if (!selectedRequest) return;
 
-		const quantity = Number(acceptedQuantity);
+		const quantity = Number(providedQuantity);
+		const remaining = selectedRequest.requestedQuantity - selectedRequest.donatedQuantity;
+
 		if (Number.isNaN(quantity) || quantity <= 0) {
-			setModalError("Quantity must be greater than 0");
+			setModalError("Quantity must be greater than 0.");
+			return;
+		}
+
+		// Inline validation: cap at remaining quantity
+		if (quantity > remaining) {
+			setModalError(`Quantity cannot exceed remaining amount (${remaining} ${selectedRequest.unit}).`);
 			return;
 		}
 
 		if (!expirationDate || !pickupAddress.trim() || !availabilityTime) {
-			setModalError("Please fill out all fields");
+			setModalError("Please fill out all fields.");
 			return;
 		}
 
@@ -196,26 +216,28 @@ export default function DonorExploreRequests() {
 				unit: selectedRequest.unit,
 				expirationDate,
 				pickupAddress: pickupAddress.trim(),
-				availabilityTime
+				availabilityTime,
 			});
 
-			setSuccessMessage(`Successfully created donation to fulfill request #${selectedRequest.donationRequestId}`);
+			const dcName = selectedRequest.distributionCenterName ?? `Center #${selectedRequest.distributionCenterUserId}`;
+			setNotice({ type: "success", message: `Donation submitted — deliver to ${dcName}` });
 
 			await updateDonationRequestQuantity(selectedRequest.donationRequestId, { donatedQuantity: quantity });
 
-			setRequests(current => {
-				return current.map(r => {
+			// Optimistically update remaining quantity
+			setRequests((current) => {
+				return current.map((r) => {
 					if (r.donationRequestId === selectedRequest.donationRequestId) {
 						const newDonated = r.donatedQuantity + quantity;
 						return { ...r, donatedQuantity: newDonated };
 					}
 					return r;
-				}).filter(r => (r.requestedQuantity - r.donatedQuantity) > 0);
+				}).filter((r) => (r.requestedQuantity - r.donatedQuantity) > 0);
 			});
 
-			closeAcceptModal();
+			closeFulfillModal();
 		} catch (err) {
-			setModalError(err instanceof Error ? err.message : "Failed to accept request.");
+			setModalError(err instanceof Error ? err.message : "Failed to fulfill request.");
 		} finally {
 			setSubmitting(false);
 		}
@@ -228,13 +250,13 @@ export default function DonorExploreRequests() {
 				{/* ── Header ── */}
 				<div className="rounded-2xl border border-white/10 bg-white/5 p-6">
 					<p className="text-xs font-bold uppercase tracking-[0.16em] text-[#7DC542]">
-						Available Requests
+						Flow 2 — Browse Requests
 					</p>
 					<h2 className="mt-2 text-2xl font-black text-[#F0EBE1]">
 						View and fulfill open requests from distribution centers.
 					</h2>
 					<p className="mt-2 text-sm text-[#F0EBE1]/65">
-						Distribution centers raise requirements. Accept a request to supply the required food directly to them.
+						Distribution centers post requirements. Fulfill a request to supply the required food directly to them.
 					</p>
 				</div>
 
@@ -345,11 +367,9 @@ export default function DonorExploreRequests() {
 					)}
 				</div>
 
-				{/* ── Success / Error Toasts ── */}
-				{successMessage ? (
-					<div className="rounded-xl border border-[#7DC542]/30 bg-[#7DC542]/10 px-4 py-3 text-sm font-semibold text-[#D6F2BE]">
-						{successMessage}
-					</div>
+				{/* ── Notices ── */}
+				{notice ? (
+					<StatusNotice type={notice.type} message={notice.message} onClose={() => setNotice(null)} />
 				) : null}
 
 				{error ? (
@@ -407,15 +427,21 @@ export default function DonorExploreRequests() {
 									<span
 										className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] ${getStatusClasses(request.status)}`}
 									>
-										{request.status}
+										{request.status.replace("_", " ")}
 									</span>
 								</div>
 
 								{/* Card Body */}
 								<div className="mt-5 flex-1 space-y-3 text-sm text-[#F0EBE1]/70">
 									<div className="flex items-center justify-between gap-3">
-										<span>Need Quantity</span>
+										<span>Needed</span>
 										<span className="font-bold text-[#F0EBE1]">
+											{request.requestedQuantity} {request.unit}
+										</span>
+									</div>
+									<div className="flex items-center justify-between gap-3">
+										<span>Remaining</span>
+										<span className="font-bold text-amber-300">
 											{request.requestedQuantity - request.donatedQuantity} {request.unit}
 										</span>
 									</div>
@@ -444,14 +470,14 @@ export default function DonorExploreRequests() {
 									</div>
 								</div>
 
-								{/* Accept Button */}
+								{/* Fulfill Button */}
 								{request.status === "pending" && (
 									<button
 										type="button"
-										onClick={() => openAcceptModal(request)}
+										onClick={() => openFulfillModal(request)}
 										className="mt-6 inline-flex items-center justify-center rounded-xl bg-[#7DC542] px-4 py-3 text-sm font-black text-[#0B1A08] transition hover:bg-[#90D85A] active:scale-[0.98]"
 									>
-										Accept Request
+										Fulfill
 									</button>
 								)}
 							</article>
@@ -460,7 +486,7 @@ export default function DonorExploreRequests() {
 				)}
 			</div>
 
-			{/* ── Accept Request Modal ── */}
+			{/* ── Fulfill Request Modal ── */}
 			{selectedRequest ? (
 				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-6 overflow-y-auto">
 					<div className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#10170D] shadow-2xl">
@@ -469,14 +495,17 @@ export default function DonorExploreRequests() {
 								Fulfill Request
 							</p>
 							<h3 className="mt-2 text-xl font-black text-[#F0EBE1]">
-								Accept Request #{selectedRequest.donationRequestId}
+								Fulfill Request #{selectedRequest.donationRequestId}
 							</h3>
 							<p className="mt-2 text-sm text-[#F0EBE1]/60">
-								Provide the details of your donation to fulfill this center's requirements.
+								Provide food to fulfill this center's requirements. Deliver to{" "}
+								<span className="font-bold text-[#F0EBE1]">
+									{selectedRequest.distributionCenterName ?? `Center #${selectedRequest.distributionCenterUserId}`}
+								</span>.
 							</p>
 						</div>
 
-						<form onSubmit={handleAcceptSubmit} className="space-y-4 px-6 py-6">
+						<form onSubmit={handleFulfillSubmit} className="space-y-4 px-6 py-6">
 							<div className="grid gap-2 mb-4 rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-[#F0EBE1]/70">
 								<div className="flex items-center justify-between gap-3">
 									<span>Food Type</span>
@@ -485,28 +514,11 @@ export default function DonorExploreRequests() {
 									</span>
 								</div>
 								<div className="flex items-center justify-between gap-3">
-									<span>Need Quantity</span>
-									<span className="font-bold text-[#F0EBE1]">
-										{selectedRequest.requestedQuantity - selectedRequest.donatedQuantity} {selectedRequest.unit}
+									<span>Remaining Quantity</span>
+									<span className="font-bold text-amber-300">
+										{remainingQuantity} {selectedRequest.unit}
 									</span>
 								</div>
-								<div className="flex items-center justify-between gap-3">
-									<span>Distribution Center</span>
-									<span className="font-bold text-[#F0EBE1] text-right">
-										{selectedRequest.distributionCenterName ?? `Center #${selectedRequest.distributionCenterUserId}`}
-									</span>
-								</div>
-								{selectedRequest.distributionCenterAddress && (
-									<div className="flex items-center justify-between gap-3">
-										<span className="flex items-center gap-1.5">
-											<MapPinIcon className="h-3.5 w-3.5 text-[#7DC542]/70 shrink-0" />
-											Location
-										</span>
-										<span className="font-medium text-[#F0EBE1]/80 text-right max-w-[60%] text-xs leading-snug">
-											{selectedRequest.distributionCenterAddress}
-										</span>
-									</div>
-								)}
 							</div>
 
 							<label className="block space-y-1.5">
@@ -517,11 +529,26 @@ export default function DonorExploreRequests() {
 									type="number"
 									min="0.01"
 									step="0.01"
-									value={acceptedQuantity}
-									onChange={(e) => setAcceptedQuantity(e.target.value)}
+									max={remainingQuantity}
+									value={providedQuantity}
+									onChange={(e) => {
+										setProvidedQuantity(e.target.value);
+										// Inline validation
+										const val = Number(e.target.value);
+										if (val > remainingQuantity) {
+											setModalError(`Cannot exceed ${remainingQuantity} ${selectedRequest.unit}.`);
+										} else {
+											setModalError(null);
+										}
+									}}
 									className="auth-input w-full"
 									required
 								/>
+								{Number(providedQuantity) > remainingQuantity ? (
+									<p className="text-xs font-semibold text-rose-300">
+										Max: {remainingQuantity} {selectedRequest.unit}
+									</p>
+								) : null}
 							</label>
 
 							<label className="block space-y-1.5">
@@ -567,7 +594,7 @@ export default function DonorExploreRequests() {
 							<div className="flex gap-3 pt-2">
 								<button
 									type="button"
-									onClick={closeAcceptModal}
+									onClick={closeFulfillModal}
 									disabled={submitting}
 									className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold text-[#F0EBE1] transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
 								>
@@ -575,10 +602,10 @@ export default function DonorExploreRequests() {
 								</button>
 								<button
 									type="submit"
-									disabled={submitting}
+									disabled={submitting || Number(providedQuantity) > remainingQuantity}
 									className="flex-1 rounded-xl bg-[#7DC542] px-4 py-3 text-sm font-black text-[#0B1A08] transition hover:bg-[#90D85A] disabled:cursor-not-allowed disabled:opacity-60"
 								>
-									{submitting ? "Submitting..." : "Accept Request"}
+									{submitting ? "Submitting..." : "Fulfill"}
 								</button>
 							</div>
 						</form>
