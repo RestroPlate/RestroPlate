@@ -17,7 +17,7 @@ export default function DonorNotificationPanel({ donations, onRefresh }: DonorNo
 	const [processingId, setProcessingId] = useState<number | null>(null);
 	const [notice, setNotice] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
-	const requestedDonations = donations.filter((d) => d.status === "REQUESTED");
+	const requestedDonations = donations.filter((d) => d.status === "REQUESTED" && !d.donationRequestId);
 
 	if (requestedDonations.length === 0 && !notice) return null;
 

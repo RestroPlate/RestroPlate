@@ -51,7 +51,7 @@ export default function DonorMyDonations() {
 				</div>
 
 				{/* Flow 1 — Notification panel for incoming requests */}
-				{!loading && donations.some((d) => d.status === "REQUESTED") ? (
+				{!loading && donations.some((d) => d.status === "REQUESTED" && !d.donationRequestId) ? (
 					<DonorNotificationPanel donations={donations} onRefresh={fetchDonations} />
 				) : null}
 
