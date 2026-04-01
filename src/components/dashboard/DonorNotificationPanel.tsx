@@ -1,32 +1,38 @@
-// new: Donor notification panel for Flow 1 accept/reject lifecycle
+// rewritten: uses donation-claims API instead of filtering donations by status
 import { useState } from "react";
-import type { Donation } from "../../types/Dashboard";
-import { acceptDonation, rejectDonation } from "../../services/donationService";
+import type { Donation, DonationClaim } from "../../types/Dashboard";
+import { updateClaimStatus } from "../../services/claimService";
 import StatusNotice from "../StatusNotice";
 
 interface DonorNotificationPanelProps {
+	claims: DonationClaim[];
 	donations: Donation[];
 	onRefresh: () => Promise<void>;
 }
 
 /**
- * Shows notification cards for donations that have been requested by a DC.
- * Donor can Accept or Reject each request.
+ * Shows notification cards for pending claim requests on the donor's donations.
+ * Donor can Accept or Reject each claim.
  */
-export default function DonorNotificationPanel({ donations, onRefresh }: DonorNotificationPanelProps) {
+export default function DonorNotificationPanel({ claims, donations, onRefresh }: DonorNotificationPanelProps) {
 	const [processingId, setProcessingId] = useState<number | null>(null);
 	const [notice, setNotice] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
-	const requestedDonations = donations.filter((d) => d.status === "REQUESTED" && !d.donationRequestId);
+	const pendingClaims = claims.filter((c) => c.status === "PENDING");
 
-	if (requestedDonations.length === 0 && !notice) return null;
+	if (pendingClaims.length === 0 && !notice) return null;
 
-	async function handleAccept(donationId: number): Promise<void> {
-		setProcessingId(donationId);
+	// Look up donation details for a claim
+	function getDonation(donationId: number): Donation | undefined {
+		return donations.find((d) => d.donationId === donationId);
+	}
+
+	async function handleAccept(claimId: number): Promise<void> {
+		setProcessingId(claimId);
 		setNotice(null);
 		try {
-			await acceptDonation(donationId);
-			setNotice({ type: "success", message: "Donation accepted — awaiting delivery." });
+			await updateClaimStatus(claimId, "ACCEPTED");
+			setNotice({ type: "success", message: "Claim accepted — donation assigned to center." });
 			await onRefresh();
 		} catch (err) {
 			setNotice({ type: "error", message: err instanceof Error ? err.message : "Failed to accept." });
@@ -35,12 +41,12 @@ export default function DonorNotificationPanel({ donations, onRefresh }: DonorNo
 		}
 	}
 
-	async function handleReject(donationId: number): Promise<void> {
-		setProcessingId(donationId);
+	async function handleReject(claimId: number): Promise<void> {
+		setProcessingId(claimId);
 		setNotice(null);
 		try {
-			await rejectDonation(donationId);
-			setNotice({ type: "success", message: "Donation rejected — returned to available." });
+			await updateClaimStatus(claimId, "REJECTED");
+			setNotice({ type: "success", message: "Claim rejected." });
 			await onRefresh();
 		} catch (err) {
 			setNotice({ type: "error", message: err instanceof Error ? err.message : "Failed to reject." });
@@ -52,55 +58,56 @@ export default function DonorNotificationPanel({ donations, onRefresh }: DonorNo
 	return (
 		<section className="space-y-3">
 			<h3 className="text-sm font-bold uppercase tracking-[0.08em] text-amber-300">
-				🔔 Incoming Requests
+				🔔 Incoming Claim Requests
 			</h3>
 
 			{notice ? (
 				<StatusNotice type={notice.type} message={notice.message} onClose={() => setNotice(null)} />
 			) : null}
 
-			{requestedDonations.map((donation) => (
-				<article
-					key={donation.donationId}
-					className="rounded-xl border border-amber-400/20 bg-amber-500/5 p-4"
-				>
-					<p className="text-sm font-semibold text-[#F0EBE1]">
-						<span className="font-bold text-amber-300">
-							{donation.requesterName ?? "A distribution center"}
-						</span>{" "}
-						has requested your donation{" "}
-						<span className="font-bold text-[#7DC542]">"{donation.foodType}"</span>
-					</p>
-					<p className="mt-1 text-xs text-[#F0EBE1]/55">
-						Quantity: {donation.quantity} {donation.unit}
-					</p>
+			{pendingClaims.map((claim) => {
+				const donation = getDonation(claim.donationId);
+				return (
+					<article
+						key={claim.claimId}
+						className="rounded-xl border border-amber-400/20 bg-amber-500/5 p-4"
+					>
+						<p className="text-sm font-semibold text-[#F0EBE1]">
+							<span className="font-bold text-amber-300">
+								A distribution center
+							</span>{" "}
+							has claimed your donation{" "}
+							<span className="font-bold text-[#7DC542]">
+								"{donation?.foodType ?? `#${claim.donationId}`}"
+							</span>
+						</p>
+						{donation ? (
+							<p className="mt-1 text-xs text-[#F0EBE1]/55">
+								Quantity: {donation.quantity} {donation.unit}
+							</p>
+						) : null}
 
-					{donation.status === "REQUESTED" ? (
 						<div className="mt-3 flex gap-2">
 							<button
 								type="button"
-								disabled={processingId === donation.donationId}
-								onClick={() => handleAccept(donation.donationId)}
+								disabled={processingId === claim.claimId}
+								onClick={() => handleAccept(claim.claimId)}
 								className="inline-flex items-center rounded-lg bg-[#7DC542] px-4 py-2 text-xs font-extrabold text-[#0B1A08] transition hover:bg-[#90D85A] disabled:cursor-not-allowed disabled:opacity-60"
 							>
-								{processingId === donation.donationId ? "Processing..." : "Accept"}
+								{processingId === claim.claimId ? "Processing..." : "Accept"}
 							</button>
 							<button
 								type="button"
-								disabled={processingId === donation.donationId}
-								onClick={() => handleReject(donation.donationId)}
+								disabled={processingId === claim.claimId}
+								onClick={() => handleReject(claim.claimId)}
 								className="inline-flex items-center rounded-lg border border-rose-400/30 bg-rose-500/10 px-4 py-2 text-xs font-bold text-rose-300 transition hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60"
 							>
 								Reject
 							</button>
 						</div>
-					) : donation.status === "ACCEPTED" ? (
-						<p className="mt-3 text-xs font-bold uppercase tracking-[0.08em] text-sky-300">
-							✓ Accepted — Awaiting delivery
-						</p>
-					) : null}
-				</article>
-			))}
+					</article>
+				);
+			})}
 		</section>
 	);
 }

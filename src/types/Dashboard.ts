@@ -20,6 +20,18 @@ export interface Donation {
 	requesterName?: string | null;
 }
 
+// Claim status for donation claim requests (Flow 1 claims)
+export type ClaimStatus = "PENDING" | "ACCEPTED" | "REJECTED";
+
+export interface DonationClaim {
+	claimId: number;
+	donationId: number;
+	centerUserId: number;
+	donatorUserId: number;
+	status: ClaimStatus;
+	createdAt: string;
+}
+
 export interface CreateDonationPayload {
 	donationRequestId?: number | null;
 	foodType: string;

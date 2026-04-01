@@ -1,23 +1,29 @@
-// modified: added DonorNotificationPanel with polling, added ACCEPTED status filter
+// modified: fetches donation claims and passes to DonorNotificationPanel
 import { useCallback, useEffect, useRef, useState } from "react";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
 import DonationHistory from "../components/dashboard/DonationHistory";
 import DonorNotificationPanel from "../components/dashboard/DonorNotificationPanel";
 import { getMyDonations } from "../services/donationService";
-import type { Donation } from "../types/Dashboard";
+import { getMyClaims } from "../services/claimService";
+import type { Donation, DonationClaim } from "../types/Dashboard";
 
 const POLL_INTERVAL = 10_000; // 10 seconds
 
 export default function DonorMyDonations() {
 	const [loading, setLoading] = useState(true);
 	const [donations, setDonations] = useState<Donation[]>([]);
+	const [claims, setClaims] = useState<DonationClaim[]>([]);
 	const [error, setError] = useState<string | null>(null);
 	const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-	const fetchDonations = useCallback(async (): Promise<void> => {
+	const fetchData = useCallback(async (): Promise<void> => {
 		try {
-			const data = await getMyDonations();
-			setDonations(data);
+			const [donationsData, claimsData] = await Promise.all([
+				getMyDonations(),
+				getMyClaims(),
+			]);
+			setDonations(donationsData);
+			setClaims(claimsData);
 		} catch (err) {
 			setError(err instanceof Error ? err.message : "Failed to load donations.");
 		} finally {
@@ -26,19 +32,21 @@ export default function DonorMyDonations() {
 	}, []);
 
 	useEffect(() => {
-		void fetchDonations();
-	}, [fetchDonations]);
+		void fetchData();
+	}, [fetchData]);
 
-	// Poll every 10s for status updates (Flow 1 notifications)
+	// Poll every 10s for status updates (claim notifications)
 	useEffect(() => {
 		intervalRef.current = setInterval(() => {
-			void fetchDonations();
+			void fetchData();
 		}, POLL_INTERVAL);
 
 		return () => {
 			if (intervalRef.current) clearInterval(intervalRef.current);
 		};
-	}, [fetchDonations]);
+	}, [fetchData]);
+
+	const pendingClaims = claims.filter((c) => c.status === "PENDING");
 
 	return (
 		<DashboardLayout>
@@ -50,9 +58,9 @@ export default function DonorMyDonations() {
 					</p>
 				</div>
 
-				{/* Flow 1 — Notification panel for incoming requests */}
-				{!loading && donations.some((d) => d.status === "REQUESTED" && !d.donationRequestId) ? (
-					<DonorNotificationPanel donations={donations} onRefresh={fetchDonations} />
+				{/* Flow 1 — Notification panel for incoming claim requests */}
+				{!loading && pendingClaims.length > 0 ? (
+					<DonorNotificationPanel claims={claims} donations={donations} onRefresh={fetchData} />
 				) : null}
 
 				{loading ? (
@@ -66,7 +74,7 @@ export default function DonorMyDonations() {
 						{error}
 					</div>
 				) : (
-					<DonationHistory donations={donations} onRefresh={fetchDonations} />
+					<DonationHistory donations={donations} onRefresh={fetchData} />
 				)}
 			</div>
 		</DashboardLayout>

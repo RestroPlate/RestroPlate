@@ -1,11 +1,11 @@
-// modified: refactored to strict Flow 1 — "Request" button, polling for donor acceptance,
-// CollectDonationAction, DCInventoryTable. Removed "Create Request for this Food Type" (Flow 2 bleed).
+// modified: uses donation-claims API instead of direct requestDonation
 import { useCallback, useEffect, useRef, useState } from "react";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
 import CollectDonationAction from "../components/dashboard/CollectDonationAction";
 import DCInventoryTable from "../components/dashboard/DCInventoryTable";
 import StatusNotice from "../components/StatusNotice";
-import { getAvailableDonations, requestDonation } from "../services/donationService";
+import { getAvailableDonations } from "../services/donationService";
+import { createClaim, getMyClaims } from "../services/claimService";
 import type { Donation, DonationStatus } from "../types/Dashboard";
 
 const POLL_INTERVAL = 10_000;
@@ -37,6 +37,7 @@ export default function CenterExploreDonations() {
 	const [inventoryRefreshKey, setInventoryRefreshKey] = useState(0);
 	const [foodTypeFilter, setFoodTypeFilter] = useState("");
 	const [locationFilter, setLocationFilter] = useState("");
+	const [claimedDonationIds, setClaimedDonationIds] = useState<Set<number>>(new Set());
 	const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
 	const fetchDonations = useCallback(async () => {
@@ -54,12 +55,24 @@ export default function CenterExploreDonations() {
 		}
 	}, [foodTypeFilter, locationFilter]);
 
+	// Fetch existing claims to know which donations are already claimed
+	const fetchMyClaims = useCallback(async () => {
+		try {
+			const claims = await getMyClaims();
+			const pendingIds = new Set(claims.filter((c) => c.status === "PENDING").map((c) => c.donationId));
+			setClaimedDonationIds(pendingIds);
+		} catch {
+			// silently fail, claim badges won't show
+		}
+	}, []);
+
 	useEffect(() => {
 		const timeoutId = window.setTimeout(() => {
 			void fetchDonations();
+			void fetchMyClaims();
 		}, 250);
 		return () => window.clearTimeout(timeoutId);
-	}, [fetchDonations]);
+	}, [fetchDonations, fetchMyClaims]);
 
 	// Poll for status updates (donor accepting/rejecting)
 	useEffect(() => {
@@ -75,16 +88,12 @@ export default function CenterExploreDonations() {
 		setRequestingId(donationId);
 		setNotice(null);
 		try {
-			await requestDonation(donationId);
-			// Optimistically update
-			setDonations((prev) =>
-				prev.map((d) =>
-					d.donationId === donationId ? { ...d, status: "REQUESTED" as DonationStatus } : d,
-				),
-			);
-			setNotice({ type: "success", message: "Donation requested — waiting for donor approval." });
+			await createClaim(donationId);
+			// Optimistically track the claim
+			setClaimedDonationIds((prev) => new Set(prev).add(donationId));
+			setNotice({ type: "success", message: "Claim sent — waiting for donor approval." });
 		} catch (err) {
-			setNotice({ type: "error", message: err instanceof Error ? err.message : "Failed to request." });
+			setNotice({ type: "error", message: err instanceof Error ? err.message : "Failed to send claim." });
 		} finally {
 			setRequestingId(null);
 		}
@@ -205,19 +214,19 @@ export default function CenterExploreDonations() {
 								</div>
 
 								{/* Flow 1 Action Buttons */}
-								{donation.status === "AVAILABLE" ? (
+								{claimedDonationIds.has(donation.donationId) ? (
+									<p className="mt-6 rounded-lg bg-amber-500/10 px-3 py-2.5 text-center text-xs font-bold uppercase tracking-[0.08em] text-amber-300">
+										Claim Pending — awaiting donor approval
+									</p>
+								) : donation.status === "AVAILABLE" ? (
 									<button
 										type="button"
 										disabled={requestingId === donation.donationId}
 										onClick={() => handleRequest(donation.donationId)}
 										className="mt-6 inline-flex items-center justify-center rounded-xl bg-[#7DC542] px-4 py-3 text-sm font-black text-[#0B1A08] transition hover:bg-[#90D85A] disabled:cursor-not-allowed disabled:opacity-60"
 									>
-										{requestingId === donation.donationId ? "Requesting..." : "Request"}
+										{requestingId === donation.donationId ? "Claiming..." : "Claim"}
 									</button>
-								) : donation.status === "REQUESTED" ? (
-									<p className="mt-6 rounded-lg bg-amber-500/10 px-3 py-2.5 text-center text-xs font-bold uppercase tracking-[0.08em] text-amber-300">
-										Pending donor approval
-									</p>
 								) : donation.status === "ACCEPTED" ? (
 									<CollectDonationAction
 										donationId={donation.donationId}
