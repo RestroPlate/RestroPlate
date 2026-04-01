@@ -23,7 +23,7 @@ interface DonationApiResponse {
 	status?: string;
 	created_at?: string;
 	createdAt?: string;
-	requesterName?: string | null;
+	claimedByCenterUserId?: number | null;
 }
 
 interface DonationsListResponse {
@@ -64,7 +64,7 @@ function mapDonationResponse(data: DonationApiResponse | undefined | null, paylo
 		donationRequestId: data.donationRequestId,
 		providerUserId: data.providerUserId ?? 0,
 		foodType: data.foodType ?? payload?.foodType ?? "Unknown",
-		description: data.description ?? payload?.description ?? "",
+		description: data.description ?? "",
 		quantity: data.quantity ?? payload?.quantity ?? 1,
 		unit: data.unit ?? payload?.unit ?? "Unit",
 		expirationDate: data.expiry_date ?? data.expirationDate ?? payload?.expirationDate ?? new Date().toISOString(),
@@ -72,7 +72,7 @@ function mapDonationResponse(data: DonationApiResponse | undefined | null, paylo
 		availabilityTime: data.availability_time ?? data.availabilityTime ?? payload?.availabilityTime ?? "Unknown",
 		status: normalizeStatus(data.status),
 		createdAt: data.created_at ?? data.createdAt ?? new Date().toISOString(),
-		requesterName: data.requesterName ?? null,
+		claimedByCenterUserId: data.claimedByCenterUserId ?? null,
 	};
 }
 
@@ -204,7 +204,7 @@ export async function getAllDonations(status?: string): Promise<Donation[]> {
  */
 export async function getAvailableDonations(params?: AvailableDonationsParams): Promise<Donation[]> {
 	try {
-		const queryParams = { status: "AVAILABLE", ...params };
+		const queryParams = { ...params };
 		const { data } = await apiClient.get<DonationApiResponse[] | DonationsListResponse>("/api/donations/available", { params: queryParams });
 		return extractDonationsList(data).map((item) => mapDonationResponse(item));
 	} catch (err) {
@@ -280,29 +280,7 @@ export async function requestDonation(id: number): Promise<Donation> {
 	}
 }
 
-/**
- * Donor accepts a requested donation (Flow 1). REQUESTED → ACCEPTED.
- */
-export async function acceptDonation(id: number): Promise<Donation> {
-	try {
-		const { data } = await apiClient.patch<DonationApiResponse>(`/api/donations/${id}/accept`);
-		return mapDonationResponse(data);
-	} catch (err) {
-		throw new Error(extractErrorMessage(err, "Failed to accept donation."));
-	}
-}
 
-/**
- * Donor rejects a requested donation (Flow 1). REQUESTED → AVAILABLE.
- */
-export async function rejectDonation(id: number): Promise<Donation> {
-	try {
-		const { data } = await apiClient.patch<DonationApiResponse>(`/api/donations/${id}/reject`);
-		return mapDonationResponse(data);
-	} catch (err) {
-		throw new Error(extractErrorMessage(err, "Failed to reject donation."));
-	}
-}
 
 /**
  * Center marks a donation as collected (Flow 1 & Flow 2). ACCEPTED → COLLECTED.

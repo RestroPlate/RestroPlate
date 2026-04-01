@@ -75,20 +75,7 @@ export async function submitDonationRequest(
 	}
 }
 
-export async function getProviderRequests(
-	status?: DonationRequestStatus,
-): Promise<DonationRequest[]> {
-	try {
-		const params = status ? { status } : undefined;
-		const { data } = await apiClient.get<DonationRequestApiResponse[]>(
-			"/api/donation-requests",
-			{ params },
-		);
-		return data.map(mapDonationRequestResponse);
-	} catch (err) {
-		throw new Error(extractErrorMessage(err, "Failed to load incoming requests."));
-	}
-}
+
 
 export async function getCenterOutgoingRequests(
 	status?: DonationRequestStatus,
@@ -148,13 +135,12 @@ export async function getDonationsForRequest(
 		const { data } = await apiClient.get(
 			`/api/donation-requests/${requestId}/donations`,
 		);
-		const items = Array.isArray(data) ? data : (data as Record<string, unknown>)?.donations ?? [];
+		const items = Array.isArray(data) ? data : (data as Record<string, unknown>)?.donations ?? (data as Record<string, unknown>)?.items ?? (data as Record<string, unknown>)?.data ?? [];
 		return (items as Array<Record<string, unknown>>).map((item) => ({
 			donationId: (item.donation_id ?? item.donationId ?? 0) as number,
-			donationRequestId: requestId,
+			donationRequestId: (item.donation_request_id ?? item.donationRequestId ?? null) as number | null,
 			providerUserId: (item.providerUserId ?? 0) as number,
 			foodType: (item.foodType ?? "Unknown") as string,
-			description: (item.description ?? "") as string,
 			quantity: (item.quantity ?? 0) as number,
 			unit: (item.unit ?? "units") as string,
 			expirationDate: (item.expiry_date ?? item.expirationDate ?? new Date().toISOString()) as string,
@@ -162,7 +148,7 @@ export async function getDonationsForRequest(
 			availabilityTime: (item.availability_time ?? item.availabilityTime ?? "") as string,
 			status: ((item.status as string)?.toUpperCase() === "COLLECTED" ? "COLLECTED" : (item.status as string)?.toUpperCase() === "ACCEPTED" ? "ACCEPTED" : (item.status as string)?.toUpperCase() === "REQUESTED" ? "REQUESTED" : "AVAILABLE") as Donation["status"],
 			createdAt: (item.created_at ?? item.createdAt ?? new Date().toISOString()) as string,
-			requesterName: (item.requesterName ?? item.donorName ?? null) as string | null,
+			claimedByCenterUserId: (item.claimedByCenterUserId ?? null) as number | null,
 		}));
 	} catch (err) {
 		throw new Error(extractErrorMessage(err, "Failed to load donations for this request."));

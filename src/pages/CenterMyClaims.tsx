@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
 import { getMyClaims } from "../services/claimService";
-import { getAllDonations } from "../services/donationService";
+import { getAvailableDonations } from "../services/donationService";
 import type { Donation, DonationClaim, ClaimStatus } from "../types/Dashboard";
 
 const POLL_INTERVAL = 15_000;
@@ -46,7 +46,7 @@ export default function CenterMyClaims() {
 		try {
 			const [claimsData, donationsData] = await Promise.all([
 				getMyClaims(),
-				getAllDonations(),
+				getAvailableDonations(),
 			]);
 			setClaims(claimsData);
 			const donationMap = new Map<number, Donation>();

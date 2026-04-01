@@ -16,8 +16,7 @@ export interface Donation {
 	availabilityTime: string;
 	status: DonationStatus;
 	createdAt: string;
-	/** Name of the center that requested this donation (Flow 1) */
-	requesterName?: string | null;
+	claimedByCenterUserId?: number | null;
 }
 
 // Claim status for donation claim requests (Flow 1 claims)
@@ -35,7 +34,6 @@ export interface DonationClaim {
 export interface CreateDonationPayload {
 	donationRequestId?: number | null;
 	foodType: string;
-	description?: string;
 	quantity: number;
 	unit: string;
 	expirationDate: string;
@@ -88,7 +86,6 @@ export interface DonationRequest {
 
 export interface SubmitDonationRequestPayload {
 	foodType: string;
-	description?: string;
 	requestedQuantity: number;
 	unit: string;
 }

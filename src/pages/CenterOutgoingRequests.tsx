@@ -246,7 +246,7 @@ export default function CenterOutgoingRequests() {
 														<div className="flex flex-wrap items-center justify-between gap-2">
 															<div>
 																<span className="text-sm font-bold text-[#F0EBE1]">
-																	{donation.requesterName ?? `Donor #${donation.providerUserId}`}
+																	{`Donor #${donation.providerUserId}`}
 																</span>
 																<span className="mx-2 text-[#F0EBE1]/30">·</span>
 																<span className="text-sm text-[#F0EBE1]/60">
