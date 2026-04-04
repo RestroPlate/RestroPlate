@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
 import CollectDonationAction from "../components/dashboard/CollectDonationAction";
-import DCInventoryTable from "../components/dashboard/DCInventoryTable";
 import StatusNotice from "../components/StatusNotice";
 import {
 	getCenterOutgoingRequests,
@@ -64,7 +63,7 @@ export default function CenterOutgoingRequests() {
 		type: "success" | "error";
 		message: string;
 	} | null>(null);
-	const [inventoryRefreshKey, setInventoryRefreshKey] = useState(0);
+
 
 	// Expanded sub-list state
 	const [expandedId, setExpandedId] = useState<number | null>(null);
@@ -131,7 +130,7 @@ export default function CenterOutgoingRequests() {
 			type: "success",
 			message: `Donation collected and added to inventory (Request #${requestId}).`,
 		});
-		setInventoryRefreshKey((k) => k + 1);
+
 		// Re-fetch sub-list
 		void toggleExpand(requestId).then(() => toggleExpand(requestId));
 	}
@@ -319,13 +318,7 @@ export default function CenterOutgoingRequests() {
 					</div>
 				)}
 
-				{/* ── DC Inventory Table ── */}
-				<div className="space-y-3">
-					<h3 className="text-lg font-bold text-[#F0EBE1]">
-						Collected Inventory
-					</h3>
-					<DCInventoryTable refreshKey={inventoryRefreshKey} />
-				</div>
+
 			</div>
 		</DashboardLayout>
 	);

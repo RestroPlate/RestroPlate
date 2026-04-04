@@ -18,6 +18,10 @@ export interface CenterDetails {
 
 export interface Donation {
 	donationId: number;
+	inventoryId?: number;
+	inventoryLogId?: number;
+	is_public?: boolean;
+	isPublished?: boolean;
 	donationRequestId?: number | null;
 	providerUserId: number;
 	foodType: string;

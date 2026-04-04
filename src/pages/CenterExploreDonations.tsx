@@ -1,8 +1,7 @@
 // modified: uses donation-claims API instead of direct requestDonation
 import { useCallback, useEffect, useRef, useState } from "react";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
-import CollectDonationAction from "../components/dashboard/CollectDonationAction";
-import DCInventoryTable from "../components/dashboard/DCInventoryTable";
+
 import StatusNotice from "../components/StatusNotice";
 import { getAvailableDonations } from "../services/donationService";
 import { createClaim, getMyClaims } from "../services/claimService";
@@ -23,7 +22,7 @@ function formatDate(value: string): string {
 const STATUS_CLASSES: Record<DonationStatus, string> = {
 	AVAILABLE: "bg-emerald-500/15 text-emerald-300",
 	REQUESTED: "bg-amber-500/15 text-amber-300",
-	ACCEPTED: "bg-sky-500/15 text-sky-300",
+
 	COLLECTED: "bg-sky-500/15 text-sky-300",
 	COMPLETED: "bg-violet-500/15 text-violet-300",
 };
@@ -37,7 +36,7 @@ export default function CenterExploreDonations() {
 		type: "success" | "error";
 		message: string;
 	} | null>(null);
-	const [inventoryRefreshKey, setInventoryRefreshKey] = useState(0);
+
 	const [foodTypeFilter, setFoodTypeFilter] = useState("");
 	const [locationFilter, setLocationFilter] = useState("");
 	const [claimedDonationIds, setClaimedDonationIds] = useState<Set<number>>(
@@ -116,14 +115,6 @@ export default function CenterExploreDonations() {
 		}
 	}
 
-	function handleCollected(): void {
-		setNotice({
-			type: "success",
-			message: "Donation collected and added to inventory!",
-		});
-		setInventoryRefreshKey((k) => k + 1);
-		void fetchDonations();
-	}
 
 	return (
 		<DashboardLayout>
@@ -257,26 +248,13 @@ export default function CenterExploreDonations() {
 											? "Claiming..."
 											: "Claim"}
 									</button>
-								) : donation.status === "ACCEPTED" ? (
-									<CollectDonationAction
-										donationId={donation.donationId}
-										quantity={donation.quantity}
-										unit={donation.unit}
-										onCollected={handleCollected}
-									/>
 								) : null}
 							</article>
 						))}
 					</div>
 				)}
 
-				{/* ── DC Inventory Table ── */}
-				<div className="space-y-3">
-					<h3 className="text-lg font-bold text-[#F0EBE1]">
-						Collected Inventory
-					</h3>
-					<DCInventoryTable refreshKey={inventoryRefreshKey} />
-				</div>
+
 			</div>
 		</DashboardLayout>
 	);

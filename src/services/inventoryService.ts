@@ -48,3 +48,19 @@ export async function collectDonation(
 		throw new Error(extractErrorMessage(err, "Failed to collect donation."));
 	}
 }
+
+/**
+ * Toggles the public visibility of an inventory item.
+ */
+export async function publishInventory(
+	inventoryId: number,
+	isPublic: boolean,
+): Promise<void> {
+	try {
+		await apiClient.patch(`/api/inventory/${inventoryId}/publish`, isPublic, {
+			headers: { "Content-Type": "application/json" },
+		});
+	} catch (err) {
+		throw new Error(extractErrorMessage(err, "Failed to update publish status."));
+	}
+}
