@@ -64,3 +64,18 @@ export async function publishInventory(
 		throw new Error(extractErrorMessage(err, "Failed to update publish status."));
 	}
 }
+/**
+ * Distributes a specific quantity of an inventory item.
+ */
+export async function distributeInventory(
+	inventoryLogId: number,
+	distributedQuantity: number,
+): Promise<void> {
+	try {
+		await apiClient.patch(`/api/inventory/logs/${inventoryLogId}/distribute`, {
+			distributedQuantity,
+		});
+	} catch (err) {
+		throw new Error(extractErrorMessage(err, "Failed to distribute inventory."));
+	}
+}
