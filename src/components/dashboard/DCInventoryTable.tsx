@@ -2,7 +2,8 @@
 import { useEffect } from "react";
 import { useInventory } from "../hooks/useInventory";
 
-function formatDate(value: string): string {
+function formatDate(value: string | undefined): string {
+	if (!value) return "N/A";
 	const parsed = new Date(value);
 	if (Number.isNaN(parsed.getTime())) return value;
 	return parsed.toLocaleDateString("en-US", {
@@ -20,7 +21,10 @@ interface DCInventoryTableProps {
 	refreshKey?: number;
 }
 
-export default function DCInventoryTable({ dcId, refreshKey }: DCInventoryTableProps) {
+export default function DCInventoryTable({
+	dcId,
+	refreshKey,
+}: DCInventoryTableProps) {
 	const { inventory, loading, error, refresh } = useInventory(dcId);
 
 	// Re-fetch when refreshKey changes
@@ -57,9 +61,11 @@ export default function DCInventoryTable({ dcId, refreshKey }: DCInventoryTableP
 	if (inventory.length === 0) {
 		return (
 			<div className="rounded-xl border border-dashed border-white/15 bg-white/5 px-6 py-8 text-center">
-				<p className="text-sm font-bold text-[#F0EBE1]">No inventory items yet</p>
+				<p className="text-sm font-bold text-[#F0EBE1]">
+					No inventory items yet
+				</p>
 				<p className="mt-1 text-xs text-[#F0EBE1]/55">
-					Collected donations from both flows will appear here.
+					Claimed donations will appear here.
 				</p>
 			</div>
 		);
@@ -72,20 +78,26 @@ export default function DCInventoryTable({ dcId, refreshKey }: DCInventoryTableP
 					<tr className="text-left text-xs font-bold uppercase tracking-[0.08em] text-[#F0EBE1]/50">
 						<th className="px-5 py-3">Item Name</th>
 						<th className="px-5 py-3">Qty Collected</th>
-						<th className="px-5 py-3">Source</th>
+						<th className="px-5 py-3">Status</th>
 						<th className="px-5 py-3">Collected At</th>
 					</tr>
 				</thead>
 				<tbody>
 					{inventory.map((item) => (
 						<tr
-							key={item.inventoryId}
+							key={item.donationId}
 							className="border-t border-white/10 text-sm text-[#F0EBE1]/75 transition hover:bg-white/[0.03]"
 						>
-							<td className="px-5 py-3 font-bold text-[#F0EBE1]">{item.itemName}</td>
-							<td className="px-5 py-3">{item.quantityCollected}</td>
-							<td className="px-5 py-3 text-xs">{item.source}</td>
-							<td className="px-5 py-3 text-xs text-[#F0EBE1]/50">{formatDate(item.collectedAt)}</td>
+							<td className="px-5 py-3 font-bold text-[#F0EBE1] capitalize">
+								{item.foodType}
+							</td>
+							<td className="px-5 py-3">
+								{item.quantity} {item.unit}
+							</td>
+							<td className="px-5 py-3 text-xs uppercase">{item.status}</td>
+							<td className="px-5 py-3 text-xs text-[#F0EBE1]/50">
+								{formatDate(item.availabilityTime)}
+							</td>
 						</tr>
 					))}
 				</tbody>

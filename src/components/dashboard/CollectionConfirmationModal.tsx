@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { updateCollectedQuantity } from "../../services/distributionInventoryService";
+import { collectDonation } from "../../services/inventoryService";
 
 interface CollectionConfirmationModalProps {
 	isOpen: boolean;
 	onClose: () => void;
 	onSuccess: () => void;
-	donationRequestId: number;
+	donationId: number;
 	defaultQuantity: number;
 	unit: string;
 	foodType: string;
@@ -15,7 +15,7 @@ export default function CollectionConfirmationModal({
 	isOpen,
 	onClose,
 	onSuccess,
-	donationRequestId,
+	donationId,
 	defaultQuantity,
 	unit,
 	foodType,
@@ -41,8 +41,8 @@ export default function CollectionConfirmationModal({
 		setError(null);
 
 		try {
-			await updateCollectedQuantity(donationRequestId, {
-				collectedQuantity: quantity,
+			await collectDonation(donationId, {
+				collectedAmount: quantity,
 			});
 			onSuccess();
 			onClose();
@@ -86,7 +86,9 @@ export default function CollectionConfirmationModal({
 					Confirm Collection
 				</h2>
 				<p className="mt-2 text-sm text-[#F0EBE1]/65">
-					Enter the actual quantity of <strong className="text-white">{foodType}</strong> collected from the provider.
+					Enter the actual quantity of{" "}
+					<strong className="text-white">{foodType}</strong> collected from the
+					provider.
 				</p>
 
 				{error && (
@@ -116,7 +118,8 @@ export default function CollectionConfirmationModal({
 							disabled={loading}
 						/>
 						<p className="text-xs text-[#F0EBE1]/40">
-							Requested amount was {defaultQuantity} {unit}. The actual collected amount may differ.
+							Requested amount was {defaultQuantity} {unit}. The actual
+							collected amount may differ.
 						</p>
 					</div>
 

@@ -25,7 +25,9 @@ export default function DonorMyDonations() {
 			setDonations(donationsData);
 			setClaims(claimsData);
 		} catch (err) {
-			setError(err instanceof Error ? err.message : "Failed to load donations.");
+			setError(
+				err instanceof Error ? err.message : "Failed to load donations.",
+			);
 		} finally {
 			setLoading(false);
 		}
@@ -60,7 +62,11 @@ export default function DonorMyDonations() {
 
 				{/* Flow 1 — Notification panel for incoming claim requests */}
 				{!loading && pendingClaims.length > 0 ? (
-					<DonorNotificationPanel claims={claims} donations={donations} onRefresh={fetchData} />
+					<DonorNotificationPanel
+						claims={claims}
+						donations={donations}
+						onRefresh={fetchData}
+					/>
 				) : null}
 
 				{loading ? (
@@ -70,7 +76,10 @@ export default function DonorMyDonations() {
 						<div className="skeleton-shimmer h-[100px]" />
 					</div>
 				) : error ? (
-					<div className="rounded-xl border border-rose-400/35 bg-rose-500/10 px-4 py-3 text-sm font-semibold text-rose-100" role="alert">
+					<div
+						className="rounded-xl border border-rose-400/35 bg-rose-500/10 px-4 py-3 text-sm font-semibold text-rose-100"
+						role="alert"
+					>
 						{error}
 					</div>
 				) : (

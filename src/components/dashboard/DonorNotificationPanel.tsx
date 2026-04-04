@@ -10,10 +10,17 @@ interface DonorNotificationPanelProps {
 	onRefresh: () => Promise<void>;
 }
 
-export default function DonorNotificationPanel({ claims, donations, onRefresh }: DonorNotificationPanelProps) {
+export default function DonorNotificationPanel({
+	claims,
+	donations,
+	onRefresh,
+}: DonorNotificationPanelProps) {
 	const [activeClaimId, setActiveClaimId] = useState<number | null>(null);
 	const [processingId, setProcessingId] = useState<number | null>(null);
-	const [notice, setNotice] = useState<{ type: "success" | "error"; message: string } | null>(null);
+	const [notice, setNotice] = useState<{
+		type: "success" | "error";
+		message: string;
+	} | null>(null);
 
 	const pendingClaims = claims.filter((c) => c.status === "PENDING");
 
@@ -32,7 +39,10 @@ export default function DonorNotificationPanel({ claims, donations, onRefresh }:
 			setActiveClaimId(null);
 			await onRefresh();
 		} catch (err) {
-			setNotice({ type: "error", message: err instanceof Error ? err.message : "Failed to accept." });
+			setNotice({
+				type: "error",
+				message: err instanceof Error ? err.message : "Failed to accept.",
+			});
 		} finally {
 			setProcessingId(null);
 		}
@@ -47,14 +57,19 @@ export default function DonorNotificationPanel({ claims, donations, onRefresh }:
 			setActiveClaimId(null);
 			await onRefresh();
 		} catch (err) {
-			setNotice({ type: "error", message: err instanceof Error ? err.message : "Failed to reject." });
+			setNotice({
+				type: "error",
+				message: err instanceof Error ? err.message : "Failed to reject.",
+			});
 		} finally {
 			setProcessingId(null);
 		}
 	}
 
 	const activeClaim = pendingClaims.find((c) => c.claimId === activeClaimId);
-	const activeDonation = activeClaim ? getDonation(activeClaim.donationId) : undefined;
+	const activeDonation = activeClaim
+		? getDonation(activeClaim.donationId)
+		: undefined;
 
 	return (
 		<section className="space-y-3">
@@ -63,7 +78,11 @@ export default function DonorNotificationPanel({ claims, donations, onRefresh }:
 			</h3>
 
 			{notice ? (
-				<StatusNotice type={notice.type} message={notice.message} onClose={() => setNotice(null)} />
+				<StatusNotice
+					type={notice.type}
+					message={notice.message}
+					onClose={() => setNotice(null)}
+				/>
 			) : null}
 
 			<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -82,7 +101,10 @@ export default function DonorNotificationPanel({ claims, donations, onRefresh }:
 									📍 {claim.center?.address || "Address not provided"}
 								</p>
 								<div className="mt-2 text-xs font-semibold text-[#F0EBE1]">
-									Requesting: <span className="text-[#7DC542]">{donation?.foodType || "Loading..."}</span>
+									Requesting:{" "}
+									<span className="text-[#7DC542]">
+										{donation?.foodType || "Loading..."}
+									</span>
 								</div>
 							</div>
 

@@ -13,84 +13,84 @@ import CenterMyClaims from "./pages/CenterMyClaims";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
-  return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/join" element={<Auth />} />
-      <Route
-        path="/dashboard/donor"
-        element={
-          <ProtectedRoute allowedRole="DONOR">
-            <DonorDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/dashboard/donor/create"
-        element={
-          <ProtectedRoute allowedRole="DONOR">
-            <DonorCreateDonation />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/dashboard/donor/my-donations"
-        element={
-          <ProtectedRoute allowedRole="DONOR">
-            <DonorMyDonations />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/dashboard/donor/explore"
-        element={
-          <ProtectedRoute allowedRole="DONOR">
-            <DonorExploreRequests />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/dashboard/center"
-        element={
-          <ProtectedRoute allowedRole="DISTRIBUTION_CENTER">
-            <CenterDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/dashboard/center/explore"
-        element={
-          <ProtectedRoute allowedRole="DISTRIBUTION_CENTER">
-            <CenterExploreDonations />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/dashboard/center/create-request"
-        element={
-          <ProtectedRoute allowedRole="DISTRIBUTION_CENTER">
-            <CenterCreateRequest />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/dashboard/center/requests"
-        element={
-          <ProtectedRoute allowedRole="DISTRIBUTION_CENTER">
-            <CenterOutgoingRequests />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/dashboard/center/claims"
-        element={
-          <ProtectedRoute allowedRole="DISTRIBUTION_CENTER">
-            <CenterMyClaims />
-          </ProtectedRoute>
-        }
-      />
-    </Routes>
-  );
+	return (
+		<Routes>
+			<Route path="/" element={<Home />} />
+			<Route path="/join" element={<Auth />} />
+			<Route
+				path="/dashboard/donor"
+				element={
+					<ProtectedRoute allowedRole="DONOR">
+						<DonorDashboard />
+					</ProtectedRoute>
+				}
+			/>
+			<Route
+				path="/dashboard/donor/create"
+				element={
+					<ProtectedRoute allowedRole="DONOR">
+						<DonorCreateDonation />
+					</ProtectedRoute>
+				}
+			/>
+			<Route
+				path="/dashboard/donor/my-donations"
+				element={
+					<ProtectedRoute allowedRole="DONOR">
+						<DonorMyDonations />
+					</ProtectedRoute>
+				}
+			/>
+			<Route
+				path="/dashboard/donor/explore"
+				element={
+					<ProtectedRoute allowedRole="DONOR">
+						<DonorExploreRequests />
+					</ProtectedRoute>
+				}
+			/>
+			<Route
+				path="/dashboard/center"
+				element={
+					<ProtectedRoute allowedRole="DISTRIBUTION_CENTER">
+						<CenterDashboard />
+					</ProtectedRoute>
+				}
+			/>
+			<Route
+				path="/dashboard/center/explore"
+				element={
+					<ProtectedRoute allowedRole="DISTRIBUTION_CENTER">
+						<CenterExploreDonations />
+					</ProtectedRoute>
+				}
+			/>
+			<Route
+				path="/dashboard/center/create-request"
+				element={
+					<ProtectedRoute allowedRole="DISTRIBUTION_CENTER">
+						<CenterCreateRequest />
+					</ProtectedRoute>
+				}
+			/>
+			<Route
+				path="/dashboard/center/requests"
+				element={
+					<ProtectedRoute allowedRole="DISTRIBUTION_CENTER">
+						<CenterOutgoingRequests />
+					</ProtectedRoute>
+				}
+			/>
+			<Route
+				path="/dashboard/center/claims"
+				element={
+					<ProtectedRoute allowedRole="DISTRIBUTION_CENTER">
+						<CenterMyClaims />
+					</ProtectedRoute>
+				}
+			/>
+		</Routes>
+	);
 }
 
 export default App;

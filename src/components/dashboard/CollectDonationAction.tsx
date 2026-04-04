@@ -36,7 +36,9 @@ export default function CollectDonationAction({
 			await collectDonation(donationId, amount);
 			onCollected();
 		} catch (err) {
-			setError(err instanceof Error ? err.message : "Failed to mark as collected.");
+			setError(
+				err instanceof Error ? err.message : "Failed to mark as collected.",
+			);
 		} finally {
 			setCollecting(false);
 		}

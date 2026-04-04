@@ -13,12 +13,9 @@ export default function CenterDashboard() {
 		available: number;
 	}>({ distributed: 0, available: 0 });
 
-	function isCurrentPath(
-	currentPath: string,
-	targetPath: string,
-	): string {
+	function isCurrentPath(currentPath: string, targetPath: string): string {
 		if (currentPath === targetPath) return targetPath;
-		const prefixMatch = currentPath.match(/^\/[^/]+/); 
+		const prefixMatch = currentPath.match(/^\/[^/]+/);
 		const prefix = prefixMatch ? prefixMatch[0] : "";
 		return `${prefix}${targetPath}`;
 	}
@@ -157,7 +154,9 @@ export default function CenterDashboard() {
 
 					{/* ── Quick Actions ── */}
 					<div className="mb-8">
-						<h2 className="mb-4 text-[1.15rem] font-bold text-[#F0EBE1]">Quick Actions</h2>
+						<h2 className="mb-4 text-[1.15rem] font-bold text-[#F0EBE1]">
+							Quick Actions
+						</h2>
 						<div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 							<a
 								href={isCurrentPath(
@@ -170,7 +169,9 @@ export default function CenterDashboard() {
 								<h3 className="mt-2 text-base font-bold text-[#F0EBE1] transition group-hover:text-[#7DC542]">
 									Browse Donations
 								</h3>
-								<p className="mt-1 text-sm text-[rgba(240,235,225,0.5)]">View available standalone donations.</p>
+								<p className="mt-1 text-sm text-[rgba(240,235,225,0.5)]">
+									View available standalone donations.
+								</p>
 							</a>
 							<a
 								href={isCurrentPath(
@@ -183,7 +184,9 @@ export default function CenterDashboard() {
 								<h3 className="mt-2 text-base font-bold text-[#F0EBE1] transition group-hover:text-[#7DC542]">
 									Create Request
 								</h3>
-								<p className="mt-1 text-sm text-[rgba(240,235,225,0.5)]">Submit a new requirement to donors.</p>
+								<p className="mt-1 text-sm text-[rgba(240,235,225,0.5)]">
+									Submit a new requirement to donors.
+								</p>
 							</a>
 							<a
 								href={isCurrentPath(
@@ -196,7 +199,9 @@ export default function CenterDashboard() {
 								<h3 className="mt-2 text-base font-bold text-[#F0EBE1] transition group-hover:text-[#7DC542]">
 									Outgoing Requests
 								</h3>
-								<p className="mt-1 text-sm text-[rgba(240,235,225,0.5)]">Track status of your submitted requests.</p>
+								<p className="mt-1 text-sm text-[rgba(240,235,225,0.5)]">
+									Track status of your submitted requests.
+								</p>
 							</a>
 						</div>
 					</div>

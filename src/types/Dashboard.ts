@@ -2,7 +2,11 @@ import type { AccountType, UserProfileDto } from "./Auth";
 export type { UserProfileDto };
 
 // modified: added COLLECTED status for Flow 1 lifecycle (removed ACCEPTED)
-export type DonationStatus = "AVAILABLE" | "REQUESTED" | "COLLECTED" | "COMPLETED";
+export type DonationStatus =
+	| "AVAILABLE"
+	| "REQUESTED"
+	| "COLLECTED"
+	| "COMPLETED";
 
 export interface CenterDetails {
 	userId: number;
@@ -79,8 +83,10 @@ export interface MockUser {
 }
 
 // modified: added partially_filled status for Flow 2 requests
-export type DonationRequestStatus = "pending" | "partially_filled" | "completed";
-
+export type DonationRequestStatus =
+	| "pending"
+	| "partially_filled"
+	| "completed";
 
 export interface DonationRequest {
 	donationRequestId: number;
@@ -99,6 +105,21 @@ export interface SubmitDonationRequestPayload {
 	foodType: string;
 	requestedQuantity: number;
 	unit: string;
+}
+
+// new: payload for POST /api/inventory/{id}/collect
+export interface CollectDonationDto {
+	collectedAmount: number;
+}
+
+// new: response from POST /api/inventory/{id}/collect
+export interface InventoryLogResponseDto {
+	inventoryLogId: number;
+	donationId: number;
+	donationRequestId: number | null;
+	distributionCenterUserId: number;
+	collectedAmount: number;
+	collectedAt: string;
 }
 
 // new: inventory item returned from GET /inventory

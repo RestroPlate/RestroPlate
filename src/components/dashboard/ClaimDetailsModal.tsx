@@ -9,8 +9,10 @@ interface ClaimDetailsModalProps {
 	onClose: () => void;
 }
 
-const DETAIL_SECTION_CLASS = "space-y-4 rounded-xl border border-white/5 bg-white/5 p-4";
-const LABEL_CLASS = "text-[10px] font-bold uppercase tracking-wider text-[#F0EBE1]/40";
+const DETAIL_SECTION_CLASS =
+	"space-y-4 rounded-xl border border-white/5 bg-white/5 p-4";
+const LABEL_CLASS =
+	"text-[10px] font-bold uppercase tracking-wider text-[#F0EBE1]/40";
 const VALUE_CLASS = "text-sm font-semibold text-[#F0EBE1]";
 
 export default function ClaimDetailsModal({
@@ -28,14 +30,25 @@ export default function ClaimDetailsModal({
 			<div className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-amber-400/20 bg-[#0F1D0C] shadow-2xl">
 				{/* Header */}
 				<div className="flex items-center justify-between border-b border-white/10 bg-amber-500/5 px-6 py-4">
-					<h3 className="text-lg font-bold text-amber-300">Review Claim Request</h3>
+					<h3 className="text-lg font-bold text-amber-300">
+						Review Claim Request
+					</h3>
 					<button
 						type="button"
 						onClick={onClose}
 						className="rounded-lg p-1.5 text-[#F0EBE1]/50 transition hover:bg-white/10 hover:text-[#F0EBE1]"
 					>
-						<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-							<path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							className="h-5 w-5"
+							viewBox="0 0 20 20"
+							fill="currentColor"
+						>
+							<path
+								fillRule="evenodd"
+								d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+								clipRule="evenodd"
+							/>
 						</svg>
 					</button>
 				</div>
@@ -47,7 +60,9 @@ export default function ClaimDetailsModal({
 						<div className={DETAIL_SECTION_CLASS}>
 							<div>
 								<p className={LABEL_CLASS}>Name</p>
-								<p className={VALUE_CLASS}>{center?.name || "Unknown Center"}</p>
+								<p className={VALUE_CLASS}>
+									{center?.name || "Unknown Center"}
+								</p>
 							</div>
 							{center?.address && (
 								<div>
@@ -79,7 +94,9 @@ export default function ClaimDetailsModal({
 							<div className="grid grid-cols-2 gap-4">
 								<div>
 									<p className={LABEL_CLASS}>Item(s)</p>
-									<p className={VALUE_CLASS}>{donation?.foodType || "Loading..."}</p>
+									<p className={VALUE_CLASS}>
+										{donation?.foodType || "Loading..."}
+									</p>
 								</div>
 								<div>
 									<p className={LABEL_CLASS}>Quantity Ordered</p>
@@ -91,15 +108,17 @@ export default function ClaimDetailsModal({
 							{donation?.description && (
 								<div>
 									<p className={LABEL_CLASS}>Description</p>
-									<p className="text-sm text-[#F0EBE1]/70">{donation.description}</p>
+									<p className="text-sm text-[#F0EBE1]/70">
+										{donation.description}
+									</p>
 								</div>
 							)}
 						</div>
 					</section>
 
 					<p className="text-xs text-center text-[#F0EBE1]/40 px-4">
-						By accepting this request, you agree to fulfill the donation as specified. 
-						The center will be notified of your decision.
+						By accepting this request, you agree to fulfill the donation as
+						specified. The center will be notified of your decision.
 					</p>
 				</div>
 

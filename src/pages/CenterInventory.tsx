@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
-import { getDistributionInventory } from "../services/distributionInventoryService";
-import type { DistributionInventoryResponseDto } from "../types/Dashboard";
+import { getInventory } from "../services/inventoryService";
+import type { Donation } from "../types/Dashboard";
+import CollectionConfirmationModal from "../components/dashboard/CollectionConfirmationModal";
 
 function formatDate(value: string): string {
+	if (!value) return "N/A";
 	const parsed = new Date(value);
 	if (Number.isNaN(parsed.getTime())) return value;
 	return parsed.toLocaleString("en-US", {
@@ -15,12 +17,12 @@ function formatDate(value: string): string {
 
 function getStatusClasses(status: string | null): string {
 	if (!status) return "bg-gray-500/15 text-gray-300";
-	switch (status.toLowerCase()) {
-		case "collected":
-		case "available":
-		case "completed":
+	switch (status.toUpperCase()) {
+		case "COLLECTED":
+		case "AVAILABLE":
+		case "COMPLETED":
 			return "bg-emerald-500/15 text-emerald-300";
-		case "distributed":
+		case "REQUESTED":
 			return "bg-amber-500/15 text-amber-300";
 		default:
 			return "bg-gray-500/15 text-gray-300";
@@ -28,43 +30,34 @@ function getStatusClasses(status: string | null): string {
 }
 
 export default function CenterInventory() {
-	const [inventory, setInventory] = useState<DistributionInventoryResponseDto[]>([]);
+	const [inventory, setInventory] = useState<Donation[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
-	useEffect(() => {
-		let active = true;
+	const [selectedDonation, setSelectedDonation] = useState<Donation | null>(
+		null,
+	);
 
-		async function loadInventory(): Promise<void> {
-			setLoading(true);
-			setError(null);
-
-			try {
-				const data = await getDistributionInventory();
-				if (active) {
-					setInventory(data);
-				}
-			} catch (err) {
-				if (active) {
-					setError(
-						err instanceof Error
-							? err.message
-							: "Failed to load distribution inventory.",
-					);
-				}
-			} finally {
-				if (active) {
-					setLoading(false);
-				}
-			}
+	const loadInventory = useCallback(async () => {
+		setLoading(true);
+		setError(null);
+		try {
+			const data = await getInventory();
+			setInventory(data);
+		} catch (err) {
+			setError(
+				err instanceof Error
+					? err.message
+					: "Failed to load distribution inventory.",
+			);
+		} finally {
+			setLoading(false);
 		}
-
-		void loadInventory();
-
-		return () => {
-			active = false;
-		};
 	}, []);
+
+	useEffect(() => {
+		void loadInventory();
+	}, [loadInventory]);
 
 	return (
 		<DashboardLayout>
@@ -78,7 +71,8 @@ export default function CenterInventory() {
 							Manage Collected Donations
 						</h2>
 						<p className="mt-2 text-sm text-[#F0EBE1]/65">
-							This page reads `GET /api/distribution-inventory` so your center can track successfully collected items and current inventory levels.
+							This page reads `GET /api/inventory` so your center can track
+							claimed items and update effectively collected quantities.
 						</p>
 					</div>
 				</div>
@@ -101,15 +95,16 @@ export default function CenterInventory() {
 							Your inventory is currently empty
 						</h3>
 						<p className="mt-2 text-sm text-[#F0EBE1]/55">
-							Accept donations from providers and mark them as collected to grow your stock.
+							Claim donations from providers and mark them as collected here to
+							track your stock.
 						</p>
 					</div>
 				) : (
 					<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 						{inventory.map((item) => (
 							<article
-								key={item.inventoryId}
-								className="group relative overflow-hidden rounded-2xl border border-white/10 bg-[#0B1A08] transition hover:border-[#7DC542]/30 hover:bg-[#7DC542]/5"
+								key={item.donationId}
+								className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-white/10 bg-[#0B1A08] transition hover:border-[#7DC542]/30 hover:bg-[#7DC542]/5"
 							>
 								{/* Decorative Background Glow */}
 								<div className="pointer-events-none absolute -inset-x-24 -top-24 h-48 bg-gradient-to-full from-[#7DC542]/10 via-[#7DC542]/5 to-transparent opacity-0 blur-2xl transition group-hover:opacity-100" />
@@ -118,14 +113,14 @@ export default function CenterInventory() {
 									<div className="flex items-start justify-between gap-3">
 										<div>
 											<p className="text-xs font-bold uppercase tracking-[0.16em] text-[#7DC542]">
-												Inventory #{item.inventoryId}
+												Donation #{item.donationId}
 											</p>
-											<h3 className="mt-2 text-lg font-black text-[#F0EBE1]">
-												Req #{item.donationRequestId}
+											<h3 className="mt-2 text-lg font-black text-[#F0EBE1] capitalize">
+												{item.foodType}
 											</h3>
 										</div>
 										<span
-											className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] ${getStatusClasses(item.status)}`}
+											className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${getStatusClasses(item.status)}`}
 										>
 											{item.status || "COLLECTED"}
 										</span>
@@ -133,25 +128,52 @@ export default function CenterInventory() {
 
 									<div className="mt-5 space-y-3">
 										<div className="flex items-center justify-between gap-3 rounded-xl bg-white/5 px-3 py-2 text-sm transition group-hover:bg-white/10">
-											<span className="text-[#F0EBE1]/55">Collected Qty</span>
+											<span className="text-[#F0EBE1]/55">Volume</span>
 											<span className="font-bold text-[#F0EBE1]">
-												{item.collectedQuantity}
+												{item.quantity} {item.unit}
 											</span>
 										</div>
 
-										<div className="flex items-center justify-between gap-3 rounded-xl bg-white/5 px-3 py-2 text-sm transition group-hover:bg-white/10">
-											<span className="text-[#F0EBE1]/55">Collection Date</span>
+										<div className="flex flex-col gap-1 rounded-xl bg-white/5 px-3 py-2 text-sm transition group-hover:bg-white/10">
+											<div className="flex items-center justify-between">
+												<span className="text-[#F0EBE1]/55">Pickup Time</span>
+											</div>
 											<span className="font-bold text-[#F0EBE1]">
-												{formatDate(item.collectionDate)}
+												{formatDate(item.availabilityTime)}
 											</span>
 										</div>
 									</div>
+								</div>
+
+								<div className="relative border-t border-white/5 p-4">
+									<button
+										type="button"
+										onClick={() => setSelectedDonation(item)}
+										className="w-full rounded-xl bg-sky-500/15 py-3 text-sm font-bold text-sky-400 transition hover:bg-sky-500/25"
+									>
+										Update Collected Qty
+									</button>
 								</div>
 							</article>
 						))}
 					</div>
 				)}
 			</div>
+
+			{selectedDonation && (
+				<CollectionConfirmationModal
+					isOpen={!!selectedDonation}
+					onClose={() => setSelectedDonation(null)}
+					onSuccess={() => {
+						setSelectedDonation(null);
+						void loadInventory();
+					}}
+					donationId={selectedDonation.donationId}
+					defaultQuantity={selectedDonation.quantity}
+					unit={selectedDonation.unit}
+					foodType={selectedDonation.foodType}
+				/>
+			)}
 		</DashboardLayout>
 	);
 }

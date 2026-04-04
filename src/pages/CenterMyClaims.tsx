@@ -76,15 +76,26 @@ export default function CenterMyClaims() {
 		};
 	}, [fetchData]);
 
-	const filteredClaims = filter === "ALL"
-		? claims
-		: claims.filter((c) => c.status === filter);
+	const filteredClaims =
+		filter === "ALL" ? claims : claims.filter((c) => c.status === filter);
 
 	const stats = [
 		{ label: "Total Claims", value: claims.length, accent: "#7DC542" },
-		{ label: "Pending", value: claims.filter((c) => c.status === "PENDING").length, accent: "#F59E0B" },
-		{ label: "Accepted", value: claims.filter((c) => c.status === "ACCEPTED").length, accent: "#10B981" },
-		{ label: "Rejected", value: claims.filter((c) => c.status === "REJECTED").length, accent: "#F43F5E" },
+		{
+			label: "Pending",
+			value: claims.filter((c) => c.status === "PENDING").length,
+			accent: "#F59E0B",
+		},
+		{
+			label: "Accepted",
+			value: claims.filter((c) => c.status === "ACCEPTED").length,
+			accent: "#10B981",
+		},
+		{
+			label: "Rejected",
+			value: claims.filter((c) => c.status === "REJECTED").length,
+			accent: "#F43F5E",
+		},
 	];
 
 	return (
@@ -99,16 +110,24 @@ export default function CenterMyClaims() {
 						Track your claim requests on available donations.
 					</h2>
 					<p className="mt-2 text-sm text-[#F0EBE1]/65">
-						View the status of claims you&apos;ve submitted to donation providers.
+						View the status of claims you&apos;ve submitted to donation
+						providers.
 					</p>
 				</div>
 
 				{/* ── Stats ── */}
 				<div className="grid grid-cols-2 gap-4 md:grid-cols-4">
 					{stats.map(({ label, value, accent }) => (
-						<div key={label} className="rounded-xl border border-white/10 bg-white/5 px-5 py-4">
-							<p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#F0EBE1]/60">{label}</p>
-							<p className="mt-1 text-3xl font-black" style={{ color: accent }}>{value}</p>
+						<div
+							key={label}
+							className="rounded-xl border border-white/10 bg-white/5 px-5 py-4"
+						>
+							<p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#F0EBE1]/60">
+								{label}
+							</p>
+							<p className="mt-1 text-3xl font-black" style={{ color: accent }}>
+								{value}
+							</p>
 						</div>
 					))}
 				</div>
@@ -146,7 +165,9 @@ export default function CenterMyClaims() {
 					</div>
 				) : filteredClaims.length === 0 ? (
 					<div className="rounded-2xl border border-dashed border-white/15 bg-white/5 px-6 py-12 text-center">
-						<h3 className="text-lg font-bold text-[#F0EBE1]">No claims found</h3>
+						<h3 className="text-lg font-bold text-[#F0EBE1]">
+							No claims found
+						</h3>
 						<p className="mt-2 text-sm text-[#F0EBE1]/55">
 							{filter === "ALL"
 								? "You haven't submitted any claims yet. Browse available donations to get started."
