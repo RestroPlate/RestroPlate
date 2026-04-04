@@ -40,7 +40,6 @@ function getStatusClasses(status: DonationRequestStatus): string {
 const DONATION_STATUS_CLASSES: Record<string, string> = {
 	AVAILABLE: "bg-emerald-500/15 text-emerald-300",
 	REQUESTED: "bg-amber-500/15 text-amber-300",
-	ACCEPTED: "bg-sky-500/15 text-sky-300",
 	COLLECTED: "bg-sky-500/15 text-sky-300",
 	COMPLETED: "bg-violet-500/15 text-violet-300",
 };
@@ -260,7 +259,7 @@ export default function CenterOutgoingRequests() {
 														</div>
 
 														{/* Mark as Collected for REQUESTED donations in Flow 2 */}
-														{(donation.status === "REQUESTED" || donation.status === "ACCEPTED") ? (
+														{donation.status === "REQUESTED" ? (
 															<CollectDonationAction
 																donationId={donation.donationId}
 																quantity={donation.quantity}

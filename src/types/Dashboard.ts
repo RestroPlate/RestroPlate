@@ -1,7 +1,16 @@
-import type { AccountType } from "./Auth";
+import type { AccountType, UserProfileDto } from "./Auth";
+export type { UserProfileDto };
 
-// modified: added ACCEPTED status for Flow 1 accept/reject lifecycle
-export type DonationStatus = "AVAILABLE" | "REQUESTED" | "ACCEPTED" | "COLLECTED" | "COMPLETED";
+// modified: added COLLECTED status for Flow 1 lifecycle (removed ACCEPTED)
+export type DonationStatus = "AVAILABLE" | "REQUESTED" | "COLLECTED" | "COMPLETED";
+
+export interface CenterDetails {
+	userId: number;
+	name: string;
+	email: string;
+	phoneNumber: string;
+	address: string;
+}
 
 export interface Donation {
 	donationId: number;
@@ -17,6 +26,7 @@ export interface Donation {
 	status: DonationStatus;
 	createdAt: string;
 	claimedByCenterUserId?: number | null;
+	centerDetails?: CenterDetails;
 }
 
 // Claim status for donation claim requests (Flow 1 claims)
@@ -29,6 +39,7 @@ export interface DonationClaim {
 	donatorUserId: number;
 	status: ClaimStatus;
 	createdAt: string;
+	center?: UserProfileDto;
 }
 
 export interface CreateDonationPayload {

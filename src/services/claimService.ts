@@ -1,6 +1,6 @@
 import axios from "axios";
 import apiClient from "../api/axiosSetup";
-import type { ClaimStatus, DonationClaim } from "../types/Dashboard";
+import type { ClaimStatus, DonationClaim, UserProfileDto } from "../types/Dashboard";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -16,6 +16,7 @@ interface ClaimApiResponse {
     status?: string;
     createdAt?: string;
     created_at?: string;
+    center?: UserProfileDto;
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -45,6 +46,7 @@ function mapClaimResponse(data: ClaimApiResponse): DonationClaim {
         donatorUserId: data.donatorUserId ?? data.donator_user_id ?? 0,
         status: normalizeClaimStatus(data.status),
         createdAt: data.createdAt ?? data.created_at ?? new Date().toISOString(),
+        center: data.center,
     };
 }
 

@@ -1,8 +1,8 @@
-// rewritten: uses donation-claims API instead of filtering donations by status
 import { useState } from "react";
 import type { Donation, DonationClaim } from "../../types/Dashboard";
 import { updateClaimStatus } from "../../services/claimService";
 import StatusNotice from "../StatusNotice";
+import ClaimDetailsModal from "./ClaimDetailsModal";
 
 interface DonorNotificationPanelProps {
 	claims: DonationClaim[];
@@ -10,11 +10,8 @@ interface DonorNotificationPanelProps {
 	onRefresh: () => Promise<void>;
 }
 
-/**
- * Shows notification cards for pending claim requests on the donor's donations.
- * Donor can Accept or Reject each claim.
- */
 export default function DonorNotificationPanel({ claims, donations, onRefresh }: DonorNotificationPanelProps) {
+	const [activeClaimId, setActiveClaimId] = useState<number | null>(null);
 	const [processingId, setProcessingId] = useState<number | null>(null);
 	const [notice, setNotice] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
@@ -22,7 +19,6 @@ export default function DonorNotificationPanel({ claims, donations, onRefresh }:
 
 	if (pendingClaims.length === 0 && !notice) return null;
 
-	// Look up donation details for a claim
 	function getDonation(donationId: number): Donation | undefined {
 		return donations.find((d) => d.donationId === donationId);
 	}
@@ -32,7 +28,8 @@ export default function DonorNotificationPanel({ claims, donations, onRefresh }:
 		setNotice(null);
 		try {
 			await updateClaimStatus(claimId, "ACCEPTED");
-			setNotice({ type: "success", message: "Claim accepted — donation assigned to center." });
+			setNotice({ type: "success", message: "Claim accepted!" });
+			setActiveClaimId(null);
 			await onRefresh();
 		} catch (err) {
 			setNotice({ type: "error", message: err instanceof Error ? err.message : "Failed to accept." });
@@ -47,6 +44,7 @@ export default function DonorNotificationPanel({ claims, donations, onRefresh }:
 		try {
 			await updateClaimStatus(claimId, "REJECTED");
 			setNotice({ type: "success", message: "Claim rejected." });
+			setActiveClaimId(null);
 			await onRefresh();
 		} catch (err) {
 			setNotice({ type: "error", message: err instanceof Error ? err.message : "Failed to reject." });
@@ -54,6 +52,9 @@ export default function DonorNotificationPanel({ claims, donations, onRefresh }:
 			setProcessingId(null);
 		}
 	}
+
+	const activeClaim = pendingClaims.find((c) => c.claimId === activeClaimId);
+	const activeDonation = activeClaim ? getDonation(activeClaim.donationId) : undefined;
 
 	return (
 		<section className="space-y-3">
@@ -65,49 +66,48 @@ export default function DonorNotificationPanel({ claims, donations, onRefresh }:
 				<StatusNotice type={notice.type} message={notice.message} onClose={() => setNotice(null)} />
 			) : null}
 
-			{pendingClaims.map((claim) => {
-				const donation = getDonation(claim.donationId);
-				return (
-					<article
-						key={claim.claimId}
-						className="rounded-xl border border-amber-400/20 bg-amber-500/5 p-4"
-					>
-						<p className="text-sm font-semibold text-[#F0EBE1]">
-							<span className="font-bold text-amber-300">
-								A distribution center
-							</span>{" "}
-							has claimed your donation{" "}
-							<span className="font-bold text-[#7DC542]">
-								"{donation?.foodType ?? `#${claim.donationId}`}"
-							</span>
-						</p>
-						{donation ? (
-							<p className="mt-1 text-xs text-[#F0EBE1]/55">
-								Quantity: {donation.quantity} {donation.unit}
-							</p>
-						) : null}
+			<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+				{pendingClaims.map((claim) => {
+					const donation = getDonation(claim.donationId);
+					return (
+						<article
+							key={claim.claimId}
+							className="group flex flex-col justify-between rounded-xl border border-amber-400/20 bg-amber-500/5 p-4 transition hover:bg-amber-400/10"
+						>
+							<div className="space-y-1">
+								<h4 className="line-clamp-1 text-sm font-bold text-amber-300">
+									{claim.center?.name || "A Distribution Center"}
+								</h4>
+								<p className="line-clamp-1 text-xs text-[#F0EBE1]/60">
+									📍 {claim.center?.address || "Address not provided"}
+								</p>
+								<div className="mt-2 text-xs font-semibold text-[#F0EBE1]">
+									Requesting: <span className="text-[#7DC542]">{donation?.foodType || "Loading..."}</span>
+								</div>
+							</div>
 
-						<div className="mt-3 flex gap-2">
 							<button
 								type="button"
-								disabled={processingId === claim.claimId}
-								onClick={() => handleAccept(claim.claimId)}
-								className="inline-flex items-center rounded-lg bg-[#7DC542] px-4 py-2 text-xs font-extrabold text-[#0B1A08] transition hover:bg-[#90D85A] disabled:cursor-not-allowed disabled:opacity-60"
+								onClick={() => setActiveClaimId(claim.claimId)}
+								className="mt-4 inline-flex items-center justify-center rounded-lg bg-amber-400/10 py-2 text-[10px] font-bold uppercase tracking-widest text-amber-300 transition hover:bg-amber-400/20"
 							>
-								{processingId === claim.claimId ? "Processing..." : "Accept"}
+								Review Request
 							</button>
-							<button
-								type="button"
-								disabled={processingId === claim.claimId}
-								onClick={() => handleReject(claim.claimId)}
-								className="inline-flex items-center rounded-lg border border-rose-400/30 bg-rose-500/10 px-4 py-2 text-xs font-bold text-rose-300 transition hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60"
-							>
-								Reject
-							</button>
-						</div>
-					</article>
-				);
-			})}
+						</article>
+					);
+				})}
+			</div>
+
+			{activeClaim && (
+				<ClaimDetailsModal
+					claim={activeClaim}
+					donation={activeDonation}
+					processing={processingId === activeClaim.claimId}
+					onAccept={handleAccept}
+					onReject={handleReject}
+					onClose={() => setActiveClaimId(null)}
+				/>
+			)}
 		</section>
 	);
 }

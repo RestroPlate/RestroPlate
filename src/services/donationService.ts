@@ -24,6 +24,13 @@ interface DonationApiResponse {
 	created_at?: string;
 	createdAt?: string;
 	claimedByCenterUserId?: number | null;
+	centerDetails?: {
+		userId: number;
+		name: string;
+		email: string;
+		phoneNumber: string;
+		address: string;
+	};
 }
 
 interface DonationsListResponse {
@@ -73,6 +80,7 @@ function mapDonationResponse(data: DonationApiResponse | undefined | null, paylo
 		status: normalizeStatus(data.status),
 		createdAt: data.created_at ?? data.createdAt ?? new Date().toISOString(),
 		claimedByCenterUserId: data.claimedByCenterUserId ?? null,
+		centerDetails: data.centerDetails,
 	};
 }
 
@@ -83,7 +91,6 @@ function normalizeStatus(status: string | undefined): DonationStatus {
 	const s = status?.toUpperCase();
 	if (s === "COMPLETED") return "COMPLETED";
 	if (s === "REQUESTED") return "REQUESTED";
-	if (s === "ACCEPTED") return "ACCEPTED";
 	if (s === "COLLECTED") return "COLLECTED";
 	return "AVAILABLE";
 }

@@ -1,24 +1,22 @@
 import { useState } from "react";
-import type { Donation, DonationStatus, UpdateDonationPayload } from "../../types/Dashboard";
+import EditDonationModal from "./EditDonationModal";
+import CenterDetailsModal from "./CenterDetailsModal";
+import StatusNotice from "../StatusNotice";
+import type { CenterDetails, Donation, DonationStatus, UpdateDonationPayload } from "../../types/Dashboard";
 import { updateDonation, deleteDonation } from "../../services/donationService";
 import { updateDonationRequestQuantity } from "../../services/donationRequestService";
-import EditDonationModal from "./EditDonationModal";
-import StatusNotice from "../StatusNotice";
 
 interface DonationHistoryProps {
     donations: Donation[];
     onRefresh: () => Promise<void>;
 }
 
-// modified: added ACCEPTED and REQUESTED to filter options for Flow 1 lifecycle
-type FilterStatus = "ALL" | "AVAILABLE" | "REQUESTED" | "ACCEPTED" | "COLLECTED" | "COMPLETED";
-
+// modified: removed ACCEPTED from filter options
+type FilterStatus = "AVAILABLE" | "REQUESTED" | "COLLECTED" | "COMPLETED";
 
 const FILTER_OPTIONS: { label: string; value: FilterStatus }[] = [
-    { label: "All", value: "ALL" },
     { label: "Available", value: "AVAILABLE" },
     { label: "Requested", value: "REQUESTED" },
-    { label: "Accepted", value: "ACCEPTED" },
     { label: "Collected", value: "COLLECTED" },
     { label: "Completed", value: "COMPLETED" },
 ];
@@ -26,7 +24,6 @@ const FILTER_OPTIONS: { label: string; value: FilterStatus }[] = [
 const STATUS_CLASSES: Record<DonationStatus, string> = {
     AVAILABLE: "bg-emerald-500/15 text-emerald-300",
     REQUESTED: "bg-amber-500/15 text-amber-300",
-    ACCEPTED: "bg-sky-500/15 text-sky-300",
     COLLECTED: "bg-sky-500/15 text-sky-300",
     COMPLETED: "bg-violet-500/15 text-violet-300",
 };
@@ -39,12 +36,13 @@ function formatDate(dateStr: string): string {
 }
 
 export default function DonationHistory({ donations, onRefresh }: DonationHistoryProps) {
-    const [filter, setFilter] = useState<FilterStatus>("ALL");
+    const [filter, setFilter] = useState<FilterStatus>("AVAILABLE");
     const [editingDonation, setEditingDonation] = useState<Donation | null>(null);
+    const [viewingCenter, setViewingCenter] = useState<CenterDetails | null>(null);
     const [deletingId, setDeletingId] = useState<number | null>(null);
     const [notice, setNotice] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
-    const filtered = filter === "ALL" ? donations : donations.filter((d) => d.status === filter);
+    const filtered = donations.filter((d) => d.status === filter);
 
     async function handleEdit(id: number, payload: UpdateDonationPayload): Promise<void> {
         const originalDonation = donations.find((d) => d.donationId === id);
@@ -125,20 +123,35 @@ export default function DonationHistory({ donations, onRefresh }: DonationHistor
             <section className="space-y-3">
                 {filtered.length === 0 ? (
                     <div className="rounded-xl border border-dashed border-white/15 bg-white/5 p-6 text-center text-sm text-[#F0EBE1]/65">
-                        {filter === "ALL"
-                            ? "No donations found for this account yet."
-                            : `No donations with status "${filter}" found.`}
+                        No donations with status "{filter}" found.
                     </div>
                 ) : (
-                    filtered.map((donation) => (
-                        <article
-                            key={donation.donationId}
-                            className="rounded-xl border border-white/10 bg-white/5 p-4 transition hover:border-white/15"
-                        >
-                            <div className="flex flex-wrap items-center justify-between gap-3">
-                                <div>
-                                    <p className="text-base font-bold text-[#F0EBE1]">{donation.foodType}</p>
-                                </div>
+                    filtered.map((donation) => {
+                        const isRequested = donation.status === "REQUESTED" && !!donation.centerDetails;
+
+                        return (
+                            <article
+                                key={donation.donationId}
+                                onClick={isRequested ? () => setViewingCenter(donation.centerDetails!) : undefined}
+                                className={`group rounded-xl border border-white/10 bg-white/5 p-4 transition ${isRequested
+                                    ? "cursor-pointer hover:border-amber-400/30 hover:bg-white/10"
+                                    : "hover:border-white/15"
+                                    }`}
+                            >
+                                <div className="flex flex-wrap items-center justify-between gap-3">
+                                    <div>
+                                        <p className="text-base font-bold text-[#F0EBE1]">{donation.foodType}</p>
+                                        {isRequested && (
+                                            <div
+                                                className="mt-1 flex items-center gap-1.5 text-xs font-medium text-amber-300/80 transition group-hover:text-amber-300"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fillRule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11H9v-1h2v1zm0-2H9V7h2v4z" clipRule="evenodd" />
+                                                </svg>
+                                                Claimed by: <span className="underline decoration-amber-300/30 underline-offset-2">{donation.centerDetails!.name}</span>
+                                            </div>
+                                        )}
+                                    </div>
                                 <span
                                     className={`rounded-full px-3 py-1 text-xs font-extrabold tracking-wide ${STATUS_CLASSES[donation.status]}`}
                                 >
@@ -180,8 +193,9 @@ export default function DonationHistory({ donations, onRefresh }: DonationHistor
                                     </button>
                                 </div>
                             ) : null}
-                        </article>
-                    ))
+                            </article>
+                        );
+                    })
                 )}
             </section>
 
@@ -191,6 +205,14 @@ export default function DonationHistory({ donations, onRefresh }: DonationHistor
                     donation={editingDonation}
                     onSave={handleEdit}
                     onClose={() => setEditingDonation(null)}
+                />
+            ) : null}
+
+            {/* ── Center Details Modal ── */}
+            {viewingCenter ? (
+                <CenterDetailsModal
+                    center={viewingCenter}
+                    onClose={() => setViewingCenter(null)}
                 />
             ) : null}
         </>
