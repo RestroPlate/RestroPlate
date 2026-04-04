@@ -1,18 +1,33 @@
 import type { AccountType } from "./Auth";
 
-export type DonationStatus = "AVAILABLE" | "REQUESTED" | "COLLECTED" | "COMPLETED";
+// modified: added ACCEPTED status for Flow 1 accept/reject lifecycle
+export type DonationStatus = "AVAILABLE" | "REQUESTED" | "ACCEPTED" | "COLLECTED" | "COMPLETED";
 
 export interface Donation {
 	donationId: number;
 	donationRequestId?: number | null;
 	providerUserId: number;
 	foodType: string;
+	description?: string;
 	quantity: number;
 	unit: string;
 	expirationDate: string;
 	pickupAddress: string;
 	availabilityTime: string;
 	status: DonationStatus;
+	createdAt: string;
+	claimedByCenterUserId?: number | null;
+}
+
+// Claim status for donation claim requests (Flow 1 claims)
+export type ClaimStatus = "PENDING" | "ACCEPTED" | "REJECTED";
+
+export interface DonationClaim {
+	claimId: number;
+	donationId: number;
+	centerUserId: number;
+	donatorUserId: number;
+	status: ClaimStatus;
 	createdAt: string;
 }
 
@@ -52,7 +67,8 @@ export interface MockUser {
 	role: AccountType;
 }
 
-export type DonationRequestStatus = "pending" | "completed" | "collected";
+// modified: added partially_filled status for Flow 2 requests
+export type DonationRequestStatus = "pending" | "partially_filled" | "completed";
 
 
 export interface DonationRequest {
@@ -74,21 +90,11 @@ export interface SubmitDonationRequestPayload {
 	unit: string;
 }
 
-export interface DistributionInventoryResponseDto {
+// new: inventory item returned from GET /inventory
+export interface InventoryItem {
 	inventoryId: number;
-	donationRequestId: number;
-	collectedQuantity: number;
-	collectionDate: string;
-	status: string | null;
-}
-
-export interface UpdateCollectedQuantityDto {
-	collectedQuantity: number;
-}
-
-
-export interface SubmitDonationRequestPayload {
-	foodType: string;
-	requestedQuantity: number;
-	unit: string;
+	itemName: string;
+	quantityCollected: number;
+	source: string;
+	collectedAt: string;
 }

@@ -18,6 +18,7 @@ const FILTER_OPTIONS: Array<{ label: string; value: DonationFilter }> = [
 const STATUS_CLASSES: Record<DonationStatus, string> = {
 	AVAILABLE: "bg-emerald-500/15 text-emerald-300",
 	REQUESTED: "bg-amber-500/15 text-amber-300",
+	ACCEPTED: "bg-sky-500/15 text-sky-300",
 	COLLECTED: "bg-sky-500/15 text-sky-300",
 	COMPLETED: "bg-violet-500/15 text-violet-300",
 };

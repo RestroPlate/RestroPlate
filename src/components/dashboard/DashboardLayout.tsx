@@ -36,6 +36,12 @@ const SIDEBAR_LINKS_CENTER: SidebarLink[] = [
 		matchPrefixes: ["/dashboard/center/explore"],
 	},
 	{
+		label: "My Claims",
+		icon: "C",
+		path: "/dashboard/center/claims",
+		matchPrefixes: ["/dashboard/center/claims"],
+	},
+	{
 		label: "My Requests",
 		icon: "R",
 		path: "/dashboard/center/requests",
