@@ -23,6 +23,7 @@ interface DonationApiResponse {
 	status?: string;
 	created_at?: string;
 	createdAt?: string;
+	claimedByCenterUserId?: number | null;
 }
 
 interface DonationsListResponse {
@@ -63,6 +64,7 @@ function mapDonationResponse(data: DonationApiResponse | undefined | null, paylo
 		donationRequestId: data.donationRequestId,
 		providerUserId: data.providerUserId ?? 0,
 		foodType: data.foodType ?? payload?.foodType ?? "Unknown",
+		description: data.description ?? "",
 		quantity: data.quantity ?? payload?.quantity ?? 1,
 		unit: data.unit ?? payload?.unit ?? "Unit",
 		expirationDate: data.expiry_date ?? data.expirationDate ?? payload?.expirationDate ?? new Date().toISOString(),
@@ -70,6 +72,7 @@ function mapDonationResponse(data: DonationApiResponse | undefined | null, paylo
 		availabilityTime: data.availability_time ?? data.availabilityTime ?? payload?.availabilityTime ?? "Unknown",
 		status: normalizeStatus(data.status),
 		createdAt: data.created_at ?? data.createdAt ?? new Date().toISOString(),
+		claimedByCenterUserId: data.claimedByCenterUserId ?? null,
 	};
 }
 
@@ -80,6 +83,7 @@ function normalizeStatus(status: string | undefined): DonationStatus {
 	const s = status?.toUpperCase();
 	if (s === "COMPLETED") return "COMPLETED";
 	if (s === "REQUESTED") return "REQUESTED";
+	if (s === "ACCEPTED") return "ACCEPTED";
 	if (s === "COLLECTED") return "COLLECTED";
 	return "AVAILABLE";
 }
@@ -200,7 +204,7 @@ export async function getAllDonations(status?: string): Promise<Donation[]> {
  */
 export async function getAvailableDonations(params?: AvailableDonationsParams): Promise<Donation[]> {
 	try {
-		const queryParams = { status: "AVAILABLE", ...params };
+		const queryParams = { ...params };
 		const { data } = await apiClient.get<DonationApiResponse[] | DonationsListResponse>("/api/donations/available", { params: queryParams });
 		return extractDonationsList(data).map((item) => mapDonationResponse(item));
 	} catch (err) {
@@ -260,3 +264,35 @@ export async function deleteDonation(id: number): Promise<void> {
 		throw new Error(extractErrorMessage(err, "Failed to delete donation. Please try again."));
 	}
 }
+
+// ── Flow 1 Status Transition Functions ───────────────────────────────────────
+// new: status transition endpoints for Flow 1 lifecycle
+
+/**
+ * Center requests a donation (Flow 1). AVAILABLE → REQUESTED.
+ */
+export async function requestDonation(id: number): Promise<Donation> {
+	try {
+		const { data } = await apiClient.patch<DonationApiResponse>(`/api/donations/${id}/request`);
+		return mapDonationResponse(data);
+	} catch (err) {
+		throw new Error(extractErrorMessage(err, "Failed to request donation."));
+	}
+}
+
+
+
+/**
+ * Center marks a donation as collected (Flow 1 & Flow 2). ACCEPTED → COLLECTED.
+ */
+export async function collectDonation(id: number, collectedAmount: number): Promise<Donation> {
+	try {
+		const { data } = await apiClient.patch<DonationApiResponse>(`/api/donations/${id}/collect`, {
+			collected_amount: collectedAmount,
+		});
+		return mapDonationResponse(data);
+	} catch (err) {
+		throw new Error(extractErrorMessage(err, "Failed to mark donation as collected."));
+	}
+}
+

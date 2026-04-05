@@ -9,6 +9,7 @@ import CenterDashboard from "./pages/CenterDashboard";
 import CenterExploreDonations from "./pages/CenterExploreDonations";
 import CenterCreateRequest from "./pages/CenterCreateRequest";
 import CenterOutgoingRequests from "./pages/CenterOutgoingRequests";
+import CenterMyClaims from "./pages/CenterMyClaims";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -77,6 +78,14 @@ function App() {
         element={
           <ProtectedRoute allowedRole="DISTRIBUTION_CENTER">
             <CenterOutgoingRequests />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/center/claims"
+        element={
+          <ProtectedRoute allowedRole="DISTRIBUTION_CENTER">
+            <CenterMyClaims />
           </ProtectedRoute>
         }
       />
