@@ -21,6 +21,7 @@ export function useInventory(dcId?: number): UseInventoryResult {
 	const refresh = useCallback(async () => {
 		try {
 			const data = await getInventory();
+			// console.log("Fetched Inventory Data from API:", data);
 			setInventory(data);
 			setError(null);
 		} catch (err) {

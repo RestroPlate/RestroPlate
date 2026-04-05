@@ -33,6 +33,8 @@ export interface Donation {
 	availabilityTime: string;
 	status: DonationStatus;
 	createdAt: string;
+	collectedAmount?: number;
+	distributedQuantity?: number;
 	claimedByCenterUserId?: number | null;
 	centerDetails?: CenterDetails;
 }

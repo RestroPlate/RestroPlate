@@ -1,8 +1,6 @@
-// new: DC Inventory table component (used by both Flow 1 and Flow 2)
-import { useEffect, useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useInventory } from "../hooks/useInventory";
 import type { Donation } from "../../types/Dashboard";
-import CollectionConfirmationModal from "./CollectionConfirmationModal";
 import DonationDetailsModal from "./DonationDetailsModal";
 
 function formatDate(value: string | undefined): string {
@@ -18,30 +16,17 @@ function formatDate(value: string | undefined): string {
 	});
 }
 
-interface DCInventoryTableProps {
+interface CompletedInventoryTableProps {
 	dcId?: number;
-	/** Extra refresh trigger — increment to force refetch */
-	refreshKey?: number;
 }
 
-export default function DCInventoryTable({
-	dcId,
-	refreshKey,
-}: DCInventoryTableProps) {
+export default function CompletedInventoryTable({ dcId }: CompletedInventoryTableProps) {
 	const { inventory, loading, error, refresh } = useInventory(dcId);
-	const [selectedDonation, setSelectedDonation] = useState<Donation | null>(null);
 	const [viewingDonation, setViewingDonation] = useState<Donation | null>(null);
 	const [searchQuery, setSearchQuery] = useState("");
 
-	// Re-fetch when refreshKey changes
-	useEffect(() => {
-		if (refreshKey && refreshKey > 0) {
-			void refresh();
-		}
-	}, [refreshKey, refresh]);
-
 	const filteredInventory = useMemo(() => {
-		const items = inventory.filter(item => String(item.status).toUpperCase() === "REQUESTED");
+		const items = inventory.filter(item => String(item.status).toUpperCase() === "COMPLETED");
 		if (searchQuery.trim()) {
 			const query = searchQuery.toLowerCase();
 			return items.filter(item => 
@@ -79,10 +64,10 @@ export default function DCInventoryTable({
 		return (
 			<div className="rounded-xl border border-dashed border-white/15 bg-white/5 px-6 py-8 text-center">
 				<p className="text-sm font-bold text-[#F0EBE1]">
-					No items pending collection
+					No completed donations found
 				</p>
 				<p className="mt-1 text-xs text-[#F0EBE1]/55">
-					Donations ready to be collected will appear here.
+					Donations that have been fully completed will appear here.
 				</p>
 			</div>
 		);
@@ -109,9 +94,8 @@ export default function DCInventoryTable({
 					<thead className="bg-white/5">
 						<tr className="text-left text-xs font-bold uppercase tracking-[0.08em] text-[#F0EBE1]/50">
 							<th className="px-5 py-3">Item Name</th>
-							<th className="px-5 py-3">Qty Collected</th>
-							<th className="px-5 py-3">Collected At</th>
-							<th className="px-5 py-3 text-right">Actions</th>
+							<th className="px-5 py-3">Qty Finalized</th>
+							<th className="px-5 py-3">Expired / Available At</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -131,20 +115,11 @@ export default function DCInventoryTable({
 									<td className="px-5 py-4 text-xs text-[#F0EBE1]/50">
 										{formatDate(item.availabilityTime)}
 									</td>
-									<td className="px-5 py-4 text-right" onClick={(e) => e.stopPropagation()}>
-										<button
-											type="button"
-											onClick={() => setSelectedDonation(item)}
-											className="rounded-xl bg-sky-500/15 px-3 py-1.5 text-xs font-bold text-sky-400 transition hover:bg-sky-500/25 whitespace-nowrap"
-										>
-											Mark as Collected
-										</button>
-									</td>
 								</tr>
 							))
 						) : (
 							<tr>
-								<td colSpan={4} className="px-5 py-8 text-center text-sm text-[#F0EBE1]/50">
+								<td colSpan={3} className="px-5 py-8 text-center text-sm text-[#F0EBE1]/50">
 								   No items match your search.
 								</td>
 							</tr>
@@ -152,21 +127,6 @@ export default function DCInventoryTable({
 					</tbody>
 				</table>
 			</div>
-
-			{selectedDonation && (
-				<CollectionConfirmationModal
-					isOpen={!!selectedDonation}
-					onClose={() => setSelectedDonation(null)}
-					onSuccess={() => {
-						setSelectedDonation(null);
-						void refresh();
-					}}
-					donationId={selectedDonation.donationId}
-					defaultQuantity={selectedDonation.quantity}
-					unit={selectedDonation.unit}
-					foodType={selectedDonation.foodType}
-				/>
-			)}
 
 			{viewingDonation && (
 				<DonationDetailsModal
