@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { getCurrentUser, getUserProfile, logout } from "../../services/authService";
+import {
+	getCurrentUser,
+	getUserProfile,
+	logout,
+} from "../../services/authService";
 import type { UserProfileDto } from "../../types/Auth";
 
 interface DashboardLayoutProps {
@@ -46,6 +50,12 @@ const SIDEBAR_LINKS_CENTER: SidebarLink[] = [
 		icon: "R",
 		path: "/dashboard/center/requests",
 		matchPrefixes: ["/dashboard/center/requests"],
+	},
+	{
+		label: "Inventory",
+		icon: "I",
+		path: "/dashboard/center/inventory",
+		matchPrefixes: ["/dashboard/center/inventory"],
 	},
 ];
 
@@ -167,7 +177,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 							Welcome back, {userProfile?.name ?? user?.name ?? "there"}
 						</h1>
 						<p className="mt-1 text-sm text-[#F0EBE1]/55">
-							Manage donations, requests, and distribution activity from one place.
+							Manage donations, requests, and distribution activity from one
+							place.
 						</p>
 					</div>
 

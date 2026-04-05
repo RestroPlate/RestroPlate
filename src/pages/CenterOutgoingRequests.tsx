@@ -4,14 +4,25 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
 import CollectDonationAction from "../components/dashboard/CollectDonationAction";
-import DCInventoryTable from "../components/dashboard/DCInventoryTable";
 import StatusNotice from "../components/StatusNotice";
-import { getCenterOutgoingRequests, getDonationsForRequest } from "../services/donationRequestService";
-import type { Donation, DonationRequest, DonationRequestStatus } from "../types/Dashboard";
+import {
+	getCenterOutgoingRequests,
+	getDonationsForRequest,
+} from "../services/donationRequestService";
+import type {
+	Donation,
+	DonationRequest,
+	DonationRequestStatus,
+} from "../types/Dashboard";
 
 type RequestFilter = "all" | DonationRequestStatus;
 
-const FILTERS: RequestFilter[] = ["all", "pending", "partially_filled", "completed"];
+const FILTERS: RequestFilter[] = [
+	"all",
+	"pending",
+	"partially_filled",
+	"completed",
+];
 
 function formatDate(value: string): string {
 	const parsed = new Date(value);
@@ -39,7 +50,6 @@ function getStatusClasses(status: DonationRequestStatus): string {
 const DONATION_STATUS_CLASSES: Record<string, string> = {
 	AVAILABLE: "bg-emerald-500/15 text-emerald-300",
 	REQUESTED: "bg-amber-500/15 text-amber-300",
-	ACCEPTED: "bg-sky-500/15 text-sky-300",
 	COLLECTED: "bg-sky-500/15 text-sky-300",
 	COMPLETED: "bg-violet-500/15 text-violet-300",
 };
@@ -49,8 +59,11 @@ export default function CenterOutgoingRequests() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [statusFilter, setStatusFilter] = useState<RequestFilter>("all");
-	const [notice, setNotice] = useState<{ type: "success" | "error"; message: string } | null>(null);
-	const [inventoryRefreshKey, setInventoryRefreshKey] = useState(0);
+	const [notice, setNotice] = useState<{
+		type: "success" | "error";
+		message: string;
+	} | null>(null);
+
 
 	// Expanded sub-list state
 	const [expandedId, setExpandedId] = useState<number | null>(null);
@@ -113,8 +126,11 @@ export default function CenterOutgoingRequests() {
 	}
 
 	function handleCollected(requestId: number): void {
-		setNotice({ type: "success", message: `Donation collected and added to inventory (Request #${requestId}).` });
-		setInventoryRefreshKey((k) => k + 1);
+		setNotice({
+			type: "success",
+			message: `Donation collected and added to inventory (Request #${requestId}).`,
+		});
+
 		// Re-fetch sub-list
 		void toggleExpand(requestId).then(() => toggleExpand(requestId));
 	}
@@ -137,17 +153,23 @@ export default function CenterOutgoingRequests() {
 
 					<div className="flex flex-col gap-3 sm:flex-row sm:items-end">
 						<label className="space-y-2">
-							<span className="text-sm font-bold text-[#F0EBE1]">Status Filter</span>
+							<span className="text-sm font-bold text-[#F0EBE1]">
+								Status Filter
+							</span>
 							<select
 								value={statusFilter}
-								onChange={(event) => setStatusFilter(event.target.value as RequestFilter)}
+								onChange={(event) =>
+									setStatusFilter(event.target.value as RequestFilter)
+								}
 								className="auth-input min-w-[12rem] cursor-pointer"
 							>
 								{FILTERS.map((filter) => (
 									<option key={filter} value={filter}>
 										{filter === "all"
 											? "All statuses"
-											: filter.replace("_", " ").replace(/^\w/, (c) => c.toUpperCase())}
+											: filter
+													.replace("_", " ")
+													.replace(/^\w/, (c) => c.toUpperCase())}
 									</option>
 								))}
 							</select>
@@ -163,7 +185,11 @@ export default function CenterOutgoingRequests() {
 				</div>
 
 				{notice ? (
-					<StatusNotice type={notice.type} message={notice.message} onClose={() => setNotice(null)} />
+					<StatusNotice
+						type={notice.type}
+						message={notice.message}
+						onClose={() => setNotice(null)}
+					/>
 				) : null}
 
 				{error ? (
@@ -208,14 +234,22 @@ export default function CenterOutgoingRequests() {
 											{request.foodType}
 										</h3>
 										<div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm text-[#F0EBE1]/60">
-											<span>Needed: {request.requestedQuantity} {request.unit}</span>
-											<span>Remaining: {request.requestedQuantity - request.donatedQuantity} {request.unit}</span>
+											<span>
+												Needed: {request.requestedQuantity} {request.unit}
+											</span>
+											<span>
+												Remaining:{" "}
+												{request.requestedQuantity - request.donatedQuantity}{" "}
+												{request.unit}
+											</span>
 											<span>Created: {formatDate(request.createdAt)}</span>
 										</div>
 									</div>
 
 									<div className="flex items-center gap-3">
-										<span className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] ${getStatusClasses(request.status)}`}>
+										<span
+											className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] ${getStatusClasses(request.status)}`}
+										>
 											{request.status.replace("_", " ")}
 										</span>
 										<span className="text-[#F0EBE1]/40 text-lg">
@@ -248,23 +282,29 @@ export default function CenterOutgoingRequests() {
 																<span className="text-sm font-bold text-[#F0EBE1]">
 																	{`Donor #${donation.providerUserId}`}
 																</span>
-																<span className="mx-2 text-[#F0EBE1]/30">·</span>
+																<span className="mx-2 text-[#F0EBE1]/30">
+																	·
+																</span>
 																<span className="text-sm text-[#F0EBE1]/60">
 																	{donation.quantity} {donation.unit}
 																</span>
 															</div>
-															<span className={`rounded-full px-3 py-1 text-xs font-bold uppercase ${DONATION_STATUS_CLASSES[donation.status] ?? "bg-white/10 text-white/60"}`}>
+															<span
+																className={`rounded-full px-3 py-1 text-xs font-bold uppercase ${DONATION_STATUS_CLASSES[donation.status] ?? "bg-white/10 text-white/60"}`}
+															>
 																{donation.status}
 															</span>
 														</div>
 
 														{/* Mark as Collected for REQUESTED donations in Flow 2 */}
-														{(donation.status === "REQUESTED" || donation.status === "ACCEPTED") ? (
+														{donation.status === "REQUESTED" ? (
 															<CollectDonationAction
 																donationId={donation.donationId}
 																quantity={donation.quantity}
 																unit={donation.unit}
-																onCollected={() => handleCollected(request.donationRequestId)}
+																onCollected={() =>
+																	handleCollected(request.donationRequestId)
+																}
 															/>
 														) : null}
 													</div>
@@ -278,11 +318,7 @@ export default function CenterOutgoingRequests() {
 					</div>
 				)}
 
-				{/* ── DC Inventory Table ── */}
-				<div className="space-y-3">
-					<h3 className="text-lg font-bold text-[#F0EBE1]">Collected Inventory</h3>
-					<DCInventoryTable refreshKey={inventoryRefreshKey} />
-				</div>
+
 			</div>
 		</DashboardLayout>
 	);

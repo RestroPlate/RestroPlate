@@ -9,7 +9,7 @@ export default function CenterCreateRequest() {
 	const [foodType, setFoodType] = useState("");
 	const [requestedQuantity, setRequestedQuantity] = useState("");
 	const [unit, setUnit] = useState("");
-	
+
 	const [requesting, setRequesting] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -18,7 +18,7 @@ export default function CenterCreateRequest() {
 		const searchParams = new URLSearchParams(location.search);
 		const initialFoodType = searchParams.get("foodType");
 		const initialUnit = searchParams.get("unit");
-		
+
 		if (initialFoodType) setFoodType(initialFoodType);
 		if (initialUnit) setUnit(initialUnit);
 	}, [location]);
@@ -46,11 +46,11 @@ export default function CenterCreateRequest() {
 			const response = await submitDonationRequest({
 				foodType: foodType.trim(),
 				requestedQuantity: quantity,
-				unit: unit.trim()
+				unit: unit.trim(),
 			});
 
 			setSuccessMessage(
-				`Request #${response.donationRequestId} submitted with ${response.status} status.`
+				`Request #${response.donationRequestId} submitted with ${response.status} status.`,
 			);
 			setFoodType("");
 			setRequestedQuantity("");
@@ -80,7 +80,8 @@ export default function CenterCreateRequest() {
 							Specify the food your center needs.
 						</h2>
 						<p className="mt-2 text-sm text-[#F0EBE1]/65">
-							This will be visible to donors who can then choose to fulfill your request.
+							This will be visible to donors who can then choose to fulfill your
+							request.
 						</p>
 					</div>
 
@@ -100,9 +101,10 @@ export default function CenterCreateRequest() {
 
 				<section className="rounded-xl border border-white/10 bg-white/5 p-6">
 					<form onSubmit={handleRequestSubmit} className="space-y-5">
-						
 						<label className="block space-y-2">
-							<span className="text-sm font-bold text-[#F0EBE1]">Food Type Needed</span>
+							<span className="text-sm font-bold text-[#F0EBE1]">
+								Food Type Needed
+							</span>
 							<input
 								type="text"
 								value={foodType}
@@ -115,7 +117,9 @@ export default function CenterCreateRequest() {
 
 						<div className="grid grid-cols-2 gap-4">
 							<label className="block space-y-2">
-								<span className="text-sm font-bold text-[#F0EBE1]">Quantity</span>
+								<span className="text-sm font-bold text-[#F0EBE1]">
+									Quantity
+								</span>
 								<input
 									type="number"
 									min="0.01"

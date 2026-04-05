@@ -1,10 +1,27 @@
-import type { AccountType } from "./Auth";
+import type { AccountType, UserProfileDto } from "./Auth";
+export type { UserProfileDto };
 
-// modified: added ACCEPTED status for Flow 1 accept/reject lifecycle
-export type DonationStatus = "AVAILABLE" | "REQUESTED" | "ACCEPTED" | "COLLECTED" | "COMPLETED";
+// modified: added COLLECTED status for Flow 1 lifecycle (removed ACCEPTED)
+export type DonationStatus =
+	| "AVAILABLE"
+	| "REQUESTED"
+	| "COLLECTED"
+	| "COMPLETED";
+
+export interface CenterDetails {
+	userId: number;
+	name: string;
+	email: string;
+	phoneNumber: string;
+	address: string;
+}
 
 export interface Donation {
 	donationId: number;
+	inventoryId?: number;
+	inventoryLogId?: number;
+	is_public?: boolean;
+	isPublished?: boolean;
 	donationRequestId?: number | null;
 	providerUserId: number;
 	foodType: string;
@@ -17,6 +34,7 @@ export interface Donation {
 	status: DonationStatus;
 	createdAt: string;
 	claimedByCenterUserId?: number | null;
+	centerDetails?: CenterDetails;
 }
 
 // Claim status for donation claim requests (Flow 1 claims)
@@ -29,6 +47,7 @@ export interface DonationClaim {
 	donatorUserId: number;
 	status: ClaimStatus;
 	createdAt: string;
+	center?: UserProfileDto;
 }
 
 export interface CreateDonationPayload {
@@ -68,8 +87,10 @@ export interface MockUser {
 }
 
 // modified: added partially_filled status for Flow 2 requests
-export type DonationRequestStatus = "pending" | "partially_filled" | "completed";
-
+export type DonationRequestStatus =
+	| "pending"
+	| "partially_filled"
+	| "completed";
 
 export interface DonationRequest {
 	donationRequestId: number;
@@ -88,6 +109,21 @@ export interface SubmitDonationRequestPayload {
 	foodType: string;
 	requestedQuantity: number;
 	unit: string;
+}
+
+// new: payload for POST /api/inventory/{id}/collect
+export interface CollectDonationDto {
+	collectedAmount: number;
+}
+
+// new: response from POST /api/inventory/{id}/collect
+export interface InventoryLogResponseDto {
+	inventoryLogId: number;
+	donationId: number;
+	donationRequestId: number | null;
+	distributionCenterUserId: number;
+	collectedAmount: number;
+	collectedAt: string;
 }
 
 // new: inventory item returned from GET /inventory

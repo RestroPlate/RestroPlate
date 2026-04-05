@@ -26,9 +26,18 @@ export default function DonorDashboard() {
 
 	const stats = [
 		{ label: "Total Donations", value: donations.length },
-		{ label: "Available", value: donations.filter((d) => d.status === "AVAILABLE").length },
-		{ label: "Requested", value: donations.filter((d) => d.status === "REQUESTED").length },
-		{ label: "Collected", value: donations.filter((d) => d.status === "COLLECTED").length },
+		{
+			label: "Available",
+			value: donations.filter((d) => d.status === "AVAILABLE").length,
+		},
+		{
+			label: "Requested",
+			value: donations.filter((d) => d.status === "REQUESTED").length,
+		},
+		{
+			label: "Collected",
+			value: donations.filter((d) => d.status === "COLLECTED").length,
+		},
 	];
 
 	const quickActions = [
@@ -46,7 +55,8 @@ export default function DonorDashboard() {
 		},
 		{
 			title: "Explore Requests",
-			description: "Browse requirements from distribution centers and accept them to supply food.",
+			description:
+				"Browse requirements from distribution centers and accept them to supply food.",
 			icon: "🔍",
 			path: "/dashboard/donor/explore",
 		},
@@ -64,16 +74,25 @@ export default function DonorDashboard() {
 					{/* ── Stats Cards ── */}
 					<div className="grid grid-cols-2 gap-4 md:grid-cols-4">
 						{stats.map((item) => (
-							<div key={item.label} className="rounded-xl border border-white/10 bg-white/5 px-5 py-4">
-								<p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#F0EBE1]/60">{item.label}</p>
-								<p className="mt-1 text-3xl font-black text-[#7DC542]">{item.value}</p>
+							<div
+								key={item.label}
+								className="rounded-xl border border-white/10 bg-white/5 px-5 py-4"
+							>
+								<p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#F0EBE1]/60">
+									{item.label}
+								</p>
+								<p className="mt-1 text-3xl font-black text-[#7DC542]">
+									{item.value}
+								</p>
 							</div>
 						))}
 					</div>
 
 					{/* ── Quick Actions ── */}
 					<div>
-						<h2 className="mb-4 text-lg font-bold text-[#F0EBE1]">Quick Actions</h2>
+						<h2 className="mb-4 text-lg font-bold text-[#F0EBE1]">
+							Quick Actions
+						</h2>
 						<div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 							{quickActions.map((action) => (
 								<button
@@ -86,7 +105,9 @@ export default function DonorDashboard() {
 									<h3 className="mt-2 text-base font-bold text-[#F0EBE1] transition group-hover:text-[#7DC542]">
 										{action.title}
 									</h3>
-									<p className="mt-1 text-sm text-[#F0EBE1]/55">{action.description}</p>
+									<p className="mt-1 text-sm text-[#F0EBE1]/55">
+										{action.description}
+									</p>
 								</button>
 							))}
 						</div>
