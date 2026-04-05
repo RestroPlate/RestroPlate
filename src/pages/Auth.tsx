@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 // @ts-ignore
 import LocationPicker from "react-location-picker";
@@ -77,6 +77,11 @@ export default function Auth() {
 		setRegisterData((prev) => ({ ...prev, accountType: type }));
 		setRegisterStep("form");
 	};
+
+	const handleLocationChange = useCallback(({ position, address }: { position: { lat: number; lng: number }; address: string }) => {
+		const locString = address || `${position.lat.toFixed(5)}, ${position.lng.toFixed(5)}`;
+		setRegisterData((prev) => ({ ...prev, address: locString }));
+	}, []);
 
 	const handleLoginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target;
@@ -377,10 +382,7 @@ export default function Auth() {
 											<div className="rounded-xl overflow-hidden border border-white/10 bg-[#111F0F]">
 												<LocationPicker
 													defaultPosition={mapCenter}
-													onChange={({ position, address }: { position: { lat: number; lng: number }; address: string }) => {
-														const locString = address || `${position.lat.toFixed(5)}, ${position.lng.toFixed(5)}`;
-														setRegisterData((prev) => ({ ...prev, address: locString }));
-													}}
+													onChange={handleLocationChange}
 													mapContainerStyle={{ height: '180px', width: '100%' }}
 												/>
 												<div className="p-2 text-xs text-[#F0EBE1] break-all">

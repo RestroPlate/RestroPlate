@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState, useCallback, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 // @ts-ignore
 import LocationPicker from "react-location-picker";
@@ -90,6 +90,12 @@ export default function DonorCreateDonation() {
 		setForm((prev) => ({ ...prev, [field]: value }));
 		setErrors((prev) => ({ ...prev, [field]: undefined }));
 	}
+
+	const handleLocationChange = useCallback(({ position, address }: { position: { lat: number; lng: number }; address: string }) => {
+		const locString = address || `${position.lat.toFixed(5)}, ${position.lng.toFixed(5)}`;
+		setForm((prev) => ({ ...prev, pickupAddress: locString }));
+		setErrors((prev) => ({ ...prev, pickupAddress: undefined }));
+	}, []);
 
 	async function handleCreateDonation(
 		event: FormEvent<HTMLFormElement>,
@@ -266,10 +272,7 @@ export default function DonorCreateDonation() {
 							<div className="overflow-hidden rounded-xl border border-white/10 bg-[#111F0F]">
 								<LocationPicker
 									defaultPosition={mapCenter}
-									onChange={({ position, address }: { position: { lat: number; lng: number }; address: string }) => {
-										const locString = address || `${position.lat.toFixed(5)}, ${position.lng.toFixed(5)}`;
-										handleFieldChange("pickupAddress", locString);
-									}}
+									onChange={handleLocationChange}
 									mapContainerStyle={{ height: '200px', width: '100%' }}
 								/>
 								<div className="p-2 text-xs text-[#F0EBE1] break-all border-t border-white/5">

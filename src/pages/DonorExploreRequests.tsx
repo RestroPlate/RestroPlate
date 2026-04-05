@@ -1,7 +1,7 @@
 // modified: renamed button to "Fulfill", added inline validation capping quantity at remaining,
 // appends to "My Donations" with REQUESTED badge (no AVAILABLE phase in Flow 2),
 // shows toast "Donation submitted — deliver to [DC Name]"
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
 import StatusNotice from "../components/StatusNotice";
 import { getAvailableRequests } from "../services/donationRequestService";
@@ -174,6 +174,11 @@ export default function DonorExploreRequests() {
 	}, [notice]);
 
 	/* ── Client-side filtering & sorting ── */
+	const handleLocationChange = useCallback(({ position, address }: { position: { lat: number; lng: number }; address: string }) => {
+		const locString = address || `${position.lat.toFixed(5)}, ${position.lng.toFixed(5)}`;
+		setPickupAddress(locString);
+	}, []);
+
 	const filteredRequests = useMemo(() => {
 		const centerQuery = centerSearch.trim().toLowerCase();
 		const locationQuery = locationSearch.trim().toLowerCase();
@@ -666,10 +671,7 @@ export default function DonorExploreRequests() {
 								<div className="overflow-hidden rounded-xl border border-white/10 bg-[#0F1D0C]">
 									<LocationPicker
 										defaultPosition={mapCenter}
-										onChange={({ position, address }: { position: { lat: number; lng: number }; address: string }) => {
-											const locString = address || `${position.lat.toFixed(5)}, ${position.lng.toFixed(5)}`;
-											setPickupAddress(locString);
-										}}
+										onChange={handleLocationChange}
 										mapContainerStyle={{ height: '200px', width: '100%' }}
 									/>
 									<div className="p-2 text-xs text-[#F0EBE1] break-all border-t border-white/5">

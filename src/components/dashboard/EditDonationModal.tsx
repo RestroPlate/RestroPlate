@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, useCallback } from "react";
 import type { Donation, UpdateDonationPayload } from "../../types/Dashboard";
 // @ts-ignore
 import LocationPicker from "react-location-picker";
@@ -91,6 +91,12 @@ export default function EditDonationModal({
 		setForm((prev) => ({ ...prev, [field]: value }));
 		setErrors((prev) => ({ ...prev, [field]: undefined }));
 	}
+
+	const handleLocationChange = useCallback(({ position, address }: { position: { lat: number; lng: number }; address: string }) => {
+		const locString = address || `${position.lat.toFixed(5)}, ${position.lng.toFixed(5)}`;
+		setForm((prev) => ({ ...prev, pickupAddress: locString }));
+		setErrors((prev) => ({ ...prev, pickupAddress: undefined }));
+	}, []);
 
 	async function handleSubmit(
 		event: FormEvent<HTMLFormElement>,
@@ -263,10 +269,7 @@ export default function EditDonationModal({
 						<div className="overflow-hidden rounded-xl border border-white/10 bg-[#0F1D0C]">
 							<LocationPicker
 								defaultPosition={mapCenter}
-								onChange={({ position, address }: { position: { lat: number; lng: number }; address: string }) => {
-									const locString = address || `${position.lat.toFixed(5)}, ${position.lng.toFixed(5)}`;
-									handleFieldChange("pickupAddress", locString);
-								}}
+								onChange={handleLocationChange}
 								mapContainerStyle={{ height: '200px', width: '100%' }}
 							/>
 							<div className="p-2 text-xs text-[#F0EBE1] break-all border-t border-white/5">
