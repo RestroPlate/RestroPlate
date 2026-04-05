@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
 
 import StatusNotice from "../components/StatusNotice";
+import LocationView from "../components/dashboard/LocationView";
 import { getAvailableDonations } from "../services/donationService";
 import { createClaim, getMyClaims } from "../services/claimService";
 import type { Donation, DonationStatus } from "../types/Dashboard";
@@ -218,11 +219,9 @@ export default function CenterExploreDonations() {
 											{donation.quantity} {donation.unit}
 										</span>
 									</div>
-									<div className="flex items-center justify-between gap-3">
-										<span>Pickup</span>
-										<span className="max-w-[13rem] text-right font-medium text-[#F0EBE1]">
-											{donation.pickupAddress}
-										</span>
+									<div className="space-y-1">
+										<p className="text-[10px] font-bold uppercase tracking-wider text-[#F0EBE1]/40">Pickup Location</p>
+										<LocationView address={donation.pickupAddress} height="120px" />
 									</div>
 									<div className="flex items-center justify-between gap-3">
 										<span>Expires</span>

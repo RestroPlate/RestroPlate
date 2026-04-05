@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+// @ts-ignore
+import LocationPicker from "react-location-picker";
 import type {
 	AccountType,
 	LoginFormData,
@@ -351,16 +353,33 @@ export default function Auth() {
 									<label className="text-[rgba(240,235,225,0.65)] text-[0.8rem] font-semibold">
 										{label}
 									</label>
-									<input
-										className="auth-input"
-										type={type}
-										name={name}
-										placeholder={placeholder}
-										value={registerData[name as keyof RegisterFormData]}
-										onChange={handleRegisterChange}
-										required
-										autoComplete={autoComplete}
-									/>
+									{name === "address" ? (
+										<div className="rounded-xl overflow-hidden border border-white/10 bg-[#111F0F]">
+											<LocationPicker
+												defaultPosition={{ lat: 6.927079, lng: 79.861244 }}
+												onChange={({ position, address }: { position: { lat: number; lng: number }; address: string }) => {
+													const locString = address || `${position.lat.toFixed(5)}, ${position.lng.toFixed(5)}`;
+													setRegisterData((prev) => ({ ...prev, address: locString }));
+												}}
+												mapContainerStyle={{ height: '200px', width: '100%' }}
+											/>
+											<div className="p-2 text-xs text-[#F0EBE1] break-all">
+												<span className="opacity-50">Selected: </span>
+												{registerData.address || "None"}
+											</div>
+										</div>
+									) : (
+										<input
+											className="auth-input"
+											type={type}
+											name={name}
+											placeholder={placeholder}
+											value={registerData[name as keyof RegisterFormData]}
+											onChange={handleRegisterChange}
+											required
+											autoComplete={autoComplete}
+										/>
+									)}
 								</div>
 							))}
 

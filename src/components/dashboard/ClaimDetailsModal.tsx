@@ -1,4 +1,5 @@
 import type { Donation, DonationClaim } from "../../types/Dashboard";
+import LocationView from "./LocationView";
 
 interface ClaimDetailsModalProps {
 	claim: DonationClaim;
@@ -67,7 +68,9 @@ export default function ClaimDetailsModal({
 							{center?.address && (
 								<div>
 									<p className={LABEL_CLASS}>Address</p>
-									<p className={VALUE_CLASS}>{center.address}</p>
+									<div className="mt-2">
+										<LocationView address={center.address} height="160px" />
+									</div>
 								</div>
 							)}
 							<div className="grid grid-cols-2 gap-4">

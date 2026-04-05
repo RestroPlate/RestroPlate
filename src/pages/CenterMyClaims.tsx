@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
 import { getMyClaims } from "../services/claimService";
 import { getAvailableDonations } from "../services/donationService";
+import LocationView from "../components/dashboard/LocationView";
 import type { Donation, DonationClaim, ClaimStatus } from "../types/Dashboard";
 
 const POLL_INTERVAL = 15_000;
@@ -208,11 +209,9 @@ export default function CenterMyClaims() {
 														{donation.quantity} {donation.unit}
 													</span>
 												</div>
-												<div className="flex items-center justify-between gap-2 sm:flex-col sm:items-start">
-													<span className="text-[#F0EBE1]/50">Pickup</span>
-													<span className="font-medium text-[#F0EBE1]">
-														{donation.pickupAddress}
-													</span>
+												<div className="flex flex-col gap-1 sm:col-span-2">
+													<span className="text-[#F0EBE1]/50 text-xs font-bold uppercase tracking-wider">Pickup Location</span>
+													<LocationView address={donation.pickupAddress} height="100px" />
 												</div>
 											</>
 										) : null}

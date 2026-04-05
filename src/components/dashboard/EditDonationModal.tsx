@@ -1,5 +1,7 @@
 import { useState, type FormEvent } from "react";
 import type { Donation, UpdateDonationPayload } from "../../types/Dashboard";
+// @ts-ignore
+import LocationPicker from "react-location-picker";
 
 interface EditDonationModalProps {
 	donation: Donation;
@@ -228,18 +230,24 @@ export default function EditDonationModal({
 					</div>
 
 					<div className="md:col-span-2">
-						<label htmlFor="edit-pickupAddress" className={LABEL_CLASS}>
+						<label className={LABEL_CLASS}>
 							Pickup Address
 						</label>
-						<input
-							id="edit-pickupAddress"
-							type="text"
-							value={form.pickupAddress}
-							onChange={(e) =>
-								handleFieldChange("pickupAddress", e.target.value)
-							}
-							className={INPUT_CLASS}
-						/>
+						<div className="overflow-hidden rounded-xl border border-white/10 bg-[#0F1D0C]">
+							<LocationPicker
+								defaultPosition={{ lat: 6.927079, lng: 79.861244 }}
+								onChange={({ position, address }: { position: { lat: number; lng: number }; address: string }) => {
+									const locString = address || `${position.lat.toFixed(5)}, ${position.lng.toFixed(5)}`;
+									handleFieldChange("pickupAddress", locString);
+								}}
+								mapContainerStyle={{ height: '220px', width: '100%' }}
+							/>
+							<div className="p-2 text-xs text-[#F0EBE1] break-all border-t border-white/5">
+								<span className="opacity-50">Selected: </span>
+								{form.pickupAddress || "(None)"}
+							</div>
+						</div>
+						<input type="hidden" id="edit-pickupAddress" value={form.pickupAddress} required />
 						{errors.pickupAddress ? (
 							<p className="mt-1 text-xs font-semibold text-rose-300">
 								{errors.pickupAddress}

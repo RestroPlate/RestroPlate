@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import type { Donation, DonationStatus } from "../types/Dashboard";
+import LocationView from "./dashboard/LocationView";
 
 interface DonationListProps {
 	donations: Donation[];
@@ -18,7 +19,6 @@ const FILTER_OPTIONS: Array<{ label: string; value: DonationFilter }> = [
 const STATUS_CLASSES: Record<DonationStatus, string> = {
 	AVAILABLE: "bg-emerald-500/15 text-emerald-300",
 	REQUESTED: "bg-amber-500/15 text-amber-300",
-	ACCEPTED: "bg-sky-500/15 text-sky-300",
 	COLLECTED: "bg-sky-500/15 text-sky-300",
 	COMPLETED: "bg-violet-500/15 text-violet-300",
 };
@@ -111,13 +111,11 @@ export default function DonationList({ donations }: DonationListProps) {
 										{formatCreatedDate(donation.createdAt)}
 									</p>
 								</div>
-								<div className="rounded-lg border border-white/6 bg-[#111F0F]/80 px-3 py-2">
+								<div className="flex flex-col gap-2 rounded-lg border border-white/6 bg-[#111F0F]/80 px-3 py-2">
 									<p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#F0EBE1]/45">
-										Pickup
+										Pickup Location
 									</p>
-									<p className="mt-1 text-[#F0EBE1]">
-										{donation.pickupAddress}
-									</p>
+									<LocationView address={donation.pickupAddress} height="100px" />
 								</div>
 								<div className="rounded-lg border border-white/6 bg-[#111F0F]/80 px-3 py-2">
 									<p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#F0EBE1]/45">
