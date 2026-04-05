@@ -54,6 +54,7 @@ export default function Auth() {
 	const [loginData, setLoginData] = useState<LoginFormData>(INITIAL_LOGIN);
 	const [registerData, setRegisterData] =
 		useState<RegisterFormData>(INITIAL_REGISTER);
+	const [mapCenter, setMapCenter] = useState({ lat: 6.927079, lng: 79.861244 });
 	const [loginError, setLoginError] = useState<string | null>(null);
 	const [loginLoading, setLoginLoading] = useState(false);
 	const [registerError, setRegisterError] = useState<string | null>(null);
@@ -354,18 +355,38 @@ export default function Auth() {
 										{label}
 									</label>
 									{name === "address" ? (
-										<div className="rounded-xl overflow-hidden border border-white/10 bg-[#111F0F]">
-											<LocationPicker
-												defaultPosition={{ lat: 6.927079, lng: 79.861244 }}
-												onChange={({ position, address }: { position: { lat: number; lng: number }; address: string }) => {
-													const locString = address || `${position.lat.toFixed(5)}, ${position.lng.toFixed(5)}`;
-													setRegisterData((prev) => ({ ...prev, address: locString }));
+										<div className="space-y-2">
+											<input
+												type="text"
+												placeholder="Manual Lat, Lng (e.g. 6.9271, 79.8612)"
+												className="auth-input w-full text-xs"
+												value={registerData.address}
+												onChange={(e) => {
+													const val = e.target.value;
+													setRegisterData(prev => ({ ...prev, address: val }));
+													const parts = val.split(",").map(p => p.trim());
+													if (parts.length === 2) {
+														const lat = parseFloat(parts[0]);
+														const lng = parseFloat(parts[1]);
+														if (!isNaN(lat) && !isNaN(lng)) {
+															setMapCenter({ lat, lng });
+														}
+													}
 												}}
-												mapContainerStyle={{ height: '200px', width: '100%' }}
 											/>
-											<div className="p-2 text-xs text-[#F0EBE1] break-all">
-												<span className="opacity-50">Selected: </span>
-												{registerData.address || "None"}
+											<div className="rounded-xl overflow-hidden border border-white/10 bg-[#111F0F]">
+												<LocationPicker
+													defaultPosition={mapCenter}
+													onChange={({ position, address }: { position: { lat: number; lng: number }; address: string }) => {
+														const locString = address || `${position.lat.toFixed(5)}, ${position.lng.toFixed(5)}`;
+														setRegisterData((prev) => ({ ...prev, address: locString }));
+													}}
+													mapContainerStyle={{ height: '180px', width: '100%' }}
+												/>
+												<div className="p-2 text-xs text-[#F0EBE1] break-all">
+													<span className="opacity-50">Selected: </span>
+													{registerData.address || "None"}
+												</div>
 											</div>
 										</div>
 									) : (

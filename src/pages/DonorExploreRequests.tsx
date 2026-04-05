@@ -125,6 +125,7 @@ export default function DonorExploreRequests() {
 	const [availabilityTime, setAvailabilityTime] = useState("");
 	const [submitting, setSubmitting] = useState(false);
 	const [modalError, setModalError] = useState<string | null>(null);
+	const [mapCenter, setMapCenter] = useState({ lat: 6.927079, lng: 79.861244 });
 	const [notice, setNotice] = useState<{
 		type: "success" | "error";
 		message: string;
@@ -642,23 +643,40 @@ export default function DonorExploreRequests() {
 
 							<label className="block space-y-1.5">
 								<span className="text-xs font-bold text-[#F0EBE1] uppercase tracking-[0.08em]">
-									Pickup Address
+									Pickup Location / Coordinates
 								</span>
+								<input
+									type="text"
+									placeholder="Manual Lat, Lng (e.g. 6.9271, 79.8612)"
+									className="auth-input w-full text-xs"
+									value={pickupAddress}
+									onChange={(e) => {
+										const val = e.target.value;
+										setPickupAddress(val);
+										const parts = val.split(",").map(p => p.trim());
+										if (parts.length === 2) {
+											const lat = parseFloat(parts[0]);
+											const lng = parseFloat(parts[1]);
+											if (!isNaN(lat) && !isNaN(lng)) {
+												setMapCenter({ lat, lng });
+											}
+										}
+									}}
+								/>
 								<div className="overflow-hidden rounded-xl border border-white/10 bg-[#0F1D0C]">
 									<LocationPicker
-										defaultPosition={{ lat: 6.927079, lng: 79.861244 }}
+										defaultPosition={mapCenter}
 										onChange={({ position, address }: { position: { lat: number; lng: number }; address: string }) => {
 											const locString = address || `${position.lat.toFixed(5)}, ${position.lng.toFixed(5)}`;
 											setPickupAddress(locString);
 										}}
-										mapContainerStyle={{ height: '220px', width: '100%' }}
+										mapContainerStyle={{ height: '200px', width: '100%' }}
 									/>
 									<div className="p-2 text-xs text-[#F0EBE1] break-all border-t border-white/5">
 										<span className="opacity-50">Selected: </span>
 										{pickupAddress || "(None)"}
 									</div>
 								</div>
-								<input type="hidden" value={pickupAddress} required />
 							</label>
 
 							<label className="block space-y-1.5">

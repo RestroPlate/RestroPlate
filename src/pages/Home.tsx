@@ -7,6 +7,7 @@ import { PhotoStrip } from "../components/PhotoStrip";
 import { Testimonials } from "../components/Testimonials";
 import { CtaSection } from "../components/CtaSection";
 import { Footer } from "../components/Footer";
+import { PublicMap } from "../components/PublicMap";
 
 export default function Home() {
 	return (
@@ -14,6 +15,7 @@ export default function Home() {
 			<NavBar />
 			<Hero />
 			<StatsBar />
+			<PublicMap />
 			<Mission />
 			<HowItWorks />
 			<PhotoStrip />
