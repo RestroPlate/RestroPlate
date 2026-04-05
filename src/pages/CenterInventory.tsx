@@ -2,8 +2,9 @@ import { useState } from "react";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
 import DCInventoryTable from "../components/dashboard/DCInventoryTable";
 import PublishedInventoryTable from "../components/dashboard/PublishedInventoryTable";
+import CompletedInventoryTable from "../components/dashboard/CompletedInventoryTable";
 
-type TabType = "publish" | "collect";
+type TabType = "publish" | "collect" | "completed";
 
 export default function CenterInventory() {
 	const [activeTab, setActiveTab] = useState<TabType>("publish");
@@ -55,18 +56,36 @@ export default function CenterInventory() {
 							<div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#7DC542]" />
 						)}
 					</button>
+					<button
+						type="button"
+						onClick={() => setActiveTab("completed")}
+						className={`px-6 py-3 text-sm font-bold transition-colors relative ${
+							activeTab === "completed"
+								? "text-[#7DC542]"
+								: "text-[#F0EBE1]/50 hover:text-[#F0EBE1]"
+						}`}
+					>
+						Completed Donations
+						{activeTab === "completed" && (
+							<div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#7DC542]" />
+						)}
+					</button>
 				</div>
 
 				{/* Tab Content */}
 				<div className="mt-4">
 					{activeTab === "publish" ? (
 						<PublishedInventoryTable />
-					) : (
+					) : activeTab === "collect" ? (
 						<div className="space-y-6">
                             <div className="rounded-xl border border-[#7DC542]/20 bg-[#7DC542]/5 p-4 text-sm text-[#F0EBE1]/80">
                                 <p>Items listed here are waiting to be picked up from donors. Once collected, they will move to your available inventory.</p>
                             </div>
 							<DCInventoryTable />
+						</div>
+					) : (
+						<div className="space-y-6">
+							<CompletedInventoryTable />
 						</div>
 					)}
 				</div>
