@@ -1,4 +1,5 @@
 import type { Donation } from "../../types/Dashboard";
+import LocationView from "./LocationView";
 
 interface DonationDetailsModalProps {
 	donation: Donation;
@@ -128,8 +129,10 @@ export default function DonationDetailsModal({
 					{/* Pickup Info */}
 					<div className={DETAIL_SECTION_CLASS}>
 						<div>
-							<p className={LABEL_CLASS}>Pickup Address</p>
-							<p className={VALUE_CLASS}>{donation.pickupAddress}</p>
+							<p className={LABEL_CLASS}>Pickup Info</p>
+							<div className="mt-2">
+								<LocationView address={donation.pickupAddress} height="180px" />
+							</div>
 						</div>
 						<div className="pt-2">
 							<p className={LABEL_CLASS}>Availability Time</p>

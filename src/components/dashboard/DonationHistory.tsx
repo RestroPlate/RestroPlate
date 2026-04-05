@@ -1,6 +1,7 @@
 import { useState } from "react";
 import EditDonationModal from "./EditDonationModal";
 import CenterDetailsModal from "./CenterDetailsModal";
+import LocationView from "./LocationView";
 import StatusNotice from "../StatusNotice";
 import type {
 	CenterDetails,
@@ -215,7 +216,10 @@ export default function DonationHistory({
 									<span>
 										Quantity: {donation.quantity} {donation.unit}
 									</span>
-									<span>Pickup: {donation.pickupAddress}</span>
+									<div className="w-full mt-2">
+										<p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-[#F0EBE1]/40">Pickup Location</p>
+										<LocationView address={donation.pickupAddress} height="120px" />
+									</div>
 									<span>Expires: {formatDate(donation.expirationDate)}</span>
 									<span>Available At: {donation.availabilityTime}</span>
 									<span>Created: {formatDate(donation.createdAt)}</span>

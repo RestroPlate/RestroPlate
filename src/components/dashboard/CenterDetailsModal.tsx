@@ -1,4 +1,5 @@
 import type { CenterDetails } from "../../types/Dashboard";
+import LocationView from "./LocationView";
 
 interface CenterDetailsModalProps {
 	center: CenterDetails;
@@ -51,7 +52,9 @@ export default function CenterDetailsModal({
 						</div>
 						<div>
 							<p className={LABEL_CLASS}>Address</p>
-							<p className={VALUE_CLASS}>{center.address}</p>
+							<div className="mt-2">
+								<LocationView address={center.address} height="180px" />
+							</div>
 						</div>
 						<div className="grid grid-cols-2 gap-4">
 							<div>

@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+// @ts-ignore
+import LocationPicker from "react-location-picker";
 import type {
 	AccountType,
 	LoginFormData,
@@ -52,6 +54,7 @@ export default function Auth() {
 	const [loginData, setLoginData] = useState<LoginFormData>(INITIAL_LOGIN);
 	const [registerData, setRegisterData] =
 		useState<RegisterFormData>(INITIAL_REGISTER);
+	const [mapCenter, setMapCenter] = useState({ lat: 6.927079, lng: 79.861244 });
 	const [loginError, setLoginError] = useState<string | null>(null);
 	const [loginLoading, setLoginLoading] = useState(false);
 	const [registerError, setRegisterError] = useState<string | null>(null);
@@ -74,6 +77,11 @@ export default function Auth() {
 		setRegisterData((prev) => ({ ...prev, accountType: type }));
 		setRegisterStep("form");
 	};
+
+	const handleLocationChange = useCallback(({ position, address }: { position: { lat: number; lng: number }; address: string }) => {
+		const locString = address || `${position.lat.toFixed(5)}, ${position.lng.toFixed(5)}`;
+		setRegisterData((prev) => ({ ...prev, address: locString }));
+	}, []);
 
 	const handleLoginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target;
@@ -351,16 +359,50 @@ export default function Auth() {
 									<label className="text-[rgba(240,235,225,0.65)] text-[0.8rem] font-semibold">
 										{label}
 									</label>
-									<input
-										className="auth-input"
-										type={type}
-										name={name}
-										placeholder={placeholder}
-										value={registerData[name as keyof RegisterFormData]}
-										onChange={handleRegisterChange}
-										required
-										autoComplete={autoComplete}
-									/>
+									{name === "address" ? (
+										<div className="space-y-2">
+											<input
+												type="text"
+												placeholder="Manual Lat, Lng (e.g. 6.9271, 79.8612)"
+												className="auth-input w-full text-xs"
+												value={registerData.address}
+												onChange={(e) => {
+													const val = e.target.value;
+													setRegisterData(prev => ({ ...prev, address: val }));
+													const parts = val.split(",").map(p => p.trim());
+													if (parts.length === 2) {
+														const lat = parseFloat(parts[0]);
+														const lng = parseFloat(parts[1]);
+														if (!isNaN(lat) && !isNaN(lng)) {
+															setMapCenter({ lat, lng });
+														}
+													}
+												}}
+											/>
+											<div className="rounded-xl overflow-hidden border border-white/10 bg-[#111F0F]">
+												<LocationPicker
+													defaultPosition={mapCenter}
+													onChange={handleLocationChange}
+													mapContainerStyle={{ height: '180px', width: '100%' }}
+												/>
+												<div className="p-2 text-xs text-[#F0EBE1] break-all">
+													<span className="opacity-50">Selected: </span>
+													{registerData.address || "None"}
+												</div>
+											</div>
+										</div>
+									) : (
+										<input
+											className="auth-input"
+											type={type}
+											name={name}
+											placeholder={placeholder}
+											value={registerData[name as keyof RegisterFormData]}
+											onChange={handleRegisterChange}
+											required
+											autoComplete={autoComplete}
+										/>
+									)}
 								</div>
 							))}
 

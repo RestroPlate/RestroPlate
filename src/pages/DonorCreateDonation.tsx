@@ -1,5 +1,7 @@
-import { useState, type FormEvent } from "react";
+import { useState, useCallback, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
+// @ts-ignore
+import LocationPicker from "react-location-picker";
 import StatusNotice from "../components/StatusNotice";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
 import { createDonation, getMyDonations } from "../services/donationService";
@@ -79,6 +81,7 @@ export default function DonorCreateDonation() {
 		type: "success" | "error";
 		message: string;
 	} | null>(null);
+	const [mapCenter, setMapCenter] = useState({ lat: 6.927079, lng: 79.861244 });
 
 	function handleFieldChange(
 		field: keyof DonationFormState,
@@ -87,6 +90,12 @@ export default function DonorCreateDonation() {
 		setForm((prev) => ({ ...prev, [field]: value }));
 		setErrors((prev) => ({ ...prev, [field]: undefined }));
 	}
+
+	const handleLocationChange = useCallback(({ position, address }: { position: { lat: number; lng: number }; address: string }) => {
+		const locString = address || `${position.lat.toFixed(5)}, ${position.lng.toFixed(5)}`;
+		setForm((prev) => ({ ...prev, pickupAddress: locString }));
+		setErrors((prev) => ({ ...prev, pickupAddress: undefined }));
+	}, []);
 
 	async function handleCreateDonation(
 		event: FormEvent<HTMLFormElement>,
@@ -238,20 +247,40 @@ export default function DonorCreateDonation() {
 							) : null}
 						</div>
 
-						<div className="md:col-span-2">
-							<label htmlFor="pickupAddress" className={LABEL_CLASS}>
-								Pickup Address
+						<div className="md:col-span-2 space-y-2">
+							<label className={LABEL_CLASS}>
+								Pickup Location / Coordinates
 							</label>
 							<input
-								id="pickupAddress"
 								type="text"
+								placeholder="Manual Lat, Lng (e.g. 6.9271, 79.8612)"
+								className="auth-input w-full text-xs"
 								value={form.pickupAddress}
-								onChange={(e) =>
-									handleFieldChange("pickupAddress", e.target.value)
-								}
-								className={INPUT_CLASS}
-								placeholder="No. 12, Main Street, Colombo"
+								onChange={(e) => {
+									const val = e.target.value;
+									handleFieldChange("pickupAddress", val);
+									const parts = val.split(",").map(p => p.trim());
+									if (parts.length === 2) {
+										const lat = parseFloat(parts[0]);
+										const lng = parseFloat(parts[1]);
+										if (!isNaN(lat) && !isNaN(lng)) {
+											setMapCenter({ lat, lng });
+										}
+									}
+								}}
 							/>
+							<div className="overflow-hidden rounded-xl border border-white/10 bg-[#111F0F]">
+								<LocationPicker
+									defaultPosition={mapCenter}
+									onChange={handleLocationChange}
+									mapContainerStyle={{ height: '200px', width: '100%' }}
+								/>
+								<div className="p-2 text-xs text-[#F0EBE1] break-all border-t border-white/5">
+									<span className="opacity-50">Selected: </span>
+									{form.pickupAddress || "(None)"}
+								</div>
+							</div>
+							<input type="hidden" id="pickupAddress" value={form.pickupAddress} required />
 							{errors.pickupAddress ? (
 								<p className="mt-1 text-xs font-semibold text-rose-300">
 									{errors.pickupAddress}

@@ -1,7 +1,7 @@
 // modified: renamed button to "Fulfill", added inline validation capping quantity at remaining,
 // appends to "My Donations" with REQUESTED badge (no AVAILABLE phase in Flow 2),
 // shows toast "Donation submitted — deliver to [DC Name]"
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
 import StatusNotice from "../components/StatusNotice";
 import { getAvailableRequests } from "../services/donationRequestService";
@@ -11,6 +11,9 @@ import type {
 	DonationRequest,
 	DonationRequestStatus,
 } from "../types/Dashboard";
+// @ts-ignore
+import LocationPicker from "react-location-picker";
+import LocationView from "../components/dashboard/LocationView";
 
 type SortOrder = "newest" | "oldest";
 
@@ -122,6 +125,7 @@ export default function DonorExploreRequests() {
 	const [availabilityTime, setAvailabilityTime] = useState("");
 	const [submitting, setSubmitting] = useState(false);
 	const [modalError, setModalError] = useState<string | null>(null);
+	const [mapCenter, setMapCenter] = useState({ lat: 6.927079, lng: 79.861244 });
 	const [notice, setNotice] = useState<{
 		type: "success" | "error";
 		message: string;
@@ -170,6 +174,11 @@ export default function DonorExploreRequests() {
 	}, [notice]);
 
 	/* ── Client-side filtering & sorting ── */
+	const handleLocationChange = useCallback(({ position, address }: { position: { lat: number; lng: number }; address: string }) => {
+		const locString = address || `${position.lat.toFixed(5)}, ${position.lng.toFixed(5)}`;
+		setPickupAddress(locString);
+	}, []);
+
 	const filteredRequests = useMemo(() => {
 		const centerQuery = centerSearch.trim().toLowerCase();
 		const locationQuery = locationSearch.trim().toLowerCase();
@@ -347,18 +356,19 @@ export default function DonorExploreRequests() {
 							<span className="text-xs font-bold uppercase tracking-[0.08em] text-[#F0EBE1]/70">
 								Search Location
 							</span>
-							<div className="relative">
-								<div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-[#F0EBE1]/40">
-									<MapPinIcon className="h-4 w-4" />
-								</div>
-								<input
-									id="search-location"
-									type="text"
-									value={locationSearch}
-									onChange={(e) => setLocationSearch(e.target.value)}
-									placeholder="Type location..."
-									className="auth-input w-full pl-9"
+							<div className="overflow-hidden rounded-xl border border-white/10">
+								<LocationPicker
+									defaultPosition={{ lat: 6.927079, lng: 79.861244 }}
+									onChange={({ position, address }: { position: { lat: number; lng: number }; address: string }) => {
+										const locString = address || `${position.lat.toFixed(5)}, ${position.lng.toFixed(5)}`;
+										setLocationSearch(locString);
+									}}
+									mapContainerStyle={{ height: '140px', width: '100%' }}
 								/>
+								<div className="p-1.5 text-[11px] text-[#F0EBE1] break-all bg-[#0F1D0C]/50">
+									<span className="opacity-50">Filter: </span>
+									{locationSearch || "(Any)"}
+								</div>
 							</div>
 						</label>
 
@@ -519,14 +529,12 @@ export default function DonorExploreRequests() {
 										</span>
 									</div>
 									{request.distributionCenterAddress && (
-										<div className="flex items-center justify-between gap-3">
-											<span className="flex items-center gap-1.5">
-												<MapPinIcon className="h-3.5 w-3.5 text-[#7DC542]/70 shrink-0" />
-												Location
-											</span>
-											<span className="font-medium text-[#F0EBE1]/80 text-right max-w-[60%] text-xs leading-snug">
-												{request.distributionCenterAddress}
-											</span>
+										<div className="space-y-2">
+											<div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#F0EBE1]/40">
+												<MapPinIcon className="h-3.5 w-3.5 text-[#7DC542]/70" />
+												Center Location
+											</div>
+											<LocationView address={request.distributionCenterAddress} height="120px" />
 										</div>
 									)}
 									<div className="flex items-center justify-between gap-3">
@@ -640,16 +648,37 @@ export default function DonorExploreRequests() {
 
 							<label className="block space-y-1.5">
 								<span className="text-xs font-bold text-[#F0EBE1] uppercase tracking-[0.08em]">
-									Pickup Address
+									Pickup Location / Coordinates
 								</span>
 								<input
 									type="text"
+									placeholder="Manual Lat, Lng (e.g. 6.9271, 79.8612)"
+									className="auth-input w-full text-xs"
 									value={pickupAddress}
-									onChange={(e) => setPickupAddress(e.target.value)}
-									placeholder="No. 12, Main Street"
-									className="auth-input w-full"
-									required
+									onChange={(e) => {
+										const val = e.target.value;
+										setPickupAddress(val);
+										const parts = val.split(",").map(p => p.trim());
+										if (parts.length === 2) {
+											const lat = parseFloat(parts[0]);
+											const lng = parseFloat(parts[1]);
+											if (!isNaN(lat) && !isNaN(lng)) {
+												setMapCenter({ lat, lng });
+											}
+										}
+									}}
 								/>
+								<div className="overflow-hidden rounded-xl border border-white/10 bg-[#0F1D0C]">
+									<LocationPicker
+										defaultPosition={mapCenter}
+										onChange={handleLocationChange}
+										mapContainerStyle={{ height: '200px', width: '100%' }}
+									/>
+									<div className="p-2 text-xs text-[#F0EBE1] break-all border-t border-white/5">
+										<span className="opacity-50">Selected: </span>
+										{pickupAddress || "(None)"}
+									</div>
+								</div>
 							</label>
 
 							<label className="block space-y-1.5">
