@@ -39,6 +39,7 @@ jobs:
         # Inject environment variables for your Axios configuration here
         env:
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+          VITE_GOOGLE_MAPS_API_KEY: ${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
         run: npm run build
         
       # Since it's a multi-page SPA, redirect 404s to index.html for routing to work
