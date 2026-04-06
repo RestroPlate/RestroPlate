@@ -82,6 +82,28 @@ export interface DistributionInventory {
 	collection_date: string;
 }
 
+/**
+ * Item in distribution inventory (returned by /api/distribution-inventory)
+ */
+export interface DistributionInventoryResponseDto {
+	inventory_id: number;
+	donation_id: number;
+	food_type: string;
+	collected_quantity: number;
+	distributed_quantity: number;
+	available_quantity: number;
+	is_public: boolean;
+	collection_date: string;
+}
+
+/**
+ * Body for updating collected quantity via PUT /api/distribution-inventory/{id}
+ */
+export interface UpdateCollectedQuantityDto {
+	collected_quantity: number;
+}
+
+
 export interface MockUser {
 	email: string;
 	name: string;
