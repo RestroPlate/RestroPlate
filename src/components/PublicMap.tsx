@@ -129,7 +129,7 @@ export function PublicMap() {
 					)}
 				</GoogleMap>
 			</div>
-			
+
 			<div className="max-w-7xl mx-auto px-6 mt-12 grid grid-cols-2 lg:grid-cols-4 gap-8">
 				<div className="p-6 rounded-2xl bg-white/5 border border-white/10">
 					<p className="text-3xl font-black text-[#7DC542] mb-1">{centers.length}</p>
