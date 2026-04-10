@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Pagination from "../Pagination";
 import type { Donation, DonationClaim } from "../../types/Dashboard";
 import { updateClaimStatus } from "../../services/claimService";
 import StatusNotice from "../StatusNotice";
@@ -16,6 +17,7 @@ export default function DonorNotificationPanel({
 	onRefresh,
 }: DonorNotificationPanelProps) {
 	const [activeClaimId, setActiveClaimId] = useState<number | null>(null);
+	const [currentPage, setCurrentPage] = useState(1);
 	const [processingId, setProcessingId] = useState<number | null>(null);
 	const [notice, setNotice] = useState<{
 		type: "success" | "error";
@@ -23,6 +25,18 @@ export default function DonorNotificationPanel({
 	} | null>(null);
 
 	const pendingClaims = claims.filter((c) => c.status === "PENDING");
+
+	const PAGE_SIZE = 5;
+
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [claims]);
+
+	const totalPages = Math.ceil(pendingClaims.length / PAGE_SIZE);
+	const paginatedClaims = pendingClaims.slice(
+		(currentPage - 1) * PAGE_SIZE,
+		currentPage * PAGE_SIZE,
+	);
 
 	if (pendingClaims.length === 0 && !notice) return null;
 
@@ -86,7 +100,7 @@ export default function DonorNotificationPanel({
 			) : null}
 
 			<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-				{pendingClaims.map((claim) => {
+				{paginatedClaims.map((claim) => {
 					const donation = getDonation(claim.donationId);
 					return (
 						<article
@@ -119,6 +133,12 @@ export default function DonorNotificationPanel({
 					);
 				})}
 			</div>
+
+			<Pagination
+				currentPage={currentPage}
+				totalPages={totalPages}
+				onPageChange={setCurrentPage}
+			/>
 
 			{activeClaim && (
 				<ClaimDetailsModal

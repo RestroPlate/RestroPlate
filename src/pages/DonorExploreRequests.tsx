@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
 import StatusNotice from "../components/StatusNotice";
+import Pagination from "../components/Pagination";
 import { getAvailableRequests } from "../services/donationRequestService";
 import { createDonation } from "../services/donationService";
 import { updateDonationRequestQuantity } from "../services/donationRequestService";
@@ -116,6 +117,9 @@ export default function DonorExploreRequests() {
 	const [locationSearch, setLocationSearch] = useState("");
 	const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
 
+	const PAGE_SIZE = 6;
+	const [currentPage, setCurrentPage] = useState(1);
+
 	/* ── Modal state ── */
 	const [selectedRequest, setSelectedRequest] =
 		useState<DonationRequest | null>(null);
@@ -210,6 +214,16 @@ export default function DonorExploreRequests() {
 
 	const hasActiveFilters =
 		centerSearch.trim() !== "" || locationSearch.trim() !== "";
+
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [centerSearch, locationSearch, sortOrder]);
+
+	const totalPages = Math.ceil(filteredRequests.length / PAGE_SIZE);
+	const paginatedRequests = filteredRequests.slice(
+		(currentPage - 1) * PAGE_SIZE,
+		currentPage * PAGE_SIZE,
+	);
 
 	function clearAllFilters(): void {
 		setCenterSearch("");
@@ -482,8 +496,12 @@ export default function DonorExploreRequests() {
 						)}
 					</div>
 				) : (
-					<div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-						{filteredRequests.map((request) => (
+					<>
+						<p className="text-xs font-semibold text-[#F0EBE1]/50">
+							Showing {paginatedRequests.length} of {filteredRequests.length} requests
+						</p>
+						<div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+							{paginatedRequests.map((request) => (
 							<article
 								key={request.donationRequestId}
 								className="group flex h-full flex-col rounded-2xl border border-white/10 bg-white/5 p-5 transition hover:border-[#7DC542]/30 hover:bg-white/[0.06]"
@@ -558,6 +576,12 @@ export default function DonorExploreRequests() {
 							</article>
 						))}
 					</div>
+					<Pagination
+						currentPage={currentPage}
+						totalPages={totalPages}
+						onPageChange={setCurrentPage}
+					/>
+					</>
 				)}
 			</div>
 
