@@ -16,6 +16,14 @@ export interface CenterDetails {
 	address: string;
 }
 
+export interface DonationImage {
+	imageId: number;
+	donationId: number;
+	imageUrl: string;
+	fileName: string;
+	uploadedAt: string;
+}
+
 export interface Donation {
 	donationId: number;
 	inventoryId?: number;
@@ -37,6 +45,7 @@ export interface Donation {
 	distributedQuantity?: number;
 	claimedByCenterUserId?: number | null;
 	centerDetails?: CenterDetails;
+	images?: DonationImage[];
 }
 
 // Claim status for donation claim requests (Flow 1 claims)

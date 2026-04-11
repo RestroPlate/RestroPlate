@@ -2,6 +2,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
 import Pagination from "../components/Pagination";
+import DonationImageGallery from "../components/dashboard/DonationImageGallery";
+import DonationDetailsModal from "../components/dashboard/DonationDetailsModal";
 
 import StatusNotice from "../components/StatusNotice";
 import LocationView from "../components/dashboard/LocationView";
@@ -33,6 +35,7 @@ const PAGE_SIZE = 6;
 
 export default function CenterExploreDonations() {
 	const [donations, setDonations] = useState<Donation[]>([]);
+	const [viewingDonation, setViewingDonation] = useState<Donation | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [requestingId, setRequestingId] = useState<number | null>(null);
@@ -215,9 +218,13 @@ export default function CenterExploreDonations() {
 										<p className="text-xs font-bold uppercase tracking-[0.16em] text-[#7DC542]">
 											Donation #{donation.donationId}
 										</p>
-										<h3 className="mt-2 text-xl font-bold text-[#F0EBE1]">
+										<button
+											type="button"
+											onClick={() => setViewingDonation(donation)}
+											className="mt-2 text-left text-xl font-bold text-[#F0EBE1] transition hover:text-[#7DC542]"
+										>
 											{donation.foodType}
-										</h3>
+										</button>
 									</div>
 									<span
 										className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] ${STATUS_CLASSES[donation.status]}`}
@@ -225,6 +232,15 @@ export default function CenterExploreDonations() {
 										{donation.status}
 									</span>
 								</div>
+								{/* Image thumbnails */}
+								{donation.images && donation.images.length > 0 ? (
+									<div className="mt-3">
+										<DonationImageGallery
+											donationId={donation.donationId}
+											images={donation.images}
+										/>
+									</div>
+								) : null}
 
 								<div className="mt-5 flex-1 space-y-3 text-sm text-[#F0EBE1]/70">
 									<div className="flex items-center justify-between gap-3">
@@ -275,6 +291,14 @@ export default function CenterExploreDonations() {
 
 
 			</div>
+
+			{/* Donation Details Modal */}
+			{viewingDonation ? (
+				<DonationDetailsModal
+					donation={viewingDonation}
+					onClose={() => setViewingDonation(null)}
+				/>
+			) : null}
 		</DashboardLayout>
 	);
 }
