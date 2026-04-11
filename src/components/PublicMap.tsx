@@ -1,4 +1,4 @@
-﻿import { GoogleMap, Marker, InfoWindow, useJsApiLoader } from "@react-google-maps/api";
+import { GoogleMap, Marker, InfoWindow, useJsApiLoader } from "@react-google-maps/api";
 import { useEffect, useState, useMemo } from "react";
 import { getPublicCentersWithDonations, type PublicCenterDonationInfo } from "../services/publicService";
 
@@ -30,7 +30,10 @@ export function PublicMap() {
 				setLoading(false);
 			}
 		}
+
 		fetchData();
+		const interval = setInterval(fetchData, 60000);
+		return () => clearInterval(interval);
 	}, []);
 
 	const centersWithCoords = useMemo(() => {
@@ -131,12 +134,17 @@ export function PublicMap() {
 									<p className="text-xs text-[#F0EBE1]/70 mb-2">📞 {selectedCenter.phoneNumber}</p>
 								)}
 
+								{/* Operating Hours */}
+								{selectedCenter.operatingHours && (
+									<p className="text-xs text-[#F0EBE1]/70 mb-2">🕐 {selectedCenter.operatingHours}</p>
+								)}
+
 								<hr className="border-white/10 mb-2" />
 
 								{/* Available donations count */}
 								<p className="text-sm font-bold flex items-center gap-2 mb-2">
 									<span className="w-2 h-2 rounded-full bg-[#7DC542] animate-pulse"></span>
-									{selectedCenter.availableDonations} Meals Available
+									{selectedCenter.availableDonations} Donations Available
 								</p>
 
 								{/* Food items list */}
