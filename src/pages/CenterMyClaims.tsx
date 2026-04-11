@@ -1,6 +1,7 @@
 // new: dedicated page for center to view their donation claim requests
 import { useCallback, useEffect, useRef, useState } from "react";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
+import Pagination from "../components/Pagination";
 import { getMyClaims } from "../services/claimService";
 import { getAvailableDonations } from "../services/donationService";
 import LocationView from "../components/dashboard/LocationView";
@@ -41,6 +42,7 @@ export default function CenterMyClaims() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [filter, setFilter] = useState<FilterStatus>("ALL");
+	const [currentPage, setCurrentPage] = useState(1);
 	const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
 	const fetchData = useCallback(async () => {
@@ -79,6 +81,18 @@ export default function CenterMyClaims() {
 
 	const filteredClaims =
 		filter === "ALL" ? claims : claims.filter((c) => c.status === filter);
+
+	const PAGE_SIZE = 8;
+
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [filter]);
+
+	const totalPages = Math.ceil(filteredClaims.length / PAGE_SIZE);
+	const paginatedClaims = filteredClaims.slice(
+		(currentPage - 1) * PAGE_SIZE,
+		currentPage * PAGE_SIZE,
+	);
 
 	const stats = [
 		{ label: "Total Claims", value: claims.length, accent: "#7DC542" },
@@ -176,70 +190,80 @@ export default function CenterMyClaims() {
 						</p>
 					</div>
 				) : (
-					<div className="space-y-4">
-						{filteredClaims.map((claim) => {
-							const donation = donations.get(claim.donationId);
-							return (
-								<article
-									key={claim.claimId}
-									className="rounded-2xl border border-white/10 bg-white/5 p-5 transition hover:border-white/15"
-								>
-									<div className="flex flex-wrap items-start justify-between gap-3">
-										<div>
-											<p className="text-xs font-bold uppercase tracking-[0.16em] text-[#7DC542]">
-												Claim #{claim.claimId}
-											</p>
-											<h3 className="mt-1 text-lg font-bold text-[#F0EBE1]">
-												{donation?.foodType ?? `Donation #${claim.donationId}`}
-											</h3>
-										</div>
-										<span
-											className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] ${STATUS_CLASSES[claim.status]}`}
-										>
-											{claim.status}
-										</span>
-									</div>
-
-									<div className="mt-4 grid gap-2 text-sm text-[#F0EBE1]/70 sm:grid-cols-3">
-										{donation ? (
-											<>
-												<div className="flex items-center justify-between gap-2 sm:flex-col sm:items-start">
-													<span className="text-[#F0EBE1]/50">Quantity</span>
-													<span className="font-bold text-[#F0EBE1]">
-														{donation.quantity} {donation.unit}
-													</span>
-												</div>
-												<div className="flex flex-col gap-1 sm:col-span-2">
-													<span className="text-[#F0EBE1]/50 text-xs font-bold uppercase tracking-wider">Pickup Location</span>
-													<LocationView address={donation.pickupAddress} height="100px" />
-												</div>
-											</>
-										) : null}
-										<div className="flex items-center justify-between gap-2 sm:flex-col sm:items-start">
-											<span className="text-[#F0EBE1]/50">Claimed on</span>
-											<span className="font-medium text-[#F0EBE1]">
-												{formatDate(claim.createdAt)}
+					<>
+						<div className="space-y-4">
+							<p className="text-xs font-semibold text-[#F0EBE1]/50">
+								Showing {paginatedClaims.length} of {filteredClaims.length} claims
+							</p>
+							{paginatedClaims.map((claim) => {
+								const donation = donations.get(claim.donationId);
+								return (
+									<article
+										key={claim.claimId}
+										className="rounded-2xl border border-white/10 bg-white/5 p-5 transition hover:border-white/15"
+									>
+										<div className="flex flex-wrap items-start justify-between gap-3">
+											<div>
+												<p className="text-xs font-bold uppercase tracking-[0.16em] text-[#7DC542]">
+													Claim #{claim.claimId}
+												</p>
+												<h3 className="mt-1 text-lg font-bold text-[#F0EBE1]">
+													{donation?.foodType ?? `Donation #${claim.donationId}`}
+												</h3>
+											</div>
+											<span
+												className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] ${STATUS_CLASSES[claim.status]}`}
+											>
+												{claim.status}
 											</span>
 										</div>
-									</div>
 
-									{claim.status === "PENDING" ? (
-										<p className="mt-4 rounded-lg bg-amber-500/10 px-3 py-2 text-center text-xs font-bold uppercase tracking-[0.08em] text-amber-300">
-											⏳ Awaiting donor approval
-										</p>
-									) : claim.status === "ACCEPTED" ? (
-										<p className="mt-4 rounded-lg bg-emerald-500/10 px-3 py-2 text-center text-xs font-bold uppercase tracking-[0.08em] text-emerald-300">
-											✓ Donor accepted — proceed with collection
-										</p>
-									) : (
-										<p className="mt-4 rounded-lg bg-rose-500/10 px-3 py-2 text-center text-xs font-bold uppercase tracking-[0.08em] text-rose-300">
-											✕ Donor declined this claim
-										</p>
-									)}
-								</article>
-							);
-						})}
-					</div>
+										<div className="mt-4 grid gap-2 text-sm text-[#F0EBE1]/70 sm:grid-cols-3">
+											{donation ? (
+												<>
+													<div className="flex items-center justify-between gap-2 sm:flex-col sm:items-start">
+														<span className="text-[#F0EBE1]/50">Quantity</span>
+														<span className="font-bold text-[#F0EBE1]">
+															{donation.quantity} {donation.unit}
+														</span>
+													</div>
+													<div className="flex flex-col gap-1 sm:col-span-2">
+														<span className="text-[#F0EBE1]/50 text-xs font-bold uppercase tracking-wider">Pickup Location</span>
+														<LocationView address={donation.pickupAddress} height="100px" />
+													</div>
+												</>
+											) : null}
+											<div className="flex items-center justify-between gap-2 sm:flex-col sm:items-start">
+												<span className="text-[#F0EBE1]/50">Claimed on</span>
+												<span className="font-medium text-[#F0EBE1]">
+													{formatDate(claim.createdAt)}
+												</span>
+											</div>
+										</div>
+
+										{claim.status === "PENDING" ? (
+											<p className="mt-4 rounded-lg bg-amber-500/10 px-3 py-2 text-center text-xs font-bold uppercase tracking-[0.08em] text-amber-300">
+												⏳ Awaiting donor approval
+											</p>
+										) : claim.status === "ACCEPTED" ? (
+											<p className="mt-4 rounded-lg bg-emerald-500/10 px-3 py-2 text-center text-xs font-bold uppercase tracking-[0.08em] text-emerald-300">
+												✓ Donor accepted — proceed with collection
+											</p>
+										) : (
+											<p className="mt-4 rounded-lg bg-rose-500/10 px-3 py-2 text-center text-xs font-bold uppercase tracking-[0.08em] text-rose-300">
+												✕ Donor declined this claim
+											</p>
+										)}
+									</article>
+								);
+							})}
+						</div>
+						<Pagination
+							currentPage={currentPage}
+							totalPages={totalPages}
+							onPageChange={setCurrentPage}
+						/>
+					</>
 				)}
 			</div>
 		</DashboardLayout>

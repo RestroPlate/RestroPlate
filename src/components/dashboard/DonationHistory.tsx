@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Pagination from "../Pagination";
 import EditDonationModal from "./EditDonationModal";
 import CenterDetailsModal from "./CenterDetailsModal";
 import LocationView from "./LocationView";
@@ -45,11 +46,14 @@ function formatDate(dateStr: string): string {
 	});
 }
 
+const PAGE_SIZE = 5;
+
 export default function DonationHistory({
 	donations,
 	onRefresh,
 }: DonationHistoryProps) {
 	const [filter, setFilter] = useState<FilterStatus>("AVAILABLE");
+	const [currentPage, setCurrentPage] = useState(1);
 	const [editingDonation, setEditingDonation] = useState<Donation | null>(null);
 	const [viewingCenter, setViewingCenter] = useState<CenterDetails | null>(
 		null,
@@ -61,6 +65,16 @@ export default function DonationHistory({
 	} | null>(null);
 
 	const filtered = donations.filter((d) => d.status === filter);
+
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [filter]);
+
+	const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+	const paginatedItems = filtered.slice(
+		(currentPage - 1) * PAGE_SIZE,
+		currentPage * PAGE_SIZE,
+	);
 
 	async function handleEdit(
 		id: number,
@@ -161,7 +175,11 @@ export default function DonationHistory({
 						No donations with status "{filter}" found.
 					</div>
 				) : (
-					filtered.map((donation) => {
+					<>
+						<p className="mb-3 text-xs font-semibold text-[#F0EBE1]/50">
+							Showing {paginatedItems.length} of {filtered.length} donations
+						</p>
+						{paginatedItems.map((donation) => {
 						const isRequested =
 							donation.status === "REQUESTED" && !!donation.centerDetails;
 
@@ -268,10 +286,17 @@ export default function DonationHistory({
 									</div>
 								) : null}
 							</article>
-						);
-					})
+							);
+						})}
+					</>
 				)}
 			</section>
+
+			<Pagination
+				currentPage={currentPage}
+				totalPages={totalPages}
+				onPageChange={setCurrentPage}
+			/>
 
 			{/* ── Edit Modal ── */}
 			{editingDonation ? (

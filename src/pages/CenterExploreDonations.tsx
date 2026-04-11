@@ -1,6 +1,7 @@
 // modified: uses donation-claims API instead of direct requestDonation
 import { useCallback, useEffect, useRef, useState } from "react";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
+import Pagination from "../components/Pagination";
 
 import StatusNotice from "../components/StatusNotice";
 import LocationView from "../components/dashboard/LocationView";
@@ -28,6 +29,8 @@ const STATUS_CLASSES: Record<DonationStatus, string> = {
 	COMPLETED: "bg-violet-500/15 text-violet-300",
 };
 
+const PAGE_SIZE = 6;
+
 export default function CenterExploreDonations() {
 	const [donations, setDonations] = useState<Donation[]>([]);
 	const [loading, setLoading] = useState(true);
@@ -37,6 +40,7 @@ export default function CenterExploreDonations() {
 		type: "success" | "error";
 		message: string;
 	} | null>(null);
+	const [currentPage, setCurrentPage] = useState(1);
 
 	const [foodTypeFilter, setFoodTypeFilter] = useState("");
 	const [locationFilter, setLocationFilter] = useState("");
@@ -52,6 +56,7 @@ export default function CenterExploreDonations() {
 				location: locationFilter || undefined,
 			});
 			setDonations(data);
+			setCurrentPage(1);
 			setError(null);
 		} catch (err) {
 			setError(
@@ -84,6 +89,11 @@ export default function CenterExploreDonations() {
 		}, 250);
 		return () => window.clearTimeout(timeoutId);
 	}, [fetchDonations, fetchMyClaims]);
+
+	// Reset page when filters change
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [foodTypeFilter, locationFilter]);
 
 	// Poll for status updates (donor accepting/rejecting)
 	useEffect(() => {
@@ -189,9 +199,13 @@ export default function CenterExploreDonations() {
 							donations.
 						</p>
 					</div>
-				) : (
-					<div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-						{donations.map((donation) => (
+		) : (
+					<>
+						<p className="text-xs font-semibold text-[#F0EBE1]/50">
+							Showing {Math.min(PAGE_SIZE, donations.length - (currentPage - 1) * PAGE_SIZE)} of {donations.length} donations
+						</p>
+						<div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+							{donations.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE).map((donation) => (
 							<article
 								key={donation.donationId}
 								className="flex h-full flex-col rounded-2xl border border-white/10 bg-white/5 p-5 transition hover:border-[#7DC542]/30 hover:bg-white/[0.06]"
@@ -251,6 +265,12 @@ export default function CenterExploreDonations() {
 							</article>
 						))}
 					</div>
+					<Pagination
+						currentPage={currentPage}
+						totalPages={Math.ceil(donations.length / PAGE_SIZE)}
+						onPageChange={setCurrentPage}
+					/>
+					</>
 				)}
 
 

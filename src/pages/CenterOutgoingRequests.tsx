@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
+import Pagination from "../components/Pagination";
 import CollectDonationAction from "../components/dashboard/CollectDonationAction";
 import StatusNotice from "../components/StatusNotice";
 import {
@@ -59,6 +60,7 @@ export default function CenterOutgoingRequests() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [statusFilter, setStatusFilter] = useState<RequestFilter>("all");
+	const [currentPage, setCurrentPage] = useState(1);
 	const [notice, setNotice] = useState<{
 		type: "success" | "error";
 		message: string;
@@ -105,6 +107,17 @@ export default function CenterOutgoingRequests() {
 			active = false;
 		};
 	}, [statusFilter]);
+
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [statusFilter]);
+
+	const PAGE_SIZE = 8;
+	const totalPages = Math.ceil(requests.length / PAGE_SIZE);
+	const paginatedRequests = requests.slice(
+		(currentPage - 1) * PAGE_SIZE,
+		currentPage * PAGE_SIZE,
+	);
 
 	async function toggleExpand(requestId: number): Promise<void> {
 		if (expandedId === requestId) {
@@ -214,8 +227,12 @@ export default function CenterOutgoingRequests() {
 						</p>
 					</div>
 				) : (
-					<div className="space-y-3">
-						{requests.map((request) => (
+					<>
+						<p className="text-xs font-semibold text-[#F0EBE1]/50">
+							Showing {paginatedRequests.length} of {requests.length} requests
+						</p>
+						<div className="space-y-3">
+							{paginatedRequests.map((request) => (
 							<article
 								key={request.donationRequestId}
 								className="rounded-2xl border border-white/10 bg-white/5 transition hover:border-white/15"
@@ -316,6 +333,12 @@ export default function CenterOutgoingRequests() {
 							</article>
 						))}
 					</div>
+					<Pagination
+						currentPage={currentPage}
+						totalPages={totalPages}
+						onPageChange={setCurrentPage}
+					/>
+					</>
 				)}
 
 
