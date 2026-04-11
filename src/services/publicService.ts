@@ -34,7 +34,7 @@ export async function getPublicCentersWithDonations(): Promise<PublicCenterDonat
 	);
 
 	const raw = Array.isArray(response.data) ? response.data : [];
-	console.log("RAW PUBLIC API RESPONSE:", JSON.stringify(raw, null, 2));
+	//console.log("RAW PUBLIC API RESPONSE:", JSON.stringify(raw, null, 2));
 
 	return raw.map((center): PublicCenterDonationInfo => {
 		const filtered = Array.isArray(center.publishedDonations)
