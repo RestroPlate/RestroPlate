@@ -202,90 +202,90 @@ export default function CenterExploreDonations() {
 							donations.
 						</p>
 					</div>
-		) : (
+				) : (
 					<>
 						<p className="text-xs font-semibold text-[#F0EBE1]/50">
 							Showing {Math.min(PAGE_SIZE, donations.length - (currentPage - 1) * PAGE_SIZE)} of {donations.length} donations
 						</p>
 						<div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
 							{donations.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE).map((donation) => (
-							<article
-								key={donation.donationId}
-								className="flex h-full flex-col rounded-2xl border border-white/10 bg-white/5 p-5 transition hover:border-[#7DC542]/30 hover:bg-white/[0.06]"
-							>
-								<div className="flex items-start justify-between gap-3">
-									<div>
-										<p className="text-xs font-bold uppercase tracking-[0.16em] text-[#7DC542]">
-											Donation #{donation.donationId}
+								<article
+									key={donation.donationId}
+									className="flex h-full flex-col rounded-2xl border border-white/10 bg-white/5 p-5 transition hover:border-[#7DC542]/30 hover:bg-white/[0.06]"
+								>
+									<div className="flex items-start justify-between gap-3">
+										<div>
+											<p className="text-xs font-bold uppercase tracking-[0.16em] text-[#7DC542]">
+												Donation #{donation.donationId}
+											</p>
+											<button
+												type="button"
+												onClick={() => setViewingDonation(donation)}
+												className="mt-2 text-left text-xl font-bold text-[#F0EBE1] transition hover:text-[#7DC542]"
+											>
+												{donation.foodType}
+											</button>
+										</div>
+										<span
+											className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] ${STATUS_CLASSES[donation.status]}`}
+										>
+											{donation.status}
+										</span>
+									</div>
+									{/* Image thumbnails */}
+									{donation.images && donation.images.length > 0 ? (
+										<div className="mt-3">
+											<DonationImageGallery
+												donationId={donation.donationId}
+												images={donation.images}
+											/>
+										</div>
+									) : null}
+
+									<div className="mt-5 flex-1 space-y-3 text-sm text-[#F0EBE1]/70">
+										<div className="flex items-center justify-between gap-3">
+											<span>Quantity</span>
+											<span className="font-bold text-[#F0EBE1]">
+												{donation.quantity} {donation.unit}
+											</span>
+										</div>
+										<div className="space-y-1">
+											<p className="text-[10px] font-bold uppercase tracking-wider text-[#F0EBE1]/40">Pickup Location</p>
+											<LocationView address={donation.pickupAddress} height="120px" />
+										</div>
+										<div className="flex items-center justify-between gap-3">
+											<span>Expires</span>
+											<span className="font-medium text-[#F0EBE1]">
+												{formatDate(donation.expirationDate)}
+											</span>
+										</div>
+									</div>
+
+									{/* Flow 1 Action Buttons */}
+									{claimedDonationIds.has(donation.donationId) ? (
+										<p className="mt-6 rounded-lg bg-amber-500/10 px-3 py-2.5 text-center text-xs font-bold uppercase tracking-[0.08em] text-amber-300">
+											Claim Pending — awaiting donor approval
 										</p>
+									) : donation.status === "AVAILABLE" ? (
 										<button
 											type="button"
-											onClick={() => setViewingDonation(donation)}
-											className="mt-2 text-left text-xl font-bold text-[#F0EBE1] transition hover:text-[#7DC542]"
+											disabled={requestingId === donation.donationId}
+											onClick={() => handleRequest(donation.donationId)}
+											className="mt-6 inline-flex items-center justify-center rounded-xl bg-[#7DC542] px-4 py-3 text-sm font-black text-[#0B1A08] transition hover:bg-[#90D85A] disabled:cursor-not-allowed disabled:opacity-60"
 										>
-											{donation.foodType}
+											{requestingId === donation.donationId
+												? "Claiming..."
+												: "Claim"}
 										</button>
-									</div>
-									<span
-										className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] ${STATUS_CLASSES[donation.status]}`}
-									>
-										{donation.status}
-									</span>
-								</div>
-								{/* Image thumbnails */}
-								{donation.images && donation.images.length > 0 ? (
-									<div className="mt-3">
-										<DonationImageGallery
-											donationId={donation.donationId}
-											images={donation.images}
-										/>
-									</div>
-								) : null}
-
-								<div className="mt-5 flex-1 space-y-3 text-sm text-[#F0EBE1]/70">
-									<div className="flex items-center justify-between gap-3">
-										<span>Quantity</span>
-										<span className="font-bold text-[#F0EBE1]">
-											{donation.quantity} {donation.unit}
-										</span>
-									</div>
-									<div className="space-y-1">
-										<p className="text-[10px] font-bold uppercase tracking-wider text-[#F0EBE1]/40">Pickup Location</p>
-										<LocationView address={donation.pickupAddress} height="120px" />
-									</div>
-									<div className="flex items-center justify-between gap-3">
-										<span>Expires</span>
-										<span className="font-medium text-[#F0EBE1]">
-											{formatDate(donation.expirationDate)}
-										</span>
-									</div>
-								</div>
-
-								{/* Flow 1 Action Buttons */}
-								{claimedDonationIds.has(donation.donationId) ? (
-									<p className="mt-6 rounded-lg bg-amber-500/10 px-3 py-2.5 text-center text-xs font-bold uppercase tracking-[0.08em] text-amber-300">
-										Claim Pending — awaiting donor approval
-									</p>
-								) : donation.status === "AVAILABLE" ? (
-									<button
-										type="button"
-										disabled={requestingId === donation.donationId}
-										onClick={() => handleRequest(donation.donationId)}
-										className="mt-6 inline-flex items-center justify-center rounded-xl bg-[#7DC542] px-4 py-3 text-sm font-black text-[#0B1A08] transition hover:bg-[#90D85A] disabled:cursor-not-allowed disabled:opacity-60"
-									>
-										{requestingId === donation.donationId
-											? "Claiming..."
-											: "Claim"}
-									</button>
-								) : null}
-							</article>
-						))}
-					</div>
-					<Pagination
-						currentPage={currentPage}
-						totalPages={Math.ceil(donations.length / PAGE_SIZE)}
-						onPageChange={setCurrentPage}
-					/>
+									) : null}
+								</article>
+							))}
+						</div>
+						<Pagination
+							currentPage={currentPage}
+							totalPages={Math.ceil(donations.length / PAGE_SIZE)}
+							onPageChange={setCurrentPage}
+						/>
 					</>
 				)}
 

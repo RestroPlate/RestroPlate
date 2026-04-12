@@ -18,20 +18,20 @@ const ACCOUNT_TYPES: {
 	title: string;
 	description: string;
 }[] = [
-	{
-		type: "DONOR",
-		icon: "🍽️",
-		title: "Donator",
-		description: "Restaurants or individuals with surplus food to donate.",
-	},
-	{
-		type: "DISTRIBUTION_CENTER",
-		icon: "🏢",
-		title: "Distributing Center",
-		description:
-			"Organizations that receive and distribute food to those in need.",
-	},
-];
+		{
+			type: "DONOR",
+			icon: "🍽️",
+			title: "Donator",
+			description: "Restaurants or individuals with surplus food to donate.",
+		},
+		{
+			type: "DISTRIBUTION_CENTER",
+			icon: "🏢",
+			title: "Distributing Center",
+			description:
+				"Organizations that receive and distribute food to those in need.",
+		},
+	];
 
 const INITIAL_LOGIN: LoginFormData = { email: "", password: "" };
 const INITIAL_REGISTER: RegisterFormData = {

@@ -154,11 +154,10 @@ export default function CenterMyClaims() {
 							key={value}
 							type="button"
 							onClick={() => setFilter(value)}
-							className={`rounded-lg px-4 py-2 text-xs font-bold uppercase tracking-[0.08em] transition ${
-								filter === value
+							className={`rounded-lg px-4 py-2 text-xs font-bold uppercase tracking-[0.08em] transition ${filter === value
 									? "bg-[#7DC542]/20 text-[#7DC542]"
 									: "bg-white/5 text-[#F0EBE1]/55 hover:bg-white/10 hover:text-[#F0EBE1]"
-							}`}
+								}`}
 						>
 							{label}
 						</button>

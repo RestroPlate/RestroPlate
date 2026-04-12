@@ -46,11 +46,23 @@ export function NavBar() {
 				className="flex items-center gap-2.5 text-[#7DC542] text-[1.35rem] font-bold no-underline tracking-[-0.01em] cursor-pointer group"
 			>
 				<span
-					role="img"
-					aria-label="leaf"
+					aria-hidden="true"
 					className="inline-block transition-transform duration-300 group-hover:rotate-[-15deg] group-hover:scale-[1.15]"
 				>
-					🍃
+					<svg
+						width="22"
+						height="22"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						strokeWidth="2"
+						strokeLinecap="round"
+						strokeLinejoin="round"
+						aria-hidden="true"
+					>
+						<path d="M2 22s4-2 8-8c3-4 4-9 4-9S9 6 6 10c-4 5-4 12-4 12z" fill="rgba(125,197,66,0.25)" stroke="#7DC542" />
+						<path d="M22 2s-6 2-10 6" stroke="#7DC542" />
+					</svg>
 				</span>
 				RestroPlate
 			</a>

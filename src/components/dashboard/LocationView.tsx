@@ -52,7 +52,7 @@ export default function LocationView({
 				options={{
 					disableDefaultUI: true,
 					zoomControl: true,
-					
+
 				}}
 			>
 				{coordinates && <Marker position={coordinates} />}
