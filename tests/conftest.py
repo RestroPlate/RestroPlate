@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import socket
 import pytest
@@ -9,7 +10,7 @@ from datetime import datetime, timedelta
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
-
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 
 # -----------------------------
 # Base URL
@@ -179,4 +180,104 @@ def explore_page(driver, base_url):
         )
     )
 
+# -----------------------------
+# file_paths fixture
+# Provides absolute paths for test files
+# -----------------------------
+@pytest.fixture(scope="session")
+def file_paths():
+    base_dir = os.path.dirname(__file__)
+
+    return {
+        "valid": os.path.abspath(os.path.join(base_dir, "fixtures", "valid.jpg")),
+        "large": os.path.abspath(os.path.join(base_dir, "fixtures", "large.jpg")),
+        "invalid": os.path.abspath(os.path.join(base_dir, "fixtures", "invalid.pdf")),
+    }
+
+# -----------------------------
+# upload_page fixture
+# Logs in and navigates to donation upload page
+# -----------------------------
+@pytest.fixture(scope="function")
+def upload_page(driver, base_url):
+    from selenium.webdriver.common.by import By
+    from selenium.webdriver.support.ui import WebDriverWait
+    from selenium.webdriver.support import expected_conditions as EC
+
+    wait = WebDriverWait(driver, 20)
+
+    # Clear session
+    driver.get(base_url.rstrip("/") + "/join")
+    driver.execute_script("window.localStorage.clear();")
+    driver.execute_script("window.sessionStorage.clear();")
+    driver.delete_all_cookies()
+    driver.refresh()
+
+    # Login
+    email_el = wait.until(
+        EC.element_to_be_clickable((By.CSS_SELECTOR, "input[name='email']"))
+    )
+    password_el = wait.until(
+        EC.element_to_be_clickable((By.CSS_SELECTOR, "input[name='password']"))
+    )
+
+    email_el.clear()
+    email_el.send_keys("theertha@gmail.com")
+    password_el.clear()
+    password_el.send_keys("123456")
+
+    wait.until(
+        EC.element_to_be_clickable((By.CSS_SELECTOR, "button[type='submit']"))
+    ).click()
+
+    wait.until(EC.url_contains("/dashboard/"))
+
+    # Navigate to donation create/upload page
+    driver.get(base_url.rstrip("/") + "/dashboard/donor/create")
+
+    # Wait until upload input OR form is visible
+    wait.until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='file']"))
+    )
+
     return driver
+
+    # -----------------------------
+# upload_helper fixture
+# Handles file upload actions
+# -----------------------------
+@pytest.fixture
+def upload_helper():
+    from selenium.webdriver.common.by import By
+    from selenium.webdriver.support.ui import WebDriverWait
+    from selenium.webdriver.support import expected_conditions as EC
+
+    class UploadHelper:
+        def __init__(self, driver):
+            self.driver = driver
+            self.wait = WebDriverWait(driver, 15)
+
+        def upload_file(self, file_path):
+            file_input = self.wait.until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='file']"))
+            )
+            file_input.send_keys(file_path)
+
+        def click_upload(self):
+            self.wait.until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, "button[type='submit']"))
+            ).click()
+
+        def is_success(self):
+            return self.wait.until(
+                EC.presence_of_element_located((By.XPATH, "//*[contains(text(),'success')]"))
+            )
+
+        def is_error(self):
+            return self.wait.until(
+                EC.presence_of_element_located((By.XPATH, "//*[contains(text(),'error') or contains(text(),'invalid')]"))
+            )
+
+    return UploadHelper
+
+    
