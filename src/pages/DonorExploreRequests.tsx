@@ -15,6 +15,7 @@ import type {
 // @ts-ignore
 import LocationPicker from "react-location-picker";
 import LocationView from "../components/dashboard/LocationView";
+import DonationImageUploader from "../components/dashboard/DonationImageUploader";
 
 type SortOrder = "newest" | "oldest";
 
@@ -123,6 +124,7 @@ export default function DonorExploreRequests() {
 	/* ── Modal state ── */
 	const [selectedRequest, setSelectedRequest] =
 		useState<DonationRequest | null>(null);
+	const [fulfilledDonationId, setFulfilledDonationId] = useState<number | null>(null);
 	const [providedQuantity, setProvidedQuantity] = useState("");
 	const [expirationDate, setExpirationDate] = useState("");
 	const [pickupAddress, setPickupAddress] = useState("");
@@ -245,6 +247,7 @@ export default function DonorExploreRequests() {
 	function closeFulfillModal(): void {
 		if (submitting) return;
 		setSelectedRequest(null);
+		setFulfilledDonationId(null);
 	}
 
 	async function handleFulfillSubmit(
@@ -279,7 +282,7 @@ export default function DonorExploreRequests() {
 		setModalError(null);
 
 		try {
-			await createDonation({
+			const fulfilledDonation = await createDonation({
 				donationRequestId: selectedRequest.donationRequestId,
 				foodType: selectedRequest.foodType,
 				quantity,
@@ -288,6 +291,7 @@ export default function DonorExploreRequests() {
 				pickupAddress: pickupAddress.trim(),
 				availabilityTime,
 			});
+			setFulfilledDonationId(fulfilledDonation.donationId);
 
 			const dcName =
 				selectedRequest.distributionCenterName ??
@@ -744,6 +748,26 @@ export default function DonorExploreRequests() {
 								</button>
 							</div>
 						</form>
+						{fulfilledDonationId ? (
+							<div className="space-y-4 border-t border-white/10 px-6 pb-6 pt-5">
+								<div>
+									<p className="text-xs font-bold uppercase tracking-[0.08em] text-[#7DC542]">
+										Optional: Add Food Photos
+									</p>
+									<p className="mt-1 text-xs text-[#F0EBE1]/50">
+										Help the distribution center see the condition of your donation.
+									</p>
+								</div>
+								<DonationImageUploader donationId={fulfilledDonationId} />
+								<button
+									type="button"
+									onClick={closeFulfillModal}
+									className="w-full rounded-xl bg-[#7DC542] py-3 text-sm font-black text-[#0B1A08] transition hover:bg-[#90D85A]"
+								>
+									Done
+								</button>
+							</div>
+						) : null}
 					</div>
 				</div>
 			) : null}

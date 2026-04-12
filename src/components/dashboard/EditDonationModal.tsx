@@ -2,6 +2,7 @@ import { useState, type FormEvent, useCallback } from "react";
 import type { Donation, UpdateDonationPayload } from "../../types/Dashboard";
 // @ts-ignore
 import LocationPicker from "react-location-picker";
+import DonationImageUploader from "./DonationImageUploader";
 
 interface EditDonationModalProps {
 	donation: Donation;
@@ -303,6 +304,13 @@ export default function EditDonationModal({
 								{errors.availabilityTime}
 							</p>
 						) : null}
+					</div>
+
+					<div className="md:col-span-2 space-y-3 border-t border-white/10 pt-4">
+						<DonationImageUploader
+							donationId={donation.donationId}
+							initialImages={donation.images ?? []}
+						/>
 					</div>
 
 					<div className="flex items-end gap-3 md:col-span-2">

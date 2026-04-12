@@ -20,6 +20,7 @@ interface RawCenterWithDonations {
 export interface PublicCenterDonationInfo {
     centerName: string;
     address: string;
+    phoneNumber: string;
     availableDonations: number;
     publishedDonations: PublishedDonationItem[];
 }
@@ -34,7 +35,10 @@ export async function getPublicCentersWithDonations(): Promise<PublicCenterDonat
     return raw.map((center): PublicCenterDonationInfo => ({
         centerName: center.name ?? "",
         address: center.address ?? "",
+        phoneNumber: center.phoneNumber ?? "",
         publishedDonations: Array.isArray(center.publishedDonations) ? center.publishedDonations : [],
-        availableDonations: Array.isArray(center.publishedDonations) ? center.publishedDonations.length : 0,
+        availableDonations: Array.isArray(center.publishedDonations)
+            ? center.publishedDonations.reduce((sum, d) => sum + (d.quantity ?? 0), 0)
+            : 0,
     }));
 }

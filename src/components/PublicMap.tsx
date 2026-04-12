@@ -1,4 +1,4 @@
-import { GoogleMap, Marker, InfoWindow, useJsApiLoader } from "@react-google-maps/api";
+﻿import { GoogleMap, Marker, InfoWindow, useJsApiLoader } from "@react-google-maps/api";
 import { useEffect, useState, useMemo } from "react";
 import { getPublicCentersWithDonations, type PublicCenterDonationInfo } from "../services/publicService";
 
@@ -119,11 +119,39 @@ export function PublicMap() {
 							position={selectedCenter.position}
 							onCloseClick={() => setSelectedCenter(null)}
 						>
-							<div className="p-2 bg-[#0F1D0C] text-[#F0EBE1]">
-								<p className="text-sm font-bold flex items-center gap-2">
+							<div className="p-3 bg-[#0F1D0C] text-[#F0EBE1] min-w-[220px]">
+								{/* Center name */}
+								<h3 className="text-base font-black mb-1">{selectedCenter.centerName}</h3>
+
+								{/* Address */}
+								<p className="text-xs text-[#F0EBE1]/70 mb-1">📍 {selectedCenter.address}</p>
+
+								{/* Phone */}
+								{selectedCenter.phoneNumber && (
+									<p className="text-xs text-[#F0EBE1]/70 mb-2">📞 {selectedCenter.phoneNumber}</p>
+								)}
+
+								<hr className="border-white/10 mb-2" />
+
+								{/* Available donations count */}
+								<p className="text-sm font-bold flex items-center gap-2 mb-2">
 									<span className="w-2 h-2 rounded-full bg-[#7DC542] animate-pulse"></span>
-									{selectedCenter.availableDonations ?? 0} Donations Available
+									{selectedCenter.availableDonations} Meals Available
 								</p>
+
+								{/* Food items list */}
+								{selectedCenter.publishedDonations.length > 0 && (
+									<ul className="text-xs text-[#F0EBE1]/80 space-y-1">
+										{selectedCenter.publishedDonations.map((item) => (
+											<li key={item.donationId} className="flex justify-between gap-4">
+												<span>{item.foodType}</span>
+												<span className="text-[#7DC542] font-bold">
+													{item.quantity} {item.unit}
+												</span>
+											</li>
+										))}
+									</ul>
+								)}
 							</div>
 						</InfoWindow>
 					)}

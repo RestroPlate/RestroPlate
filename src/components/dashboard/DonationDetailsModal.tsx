@@ -1,5 +1,6 @@
 import type { Donation } from "../../types/Dashboard";
 import LocationView from "./LocationView";
+import DonationImageGallery from "./DonationImageGallery";
 
 interface DonationDetailsModalProps {
 	donation: Donation;
@@ -85,6 +86,16 @@ export default function DonationDetailsModal({
 								<p className={LABEL_CLASS}>Expiration</p>
 								<p className={VALUE_CLASS}>{formatDate(donation.expirationDate)}</p>
 							</div>
+						</div>
+					</div>
+
+					{/* Food Photos */}
+					<div className={DETAIL_SECTION_CLASS}>
+						<p className={LABEL_CLASS}>Food Photos</p>
+						<div className="mt-3">
+							<DonationImageGallery
+								donationId={donation.donationId}
+							/>
 						</div>
 					</div>
 

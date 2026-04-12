@@ -3,6 +3,8 @@ import Pagination from "../Pagination";
 import EditDonationModal from "./EditDonationModal";
 import CenterDetailsModal from "./CenterDetailsModal";
 import LocationView from "./LocationView";
+import DonationImageGallery from "./DonationImageGallery";
+import DonationDetailsModal from "./DonationDetailsModal";
 import StatusNotice from "../StatusNotice";
 import type {
 	CenterDetails,
@@ -58,6 +60,7 @@ export default function DonationHistory({
 	const [viewingCenter, setViewingCenter] = useState<CenterDetails | null>(
 		null,
 	);
+	const [viewingDonationDetails, setViewingDonationDetails] = useState<Donation | null>(null);
 	const [deletingId, setDeletingId] = useState<number | null>(null);
 	const [notice, setNotice] = useState<{
 		type: "success" | "error";
@@ -199,9 +202,16 @@ export default function DonationHistory({
 							>
 								<div className="flex flex-wrap items-center justify-between gap-3">
 									<div>
-										<p className="text-base font-bold text-[#F0EBE1]">
+										<button
+											type="button"
+											onClick={(e) => {
+												e.stopPropagation();
+												setViewingDonationDetails(donation);
+											}}
+											className="text-left text-base font-bold text-[#F0EBE1] hover:text-[#7DC542] transition"
+										>
 											{donation.foodType}
-										</p>
+										</button>
 										{isRequested && (
 											<div className="mt-1 flex items-center gap-1.5 text-xs font-medium text-amber-300/80 transition group-hover:text-amber-300">
 												<svg
@@ -234,6 +244,10 @@ export default function DonationHistory({
 									<span>
 										Quantity: {donation.quantity} {donation.unit}
 									</span>
+									<div className="w-full mt-2">
+										<p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-[#F0EBE1]/40">Photos</p>
+										<DonationImageGallery donationId={donation.donationId} />
+									</div>
 									<div className="w-full mt-2">
 										<p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-[#F0EBE1]/40">Pickup Location</p>
 										<LocationView address={donation.pickupAddress} height="120px" />
@@ -312,6 +326,14 @@ export default function DonationHistory({
 				<CenterDetailsModal
 					center={viewingCenter}
 					onClose={() => setViewingCenter(null)}
+				/>
+			) : null}
+
+			{/* ── Donation Details Modal ── */}
+			{viewingDonationDetails ? (
+				<DonationDetailsModal
+					donation={viewingDonationDetails}
+					onClose={() => setViewingDonationDetails(null)}
 				/>
 			) : null}
 		</>
