@@ -49,7 +49,7 @@ export function NavBar() {
 					aria-hidden="true"
 					className="inline-block transition-transform duration-300 group-hover:rotate-[-15deg] group-hover:scale-[1.15]"
 				>
-					<svg
+					{/* <svg
 						width="22"
 						height="22"
 						viewBox="0 0 24 24"
@@ -62,9 +62,9 @@ export function NavBar() {
 					>
 						<path d="M2 22s4-2 8-8c3-4 4-9 4-9S9 6 6 10c-4 5-4 12-4 12z" fill="rgba(125,197,66,0.25)" stroke="#7DC542" />
 						<path d="M22 2s-6 2-10 6" stroke="#7DC542" />
-					</svg>
+					</svg> */}
 				</span>
-				RestroPlate
+				 🍃 RestroPlate
 			</a>
 
 			{/* Desktop links */}

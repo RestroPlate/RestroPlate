@@ -183,7 +183,7 @@ export function PublicMap() {
       )}
 
       {/* ── Normal section ── */}
-      <section className="relative w-full py-20 bg-[#0B1A08]">
+      <section id="map-section" className="relative w-full py-20 bg-[#0B1A08]">
 
         {/* Section header */}
         <div className="max-w-7xl mx-auto px-6 mb-10">
