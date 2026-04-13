@@ -1,10 +1,9 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
 import { useInventory } from "../components/hooks/useInventory";
 import { useCenterOutgoingRequests } from "../components/hooks/useDonationRequests";
 import { useAvailableDonations } from "../components/hooks/useDonations";
-import type { Donation, DonationRequest } from "../types/Dashboard";
 
 function daysUntil(dateString: string): number {
   if (!dateString) return 0;

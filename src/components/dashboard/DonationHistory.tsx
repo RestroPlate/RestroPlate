@@ -244,7 +244,9 @@ export default function DonationHistory({
 										</span>
 										<div className="w-full mt-2">
 											<p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-[#F0EBE1]/40">Photos</p>
-											<DonationImageGallery donationId={donation.donationId} />
+											<div className="max-w-xs">
+												<DonationImageGallery donationId={donation.donationId} />
+											</div>
 										</div>
 										<div className="w-full mt-2">
 											<p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-[#F0EBE1]/40">Pickup Location</p>

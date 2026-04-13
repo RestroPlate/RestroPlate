@@ -1,6 +1,6 @@
 import { GoogleMap, Marker, InfoWindow, useJsApiLoader } from "@react-google-maps/api";
 import { useEffect, useState, useMemo } from "react";
-import { Maximize2, Minimize2 } from "lucide-react";
+import { Maximize2, Minimize2, Navigation } from "lucide-react";
 import { getPublicCentersWithDonations, type PublicCenterDonationInfo } from "../services/publicService";
 
 const MAP_CONTAINER_STYLE = {
@@ -136,6 +136,37 @@ export function PublicMap() {
                 ))}
               </ul>
             )}
+
+            <button
+              onClick={() => {
+                const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(selectedCenter.address)}&travelmode=driving`;
+                window.open(navUrl, "_blank", "noopener,noreferrer");
+              }}
+              style={{
+                marginTop: "16px",
+                width: "100%",
+                padding: "10px 0",
+                backgroundColor: "#7DC542",
+                color: "#0B1A08",
+                border: "none",
+                borderRadius: "6px",
+                fontSize: "12px",
+                fontWeight: "900",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px",
+                textTransform: "uppercase",
+                letterSpacing: "0.5px",
+                transition: "opacity 0.2s"
+              }}
+              onMouseOver={(e) => (e.currentTarget.style.opacity = "0.9")}
+              onMouseOut={(e) => (e.currentTarget.style.opacity = "1")}
+            >
+              <Navigation size={14} />
+              Start Navigation
+            </button>
           </div>
         </InfoWindow>
       )}
