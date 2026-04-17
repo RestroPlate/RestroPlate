@@ -506,85 +506,85 @@ export default function DonorExploreRequests() {
 						</p>
 						<div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
 							{paginatedRequests.map((request) => (
-							<article
-								key={request.donationRequestId}
-								className="group flex h-full flex-col rounded-2xl border border-white/10 bg-white/5 p-5 transition hover:border-[#7DC542]/30 hover:bg-white/[0.06]"
-							>
-								{/* Card Header */}
-								<div className="flex items-start justify-between gap-3">
-									<div>
-										<p className="text-xs font-bold uppercase tracking-[0.16em] text-[#7DC542]">
-											Request #{request.donationRequestId}
-										</p>
-										<h3 className="mt-2 text-xl font-bold text-[#F0EBE1]">
-											{request.foodType}
-										</h3>
-									</div>
-
-									<span
-										className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] ${getStatusClasses(request.status)}`}
-									>
-										{request.status.replace("_", " ")}
-									</span>
-								</div>
-
-								{/* Card Body */}
-								<div className="mt-5 flex-1 space-y-3 text-sm text-[#F0EBE1]/70">
-									<div className="flex items-center justify-between gap-3">
-										<span>Needed</span>
-										<span className="font-bold text-[#F0EBE1]">
-											{request.requestedQuantity} {request.unit}
-										</span>
-									</div>
-									<div className="flex items-center justify-between gap-3">
-										<span>Remaining</span>
-										<span className="font-bold text-amber-300">
-											{request.requestedQuantity - request.donatedQuantity}{" "}
-											{request.unit}
-										</span>
-									</div>
-									<div className="flex items-center justify-between gap-3">
-										<span>Distribution Center</span>
-										<span className="font-bold text-[#F0EBE1] text-right">
-											{request.distributionCenterName ??
-												`Center #${request.distributionCenterUserId}`}
-										</span>
-									</div>
-									{request.distributionCenterAddress && (
-										<div className="space-y-2">
-											<div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#F0EBE1]/40">
-												<MapPinIcon className="h-3.5 w-3.5 text-[#7DC542]/70" />
-												Center Location
-											</div>
-											<LocationView address={request.distributionCenterAddress} height="120px" />
+								<article
+									key={request.donationRequestId}
+									className="group flex h-full flex-col rounded-2xl border border-white/10 bg-white/5 p-5 transition hover:border-[#7DC542]/30 hover:bg-white/[0.06]"
+								>
+									{/* Card Header */}
+									<div className="flex items-start justify-between gap-3">
+										<div>
+											<p className="text-xs font-bold uppercase tracking-[0.16em] text-[#7DC542]">
+												Request #{request.donationRequestId}
+											</p>
+											<h3 className="mt-2 text-xl font-bold text-[#F0EBE1]">
+												{request.foodType}
+											</h3>
 										</div>
-									)}
-									<div className="flex items-center justify-between gap-3">
-										<span>Created</span>
-										<span className="font-medium text-[#F0EBE1]">
-											{formatDate(request.createdAt)}
+
+										<span
+											className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] ${getStatusClasses(request.status)}`}
+										>
+											{request.status.replace("_", " ")}
 										</span>
 									</div>
-								</div>
 
-								{/* Fulfill Button */}
-								{request.status === "pending" && (
-									<button
-										type="button"
-										onClick={() => openFulfillModal(request)}
-										className="mt-6 inline-flex items-center justify-center rounded-xl bg-[#7DC542] px-4 py-3 text-sm font-black text-[#0B1A08] transition hover:bg-[#90D85A] active:scale-[0.98]"
-									>
-										Fulfill
-									</button>
-								)}
-							</article>
-						))}
-					</div>
-					<Pagination
-						currentPage={currentPage}
-						totalPages={totalPages}
-						onPageChange={setCurrentPage}
-					/>
+									{/* Card Body */}
+									<div className="mt-5 flex-1 space-y-3 text-sm text-[#F0EBE1]/70">
+										<div className="flex items-center justify-between gap-3">
+											<span>Needed</span>
+											<span className="font-bold text-[#F0EBE1]">
+												{request.requestedQuantity} {request.unit}
+											</span>
+										</div>
+										<div className="flex items-center justify-between gap-3">
+											<span>Remaining</span>
+											<span className="font-bold text-amber-300">
+												{request.requestedQuantity - request.donatedQuantity}{" "}
+												{request.unit}
+											</span>
+										</div>
+										<div className="flex items-center justify-between gap-3">
+											<span>Distribution Center</span>
+											<span className="font-bold text-[#F0EBE1] text-right">
+												{request.distributionCenterName ??
+													`Center #${request.distributionCenterUserId}`}
+											</span>
+										</div>
+										{request.distributionCenterAddress && (
+											<div className="space-y-2">
+												<div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#F0EBE1]/40">
+													<MapPinIcon className="h-3.5 w-3.5 text-[#7DC542]/70" />
+													Center Location
+												</div>
+												<LocationView address={request.distributionCenterAddress} height="120px" />
+											</div>
+										)}
+										<div className="flex items-center justify-between gap-3">
+											<span>Created</span>
+											<span className="font-medium text-[#F0EBE1]">
+												{formatDate(request.createdAt)}
+											</span>
+										</div>
+									</div>
+
+									{/* Fulfill Button */}
+									{request.status === "pending" && (
+										<button
+											type="button"
+											onClick={() => openFulfillModal(request)}
+											className="mt-6 inline-flex items-center justify-center rounded-xl bg-[#7DC542] px-4 py-3 text-sm font-black text-[#0B1A08] transition hover:bg-[#90D85A] active:scale-[0.98]"
+										>
+											Fulfill
+										</button>
+									)}
+								</article>
+							))}
+						</div>
+						<Pagination
+							currentPage={currentPage}
+							totalPages={totalPages}
+							onPageChange={setCurrentPage}
+						/>
 					</>
 				)}
 			</div>

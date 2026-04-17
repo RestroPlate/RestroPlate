@@ -112,7 +112,7 @@ export default function DonationImageGallery({
 						<img
 							src={resolveImageUrl(lightboxImg.imageUrl)}
 							alt={lightboxImg.fileName}
-							className="max-h-[85vh] max-w-[90vw] rounded-xl object-contain shadow-2xl"
+							className="h-[85vh] w-[90vw] rounded-xl object-contain shadow-2xl"
 						/>
 						<button
 							type="button"

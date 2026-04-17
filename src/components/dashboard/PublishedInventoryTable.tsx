@@ -9,7 +9,7 @@ export default function PublishedInventoryTable() {
 	const { inventory, loading, error, refresh } = useInventory();
 	const [updatingId, setUpdatingId] = useState<number | null>(null);
 	const [optimisticStates, setOptimisticStates] = useState<Record<number, boolean>>({});
-	
+
 	// Modal states
 	const [selectedDonation, setSelectedDonation] = useState<Donation | null>(null);
 	const [distributingDonation, setDistributingDonation] = useState<Donation | null>(null);
@@ -29,12 +29,12 @@ export default function PublishedInventoryTable() {
 		const id = item.inventoryLogId ?? item.inventoryId ?? item.donationId;
 		const currentStatus = getIsPublic(item);
 		const newStatus = !currentStatus;
-		
+
 		try {
 			setUpdatingId(id);
 			// set optimistic state
 			setOptimisticStates(prev => ({ ...prev, [id]: newStatus }));
-			
+
 			await publishInventory(id, newStatus);
 			await refresh();
 		} catch (err) {
@@ -53,8 +53,8 @@ export default function PublishedInventoryTable() {
 	if (loading) {
 		return (
 			<div className="space-y-4">
-				 <div className="skeleton-shimmer h-24 rounded-2xl" />
-				 <div className="skeleton-shimmer h-48 rounded-xl" />
+				<div className="skeleton-shimmer h-24 rounded-2xl" />
+				<div className="skeleton-shimmer h-48 rounded-xl" />
 			</div>
 		);
 	}
@@ -102,11 +102,11 @@ export default function PublishedInventoryTable() {
 								const id = item.inventoryLogId ?? item.inventoryId ?? item.donationId;
 								const isUpdating = updatingId === id;
 								const isPublic = getIsPublic(item);
-								
+
 								const totalCollected = item.collectedAmount ?? item.quantity;
 								const totalDistributed = item.distributedQuantity ?? 0;
 								const remaining = totalCollected - totalDistributed;
-								
+
 								return (
 									<tr
 										key={id}
@@ -130,16 +130,14 @@ export default function PublishedInventoryTable() {
 													type="button"
 													disabled={isUpdating}
 													onClick={() => handleToggle(item)}
-													className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-														isPublic ? "bg-[#7DC542]" : "bg-white/20"
-													} ${isUpdating ? "cursor-not-allowed" : "cursor-pointer"}`}
+													className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isPublic ? "bg-[#7DC542]" : "bg-white/20"
+														} ${isUpdating ? "cursor-not-allowed" : "cursor-pointer"}`}
 													aria-pressed={isPublic}
 												>
 													<span className="sr-only">Toggle publish status</span>
 													<span
-														className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-															isPublic ? "translate-x-6" : "translate-x-1"
-														}`}
+														className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isPublic ? "translate-x-6" : "translate-x-1"
+															}`}
 													/>
 												</button>
 												<span className="ml-3 text-[10px] font-bold uppercase tracking-wider w-12 opacity-60">
@@ -152,11 +150,10 @@ export default function PublishedInventoryTable() {
 												type="button"
 												disabled={remaining <= 0}
 												onClick={() => setDistributingDonation(item)}
-												className={`rounded-xl px-4 py-2 text-xs font-bold transition-all ${
-													remaining > 0 
-														? "bg-sky-500/10 text-sky-400 hover:bg-sky-500 hover:text-white" 
+												className={`rounded-xl px-4 py-2 text-xs font-bold transition-all ${remaining > 0
+														? "bg-sky-500/10 text-sky-400 hover:bg-sky-500 hover:text-white"
 														: "bg-white/5 text-[#F0EBE1]/30 cursor-not-allowed"
-												}`}
+													}`}
 											>
 												Distribute
 											</button>
@@ -167,7 +164,7 @@ export default function PublishedInventoryTable() {
 						) : (
 							<tr>
 								<td colSpan={5} className="px-5 py-12 text-center text-sm text-[#F0EBE1]/50 italic">
-								   No collected inventory items items found in your center database.
+									No collected inventory items items found in your center database.
 								</td>
 							</tr>
 						)}

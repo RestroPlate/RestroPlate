@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { getCurrentUser } from "../services/authService";
 
 const IMG = {
 	hero: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1600&q=80",
@@ -18,6 +20,25 @@ export function Hero() {
 	const [transitioning, setTransitioning] = useState<boolean>(false);
 	const [frameHovered, setFrameHovered] = useState<boolean>(false);
 	const [hoveredDot, setHoveredDot] = useState<number | null>(null);
+
+	const navigate = useNavigate();
+	const user = getCurrentUser();
+	const isLoggedIn = user !== null;
+
+	const handleDonateClick = () => {
+		if (isLoggedIn) {
+			const dashboardPath = user?.role === "DONOR" ? "/dashboard/donor" : "/dashboard/center";
+			navigate(dashboardPath);
+		} else {
+			navigate("/join");
+		}
+	};
+
+	const handleScrollToMap = () => {
+		document.getElementById("map-section")?.scrollIntoView({
+			behavior: "smooth"
+		});
+	};
 
 	useEffect((): (() => void) => {
 		const interval = setInterval((): void => {
@@ -97,14 +118,16 @@ export function Hero() {
 					<div className="flex gap-4 flex-wrap sm:flex-col">
 						<button
 							type="button"
-							className="text-[0.85rem] font-extrabold tracking-[0.1em] text-[#0B1A08] bg-[#7DC542] border-none rounded-[6px] px-8 py-[15px] cursor-pointer shadow-[0_8px_32px_rgba(125,197,66,0.35)] transition-[transform,box-shadow] duration-300 hover:-translate-y-[3px] hover:shadow-[0_14px_40px_rgba(125,197,66,0.45)]"
+							onClick={handleDonateClick}
+							className="text-[0.85rem] font-extrabold tracking-[0.1em] text-[#0B1A08] bg-[#7DC542] border-none rounded-[6px] px-8 py-[15px] cursor-pointer shadow-[0_8px_32px_rgba(125,197,66,0.35)] transition-[transform,box-shadow] duration-300 hover:-translate-y-[3px] hover:shadow-[0_14px_40px_rgba(125,197,66,0.45)] active:scale-[0.98]"
 						>
 							DONATE FOOD
 						</button>
 
 						<button
 							type="button"
-							className="text-[0.85rem] font-extrabold tracking-[0.1em] text-[#F0EBE1] bg-transparent border-2 border-[rgba(240,235,225,0.45)] rounded-[6px] px-8 py-[15px] cursor-pointer transition-[border-color,color] duration-300 hover:border-[#7DC542] hover:text-[#7DC542]"
+							onClick={handleScrollToMap}
+							className="text-[0.85rem] font-extrabold tracking-[0.1em] text-[#F0EBE1] bg-transparent border-2 border-[rgba(240,235,225,0.45)] rounded-[6px] px-8 py-[15px] cursor-pointer transition-[border-color,color,transform] duration-300 hover:border-[#7DC542] hover:text-[#7DC542] hover:-translate-y-[2px] active:scale-[0.98]"
 						>
 							FIND FOOD NEAR ME
 						</button>

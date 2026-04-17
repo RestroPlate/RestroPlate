@@ -102,40 +102,40 @@ export default function DonationDetailsModal({
 					{/* Distribution Stats (If collected) */}
 					{(donation.collectedAmount !== undefined ||
 						donation.distributedQuantity !== undefined) && (
-						<div className={`${DETAIL_SECTION_CLASS} border-emerald-500/10`}>
-							<p className={LABEL_CLASS}>Inventory Stats</p>
-							<div className="grid grid-cols-3 gap-4 pt-2">
-								<div>
-									<p className="text-[9px] uppercase text-[#F0EBE1]/40">
-										Collected
-									</p>
-									<p className="text-sm font-bold text-emerald-400">
-										{donation.collectedAmount ?? donation.quantity}{" "}
-										{donation.unit}
-									</p>
-								</div>
-								<div>
-									<p className="text-[9px] uppercase text-[#F0EBE1]/40">
-										Distributed
-									</p>
-									<p className="text-sm font-bold text-sky-400">
-										{donation.distributedQuantity ?? 0} {donation.unit}
-									</p>
-								</div>
-								<div>
-									<p className="text-[9px] uppercase text-[#F0EBE1]/40">
-										Remaining
-									</p>
-									{/* Remaining = Collected - Distributed */}
-									<p className="text-sm font-bold text-[#7DC542]">
-										{(donation.collectedAmount ?? donation.quantity) -
-											(donation.distributedQuantity ?? 0)}{" "}
-										{donation.unit}
-									</p>
+							<div className={`${DETAIL_SECTION_CLASS} border-emerald-500/10`}>
+								<p className={LABEL_CLASS}>Inventory Stats</p>
+								<div className="grid grid-cols-3 gap-4 pt-2">
+									<div>
+										<p className="text-[9px] uppercase text-[#F0EBE1]/40">
+											Collected
+										</p>
+										<p className="text-sm font-bold text-emerald-400">
+											{donation.collectedAmount ?? donation.quantity}{" "}
+											{donation.unit}
+										</p>
+									</div>
+									<div>
+										<p className="text-[9px] uppercase text-[#F0EBE1]/40">
+											Distributed
+										</p>
+										<p className="text-sm font-bold text-sky-400">
+											{donation.distributedQuantity ?? 0} {donation.unit}
+										</p>
+									</div>
+									<div>
+										<p className="text-[9px] uppercase text-[#F0EBE1]/40">
+											Remaining
+										</p>
+										{/* Remaining = Collected - Distributed */}
+										<p className="text-sm font-bold text-[#7DC542]">
+											{(donation.collectedAmount ?? donation.quantity) -
+												(donation.distributedQuantity ?? 0)}{" "}
+											{donation.unit}
+										</p>
+									</div>
 								</div>
 							</div>
-						</div>
-					)}
+						)}
 
 					{/* Pickup Info */}
 					<div className={DETAIL_SECTION_CLASS}>

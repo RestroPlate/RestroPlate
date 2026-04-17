@@ -31,11 +31,10 @@ export default function CenterInventory() {
 					<button
 						type="button"
 						onClick={() => setActiveTab("publish")}
-						className={`px-6 py-3 text-sm font-bold transition-colors relative ${
-							activeTab === "publish"
+						className={`px-6 py-3 text-sm font-bold transition-colors relative ${activeTab === "publish"
 								? "text-[#7DC542]"
 								: "text-[#F0EBE1]/50 hover:text-[#F0EBE1]"
-						}`}
+							}`}
 					>
 						Publish to Consumers
 						{activeTab === "publish" && (
@@ -45,11 +44,10 @@ export default function CenterInventory() {
 					<button
 						type="button"
 						onClick={() => setActiveTab("collect")}
-						className={`px-6 py-3 text-sm font-bold transition-colors relative ${
-							activeTab === "collect"
+						className={`px-6 py-3 text-sm font-bold transition-colors relative ${activeTab === "collect"
 								? "text-[#7DC542]"
 								: "text-[#F0EBE1]/50 hover:text-[#F0EBE1]"
-						}`}
+							}`}
 					>
 						Mark as Collected
 						{activeTab === "collect" && (
@@ -59,11 +57,10 @@ export default function CenterInventory() {
 					<button
 						type="button"
 						onClick={() => setActiveTab("completed")}
-						className={`px-6 py-3 text-sm font-bold transition-colors relative ${
-							activeTab === "completed"
+						className={`px-6 py-3 text-sm font-bold transition-colors relative ${activeTab === "completed"
 								? "text-[#7DC542]"
 								: "text-[#F0EBE1]/50 hover:text-[#F0EBE1]"
-						}`}
+							}`}
 					>
 						Completed Donations
 						{activeTab === "completed" && (
@@ -78,9 +75,9 @@ export default function CenterInventory() {
 						<PublishedInventoryTable />
 					) : activeTab === "collect" ? (
 						<div className="space-y-6">
-                            <div className="rounded-xl border border-[#7DC542]/20 bg-[#7DC542]/5 p-4 text-sm text-[#F0EBE1]/80">
-                                <p>Items listed here are waiting to be picked up from donors. Once collected, they will move to your available inventory.</p>
-                            </div>
+							<div className="rounded-xl border border-[#7DC542]/20 bg-[#7DC542]/5 p-4 text-sm text-[#F0EBE1]/80">
+								<p>Items listed here are waiting to be picked up from donors. Once collected, they will move to your available inventory.</p>
+							</div>
 							<DCInventoryTable />
 						</div>
 					) : (
