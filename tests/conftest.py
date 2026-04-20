@@ -1,283 +1,222 @@
+"""
+RestroPlate E2E Test Configuration
+
+Key design decisions:
+1. setup_test_accounts() is a session-scoped autouse fixture.
+   It calls POST /api/auth/register for both test accounts before any test runs.
+   It ignores HTTP 409 (account already exists). This is idempotent.
+
+2. login_as_donor / login_as_center are function-scoped fixtures.
+   They call POST /api/auth/login via the `requests` library to get a real JWT,
+   then inject it directly into localStorage. This is faster and more reliable
+   than typing through the UI login form, which is subject to network timing issues.
+
+3. The 'driver' fixture is function-scoped — a fresh browser per test.
+
+4. base_url always includes the Vite base path /RestroPlate.
+
+5. Uses Selenium 4's BUILT-IN Selenium Manager for driver downloads.
+   Do NOT use webdriver-manager — it resolves to THIRD_PARTY_NOTICES.chromedriver
+   on Windows with Chrome 147+, causing WinError 193.
+"""
 import os
-import sys
 import time
-import socket
+import requests as req_lib
 import pytest
-import requests
-
-from datetime import datetime, timedelta
-
+from dotenv import load_dotenv
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 
-# -----------------------------
-# Base URL
-# -----------------------------
+load_dotenv(dotenv_path="tests/.env.test")
+
+BASE_URL     = os.getenv("FRONTEND_BASE_URL", "http://localhost:5173/RestroPlate")
+API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:5053")
+HEADLESS     = os.getenv("HEADLESS", "false").lower() == "true"
+
+DONOR_EMAIL    = os.getenv("DONOR_EMAIL", "test_donor@restroplate.io")
+DONOR_PASSWORD = os.getenv("DONOR_PASSWORD", "TestDonor@123")
+CENTER_EMAIL    = os.getenv("CENTER_EMAIL", "test_center@restroplate.io")
+CENTER_PASSWORD = os.getenv("CENTER_PASSWORD", "TestCenter@123")
+
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--browser",
+        action="store",
+        default="chrome",
+        help="Browser: chrome | firefox | safari",
+    )
+
+
 @pytest.fixture(scope="session")
-def base_url():
-    return os.getenv("BASE_URL", "http://localhost:5173/RestroPlate")
+def browser_name(request):
+    return request.config.getoption("--browser").lower()
 
 
-# -----------------------------
-# Helper: find a free port so each ChromeDriver gets its own
-# -----------------------------
-def _free_port() -> int:
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind(("127.0.0.1", 0))
-        return s.getsockname()[1]
+# ─── ACCOUNT SETUP ────────────────────────────────────────────────────────────
 
-
-# -----------------------------
-# Helper: build Chrome options
-# -----------------------------
-def _chrome_options() -> Options:
-    options = Options()
-    options.add_argument("--headless=new")          # headless: no window, no GPU fight
-    options.add_argument("--window-size=1920,1080")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-gpu")
-    options.add_argument("--disable-extensions")
-    options.add_argument("--disable-features=VizDisplayCompositor")
-    options.add_argument("--remote-debugging-port=0")  # OS picks a free debug port
-    return options
-
-
-# -----------------------------
-# Selenium Driver — PER FUNCTION with retry
-# -----------------------------
-@pytest.fixture(scope="function")
-def driver():
-    d = None
-    last_error = None
-
-    for attempt in range(3):          # retry up to 3 times
+@pytest.fixture(scope="session", autouse=True)
+def setup_test_accounts():
+    """
+    Registers both test accounts via the API before the test session begins.
+    Silently ignores 409 Conflict (account already exists).
+    This must run before any test that calls login_as_donor or login_as_center.
+    """
+    accounts = [
+        {
+            "name": "Test Donor User",
+            "email": DONOR_EMAIL,
+            "password": DONOR_PASSWORD,
+            "phoneNumber": "+94771234567",
+            "address": "6.9271, 79.8612",
+            "role": "DONOR",
+        },
+        {
+            "name": "Test Distribution Center",
+            "email": CENTER_EMAIL,
+            "password": CENTER_PASSWORD,
+            "phoneNumber": "+94771234568",
+            "address": "6.9000, 79.8500",
+            "role": "DISTRIBUTION_CENTER",
+        },
+    ]
+    for account in accounts:
         try:
-            service = Service(port=_free_port())   # unique port each attempt
-            d = webdriver.Chrome(service=service, options=_chrome_options())
-            d.set_page_load_timeout(30)
-            d.implicitly_wait(0)       # keep explicit waits; don't mix with implicit
-            break
+            response = req_lib.post(
+                f"{API_BASE_URL}/api/auth/register",
+                json=account,
+                timeout=15,
+            )
+            if response.status_code not in (200, 201, 409):
+                print(
+                    f"[WARN] Registration returned {response.status_code} "
+                    f"for {account['email']}: {response.text[:200]}"
+                )
+            else:
+                print(f"[OK] Registration for {account['email']}: {response.status_code}")
         except Exception as exc:
-            last_error = exc
-            time.sleep(1.5 * (attempt + 1))   # back off before retry
+            print(f"[WARN] Could not reach API to register {account['email']}: {exc}")
+    yield
 
-    if d is None:
-        pytest.fail(f"Could not start ChromeDriver after 3 attempts: {last_error}")
 
-    yield d
-
+def _api_login(email: str, password: str) -> dict:
+    """
+    Returns {"token": str, "userId": int, "email": str, "role": str}
+    or raises RuntimeError on failure.
+    """
     try:
-        d.quit()
-    except Exception:
-        pass
-
-
-# -----------------------------
-# Seed Donations (API only — no browser needed)
-# -----------------------------
-@pytest.fixture(scope="session")
-def seed_donations():
-    api_base = os.getenv("VITE_API_BASE_URL", "http://localhost:5053").rstrip("/")
-
-    login_url   = f"{api_base}/api/auth/login"
-    donations_url = f"{api_base}/api/donations"
-
-    login_payload = {
-        "email": "theertha@gmail.com",
-        "password": "123456",
-    }
-
-    try:
-        login_res = requests.post(login_url, json=login_payload, timeout=10)
-        login_res.raise_for_status()
-    except Exception:
-        pytest.skip("Backend not reachable → skipping donation seeding")
-
-    token = login_res.json().get("token")
-    if not token:
-        pytest.skip("Could not retrieve API token")
-
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json",
-    }
-
-    for i in range(3):
-        donation_payload = {
-            "foodType": f"QA Seed Donation {int(time.time())}-{i}",
-            "quantity": 5,
-            "unit": "Boxes",
-            "expirationDate": (
-                datetime.today() + timedelta(days=2)
-            ).strftime("%Y-%m-%d"),
-            "pickupAddress": "QA Test Location",
-            "availabilityTime": "12:00",
-        }
-        try:
-            requests.post(donations_url, json=donation_payload,
-                          headers=headers, timeout=10)
-        except requests.RequestException:
-            pass
-
-
-# -----------------------------
-# explore_page fixture
-# Logs in as the known DONOR and navigates to /dashboard/donor/explore.
-# Returns the driver object, already on the explore page.
-# -----------------------------
-@pytest.fixture(scope="function")
-def explore_page(driver, base_url):
-    from selenium.webdriver.common.by import By
-    from selenium.webdriver.support.ui import WebDriverWait
-    from selenium.webdriver.support import expected_conditions as EC
-
-    api_base = os.getenv("VITE_API_BASE_URL", "http://localhost:5053").rstrip("/")
-
-    try:
-        login_res = requests.post(
-            f"{api_base}/api/auth/login",
-            json={"email": "theertha@gmail.com", "password": "123456"},
-            timeout=10,
+        r = req_lib.post(
+            f"{API_BASE_URL}/api/auth/login",
+            json={"email": email, "password": password},
+            timeout=15,
         )
-        login_res.raise_for_status()
-    except Exception:
-        pytest.skip("Backend not reachable — skipping explore_page fixture")
+        r.raise_for_status()
+        return r.json()
+    except Exception as exc:
+        raise RuntimeError(
+            f"API login failed for {email}: {exc}"
+        ) from exc
 
-    # Clear any existing session before logging in
-    driver.get(base_url.rstrip("/") + "/join")
-    driver.execute_script("window.localStorage.clear();")
-    driver.execute_script("window.sessionStorage.clear();")
-    driver.delete_all_cookies()
-    driver.refresh()
 
-    wait = WebDriverWait(driver, 20)
-
-    email_el = wait.until(
-        EC.element_to_be_clickable((By.CSS_SELECTOR, "input[name='email']"))
+def _inject_session(driver, data: dict, base_url: str) -> None:
+    """
+    Navigates to the app root (so localStorage is scoped to the right origin),
+    then injects the JWT token and user object into localStorage.
+    After this, any protected route navigation will succeed because React's
+    ProtectedRoute reads from localStorage.
+    """
+    driver.get(base_url)
+    time.sleep(0.5)  # let the page load so localStorage is accessible
+    token = data.get("token", "")
+    user_json = (
+        f'{{"userId":{data.get("userId", 0)},'
+        f'"email":"{data.get("email", "")}",'
+        f'"role":"{data.get("role", "")}"}}'
     )
-    password_el = wait.until(
-        EC.element_to_be_clickable((By.CSS_SELECTOR, "input[name='password']"))
-    )
-    email_el.clear()
-    email_el.send_keys("theertha@gmail.com")
-    password_el.clear()
-    password_el.send_keys("123456")
-
-    wait.until(
-        EC.element_to_be_clickable((By.CSS_SELECTOR, "button[type='submit']"))
-    ).click()
-    wait.until(EC.url_contains("/dashboard/"))
-
-    driver.get(base_url.rstrip("/") + "/dashboard/donor/explore")
-    wait.until(
-        lambda d: (
-            "available requests" in d.page_source.lower()
-            or "no requests" in d.page_source.lower()
-            or "donation" in d.page_source.lower()
-        )
+    driver.execute_script(
+        "window.localStorage.setItem('restroplate_token', arguments[0]);"
+        "window.localStorage.setItem('restroplate_user', arguments[1]);",
+        token,
+        user_json,
     )
 
-# -----------------------------
-# file_paths fixture
-# Provides absolute paths for test files
-# -----------------------------
-@pytest.fixture(scope="session")
-def file_paths():
-    base_dir = os.path.dirname(__file__)
 
-    return {
-        "valid": os.path.abspath(os.path.join(base_dir, "fixtures", "valid.jpg")),
-        "large": os.path.abspath(os.path.join(base_dir, "fixtures", "large.jpg")),
-        "invalid": os.path.abspath(os.path.join(base_dir, "fixtures", "invalid.pdf")),
-    }
+# ─── DRIVER ───────────────────────────────────────────────────────────────────
 
-# -----------------------------
-# upload_page fixture
-# Logs in and navigates to donation upload page
-# -----------------------------
 @pytest.fixture(scope="function")
-def upload_page(driver, base_url):
-    from selenium.webdriver.common.by import By
-    from selenium.webdriver.support.ui import WebDriverWait
-    from selenium.webdriver.support import expected_conditions as EC
+def driver(browser_name):
+    drv = _create_driver(browser_name)
+    drv.set_window_size(1440, 900)
+    drv.implicitly_wait(10)
+    yield drv
+    drv.quit()
 
-    wait = WebDriverWait(driver, 20)
 
-    # Clear session
-    driver.get(base_url.rstrip("/") + "/join")
-    driver.execute_script("window.localStorage.clear();")
-    driver.execute_script("window.sessionStorage.clear();")
-    driver.delete_all_cookies()
-    driver.refresh()
+def _create_driver(browser: str):
+    """
+    Creates a WebDriver using Selenium 4's built-in Selenium Manager.
+    Do NOT use webdriver-manager — it breaks on Windows with Chrome 147+
+    (resolves to THIRD_PARTY_NOTICES.chromedriver → WinError 193).
+    """
+    if browser == "chrome":
+        options = webdriver.ChromeOptions()
+        if HEADLESS:
+            options.add_argument("--headless=new")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--disable-gpu")
+        options.add_argument("--log-level=3")
+        options.add_experimental_option("excludeSwitches", ["enable-logging"])
+        return webdriver.Chrome(options=options)
+    elif browser == "firefox":
+        options = webdriver.FirefoxOptions()
+        if HEADLESS:
+            options.add_argument("--headless")
+        return webdriver.Firefox(options=options)
+    else:
+        raise ValueError(f"Unsupported browser: {browser}")
 
-    # Login
-    email_el = wait.until(
-        EC.element_to_be_clickable((By.CSS_SELECTOR, "input[name='email']"))
-    )
-    password_el = wait.until(
-        EC.element_to_be_clickable((By.CSS_SELECTOR, "input[name='password']"))
-    )
 
-    email_el.clear()
-    email_el.send_keys("theertha@gmail.com")
-    password_el.clear()
-    password_el.send_keys("123456")
+# ─── SESSION FIXTURES ─────────────────────────────────────────────────────────
 
-    wait.until(
-        EC.element_to_be_clickable((By.CSS_SELECTOR, "button[type='submit']"))
-    ).click()
+@pytest.fixture(scope="function")
+def base_url():
+    return BASE_URL
 
-    wait.until(EC.url_contains("/dashboard/"))
 
-    # Navigate to donation create/upload page
-    driver.get(base_url.rstrip("/") + "/dashboard/donor/create")
+@pytest.fixture(scope="function")
+def donor_credentials():
+    return {"email": DONOR_EMAIL, "password": DONOR_PASSWORD}
 
-    # Wait until upload input OR form is visible
-    wait.until(
-        EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='file']"))
-    )
 
-    return driver
+@pytest.fixture(scope="function")
+def center_credentials():
+    return {"email": CENTER_EMAIL, "password": CENTER_PASSWORD}
 
-    # -----------------------------
-# upload_helper fixture
-# Handles file upload actions
-# -----------------------------
-@pytest.fixture
-def upload_helper():
-    from selenium.webdriver.common.by import By
-    from selenium.webdriver.support.ui import WebDriverWait
-    from selenium.webdriver.support import expected_conditions as EC
 
-    class UploadHelper:
-        def __init__(self, driver):
-            self.driver = driver
-            self.wait = WebDriverWait(driver, 15)
+# ─── LOGIN HELPERS ────────────────────────────────────────────────────────────
 
-        def upload_file(self, file_path):
-            file_input = self.wait.until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='file']"))
-            )
-            file_input.send_keys(file_path)
+@pytest.fixture(scope="function")
+def login_as_donor(driver, base_url, setup_test_accounts):
+    """
+    Injects a valid DONOR JWT into localStorage via API login.
+    Use this instead of the UI login form for all tests that require authentication.
+    Returns the dashboard URL so tests can assert navigation.
+    """
+    data = _api_login(DONOR_EMAIL, DONOR_PASSWORD)
+    _inject_session(driver, data, base_url)
+    driver.get(f"{base_url}/dashboard/donor")
+    time.sleep(1)
+    return f"{base_url}/dashboard/donor"
 
-        def click_upload(self):
-            self.wait.until(
-                EC.element_to_be_clickable((By.CSS_SELECTOR, "button[type='submit']"))
-            ).click()
 
-        def is_success(self):
-            return self.wait.until(
-                EC.presence_of_element_located((By.XPATH, "//*[contains(text(),'success')]"))
-            )
-
-        def is_error(self):
-            return self.wait.until(
-                EC.presence_of_element_located((By.XPATH, "//*[contains(text(),'error') or contains(text(),'invalid')]"))
-            )
-
-    return UploadHelper
-
-    
+@pytest.fixture(scope="function")
+def login_as_center(driver, base_url, setup_test_accounts):
+    """
+    Injects a valid DISTRIBUTION_CENTER JWT into localStorage via API login.
+    Returns the dashboard URL so tests can assert navigation.
+    """
+    data = _api_login(CENTER_EMAIL, CENTER_PASSWORD)
+    _inject_session(driver, data, base_url)
+    driver.get(f"{base_url}/dashboard/center")
+    time.sleep(1)
+    return f"{base_url}/dashboard/center"
