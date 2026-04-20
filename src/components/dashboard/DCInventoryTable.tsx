@@ -44,7 +44,7 @@ export default function DCInventoryTable({
 		const items = inventory.filter(item => String(item.status).toUpperCase() === "REQUESTED");
 		if (searchQuery.trim()) {
 			const query = searchQuery.toLowerCase();
-			return items.filter(item => 
+			return items.filter(item =>
 				item.foodType?.toLowerCase().includes(query)
 			);
 		}
@@ -145,7 +145,7 @@ export default function DCInventoryTable({
 						) : (
 							<tr>
 								<td colSpan={4} className="px-5 py-8 text-center text-sm text-[#F0EBE1]/50">
-								   No items match your search.
+									No items match your search.
 								</td>
 							</tr>
 						)}

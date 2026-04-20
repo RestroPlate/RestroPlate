@@ -4,6 +4,7 @@ import { getCurrentUser } from "./authService";
 import type {
 	CreateDonationPayload,
 	Donation,
+	DonationImage,
 	DonationStatus,
 	UpdateDonationPayload,
 } from "../types/Dashboard";
@@ -36,6 +37,13 @@ interface DonationApiResponse {
 		phoneNumber: string;
 		address: string;
 	};
+	images?: Array<{
+		imageId: number;
+		donationId: number;
+		imageUrl: string;
+		fileName: string;
+		uploadedAt: string;
+	}>;
 }
 
 interface DonationsListResponse {
@@ -103,6 +111,15 @@ function mapDonationResponse(
 		createdAt: data.created_at ?? data.createdAt ?? new Date().toISOString(),
 		claimedByCenterUserId: data.claimedByCenterUserId ?? null,
 		centerDetails: data.centerDetails,
+		images: (data.images ?? []).map(
+			(img): DonationImage => ({
+				imageId: img.imageId,
+				donationId: img.donationId,
+				imageUrl: img.imageUrl,
+				fileName: img.fileName,
+				uploadedAt: img.uploadedAt,
+			}),
+		),
 	};
 }
 

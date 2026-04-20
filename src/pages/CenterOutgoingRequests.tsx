@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
+import Pagination from "../components/Pagination";
 import CollectDonationAction from "../components/dashboard/CollectDonationAction";
 import StatusNotice from "../components/StatusNotice";
 import {
@@ -59,6 +60,7 @@ export default function CenterOutgoingRequests() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [statusFilter, setStatusFilter] = useState<RequestFilter>("all");
+	const [currentPage, setCurrentPage] = useState(1);
 	const [notice, setNotice] = useState<{
 		type: "success" | "error";
 		message: string;
@@ -105,6 +107,17 @@ export default function CenterOutgoingRequests() {
 			active = false;
 		};
 	}, [statusFilter]);
+
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [statusFilter]);
+
+	const PAGE_SIZE = 8;
+	const totalPages = Math.ceil(requests.length / PAGE_SIZE);
+	const paginatedRequests = requests.slice(
+		(currentPage - 1) * PAGE_SIZE,
+		currentPage * PAGE_SIZE,
+	);
 
 	async function toggleExpand(requestId: number): Promise<void> {
 		if (expandedId === requestId) {
@@ -168,8 +181,8 @@ export default function CenterOutgoingRequests() {
 										{filter === "all"
 											? "All statuses"
 											: filter
-													.replace("_", " ")
-													.replace(/^\w/, (c) => c.toUpperCase())}
+												.replace("_", " ")
+												.replace(/^\w/, (c) => c.toUpperCase())}
 									</option>
 								))}
 							</select>
@@ -214,108 +227,118 @@ export default function CenterOutgoingRequests() {
 						</p>
 					</div>
 				) : (
-					<div className="space-y-3">
-						{requests.map((request) => (
-							<article
-								key={request.donationRequestId}
-								className="rounded-2xl border border-white/10 bg-white/5 transition hover:border-white/15"
-							>
-								{/* Request Row */}
-								<button
-									type="button"
-									onClick={() => toggleExpand(request.donationRequestId)}
-									className="flex w-full flex-wrap items-center justify-between gap-3 p-5 text-left"
+					<>
+						<p className="text-xs font-semibold text-[#F0EBE1]/50">
+							Showing {paginatedRequests.length} of {requests.length} requests
+						</p>
+						<div className="space-y-3">
+							{paginatedRequests.map((request) => (
+								<article
+									key={request.donationRequestId}
+									className="rounded-2xl border border-white/10 bg-white/5 transition hover:border-white/15"
 								>
-									<div>
-										<p className="text-xs font-bold uppercase tracking-[0.16em] text-[#7DC542]">
-											Request #{request.donationRequestId}
-										</p>
-										<h3 className="mt-1 text-lg font-bold text-[#F0EBE1]">
-											{request.foodType}
-										</h3>
-										<div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm text-[#F0EBE1]/60">
-											<span>
-												Needed: {request.requestedQuantity} {request.unit}
-											</span>
-											<span>
-												Remaining:{" "}
-												{request.requestedQuantity - request.donatedQuantity}{" "}
-												{request.unit}
-											</span>
-											<span>Created: {formatDate(request.createdAt)}</span>
-										</div>
-									</div>
-
-									<div className="flex items-center gap-3">
-										<span
-											className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] ${getStatusClasses(request.status)}`}
-										>
-											{request.status.replace("_", " ")}
-										</span>
-										<span className="text-[#F0EBE1]/40 text-lg">
-											{expandedId === request.donationRequestId ? "▲" : "▼"}
-										</span>
-									</div>
-								</button>
-
-								{/* Expandable Sub-List */}
-								{expandedId === request.donationRequestId ? (
-									<div className="border-t border-white/10 bg-white/[0.02] p-5">
-										{subLoading ? (
-											<div className="skeleton-shimmer h-[60px]" />
-										) : subDonations.length === 0 ? (
-											<p className="text-sm text-[#F0EBE1]/50">
-												No donations linked to this request yet.
+									{/* Request Row */}
+									<button
+										type="button"
+										onClick={() => toggleExpand(request.donationRequestId)}
+										className="flex w-full flex-wrap items-center justify-between gap-3 p-5 text-left"
+									>
+										<div>
+											<p className="text-xs font-bold uppercase tracking-[0.16em] text-[#7DC542]">
+												Request #{request.donationRequestId}
 											</p>
-										) : (
-											<div className="space-y-3">
-												<p className="text-xs font-bold uppercase tracking-[0.08em] text-[#F0EBE1]/50">
-													Linked Donations
+											<h3 className="mt-1 text-lg font-bold text-[#F0EBE1]">
+												{request.foodType}
+											</h3>
+											<div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm text-[#F0EBE1]/60">
+												<span>
+													Needed: {request.requestedQuantity} {request.unit}
+												</span>
+												<span>
+													Remaining:{" "}
+													{request.requestedQuantity - request.donatedQuantity}{" "}
+													{request.unit}
+												</span>
+												<span>Created: {formatDate(request.createdAt)}</span>
+											</div>
+										</div>
+
+										<div className="flex items-center gap-3">
+											<span
+												className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] ${getStatusClasses(request.status)}`}
+											>
+												{request.status.replace("_", " ")}
+											</span>
+											<span className="text-[#F0EBE1]/40 text-lg">
+												{expandedId === request.donationRequestId ? "▲" : "▼"}
+											</span>
+										</div>
+									</button>
+
+									{/* Expandable Sub-List */}
+									{expandedId === request.donationRequestId ? (
+										<div className="border-t border-white/10 bg-white/[0.02] p-5">
+											{subLoading ? (
+												<div className="skeleton-shimmer h-[60px]" />
+											) : subDonations.length === 0 ? (
+												<p className="text-sm text-[#F0EBE1]/50">
+													No donations linked to this request yet.
 												</p>
-												{subDonations.map((donation) => (
-													<div
-														key={donation.donationId}
-														className="rounded-xl border border-white/10 bg-white/5 p-4"
-													>
-														<div className="flex flex-wrap items-center justify-between gap-2">
-															<div>
-																<span className="text-sm font-bold text-[#F0EBE1]">
-																	{`Donor #${donation.providerUserId}`}
-																</span>
-																<span className="mx-2 text-[#F0EBE1]/30">
-																	·
-																</span>
-																<span className="text-sm text-[#F0EBE1]/60">
-																	{donation.quantity} {donation.unit}
+											) : (
+												<div className="space-y-3">
+													<p className="text-xs font-bold uppercase tracking-[0.08em] text-[#F0EBE1]/50">
+														Linked Donations
+													</p>
+													{subDonations.map((donation) => (
+														<div
+															key={donation.donationId}
+															className="rounded-xl border border-white/10 bg-white/5 p-4"
+														>
+															<div className="flex flex-wrap items-center justify-between gap-2">
+																<div>
+																	<span className="text-sm font-bold text-[#F0EBE1]">
+																		{`Donor #${donation.providerUserId}`}
+																	</span>
+																	<span className="mx-2 text-[#F0EBE1]/30">
+																		·
+																	</span>
+																	<span className="text-sm text-[#F0EBE1]/60">
+																		{donation.quantity} {donation.unit}
+																	</span>
+																</div>
+																<span
+																	className={`rounded-full px-3 py-1 text-xs font-bold uppercase ${DONATION_STATUS_CLASSES[donation.status] ?? "bg-white/10 text-white/60"}`}
+																>
+																	{donation.status}
 																</span>
 															</div>
-															<span
-																className={`rounded-full px-3 py-1 text-xs font-bold uppercase ${DONATION_STATUS_CLASSES[donation.status] ?? "bg-white/10 text-white/60"}`}
-															>
-																{donation.status}
-															</span>
-														</div>
 
-														{/* Mark as Collected for REQUESTED donations in Flow 2 */}
-														{donation.status === "REQUESTED" ? (
-															<CollectDonationAction
-																donationId={donation.donationId}
-																quantity={donation.quantity}
-																unit={donation.unit}
-																onCollected={() =>
-																	handleCollected(request.donationRequestId)
-																}
-															/>
-														) : null}
-													</div>
-												))}
-											</div>
-										)}
-									</div>
-								) : null}
-							</article>
-						))}
-					</div>
+															{/* Mark as Collected for REQUESTED donations in Flow 2 */}
+															{donation.status === "REQUESTED" ? (
+																<CollectDonationAction
+																	donationId={donation.donationId}
+																	quantity={donation.quantity}
+																	unit={donation.unit}
+																	onCollected={() =>
+																		handleCollected(request.donationRequestId)
+																	}
+																/>
+															) : null}
+														</div>
+													))}
+												</div>
+											)}
+										</div>
+									) : null}
+								</article>
+							))}
+						</div>
+						<Pagination
+							currentPage={currentPage}
+							totalPages={totalPages}
+							onPageChange={setCurrentPage}
+						/>
+					</>
 				)}
 
 

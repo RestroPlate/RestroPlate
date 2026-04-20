@@ -1,0 +1,60 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.7, pytest-9.0.2, pluggy-1.6.0 -- C:\Python313\python.exe
+cachedir: .pytest_cache
+metadata: {'Python': '3.13.7', 'Platform': 'Windows-11-10.0.26200-SP0', 'Packages': {'pytest': '9.0.2', 'pluggy': '1.6.0'}, 'Plugins': {'html': '4.2.0', 'metadata': '3.1.1'}, 'JAVA_HOME': 'C:\\Program Files\\Java\\jdk-23'}
+rootdir: c:\SLIIT UNI\3rd year 1st sem\CSP lec\restoplate\RestroPlate\tests
+configfile: pytest.ini
+plugins: html-4.2.0, metadata-3.1.1
+collecting ... collected 8 items
+
+tests\ui\test_donation_upload_page.py::test_upload_valid_image_shows_preview PASSED [ 12%]
+tests\ui\test_donation_upload_page.py::test_upload_invalid_file_shows_error PASSED [ 25%]
+tests\ui\test_donation_upload_page.py::test_upload_large_file_shows_size_error PASSED [ 37%]
+tests\ui\test_donation_upload_page.py::test_upload_multiple_images_shows_all_previews PASSED [ 50%]
+tests\ui\test_donation_upload_page.py::test_remove_preview_image PASSED  [ 62%]
+tests\ui\test_donation_upload_page.py::test_create_donation_with_image_e2e FAILED [ 75%]
+tests\ui\test_donation_upload_page.py::test_file_input_accept_attribute PASSED [ 87%]
+tests\ui\test_donation_upload_page.py::test_file_input_allows_multiple_selection PASSED [100%]
+
+================================== FAILURES ===================================
+_____________________ test_create_donation_with_image_e2e _____________________
+tests\ui\test_donation_upload_page.py:291: in test_create_donation_with_image_e2e
+    submit_btn.click()
+C:\Users\Theertha Dheemani\AppData\Roaming\Python\Python313\site-packages\selenium\webdriver\remote\webelement.py:114: in click
+    self._execute(Command.CLICK_ELEMENT)
+C:\Users\Theertha Dheemani\AppData\Roaming\Python\Python313\site-packages\selenium\webdriver\remote\webelement.py:508: in _execute
+    return self._parent.execute(command, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Theertha Dheemani\AppData\Roaming\Python\Python313\site-packages\selenium\webdriver\remote\webdriver.py:446: in execute
+    self.error_handler.check_response(response)
+C:\Users\Theertha Dheemani\AppData\Roaming\Python\Python313\site-packages\selenium\webdriver\remote\errorhandler.py:232: in check_response
+    raise exception_class(message, screen, stacktrace)
+E   selenium.common.exceptions.ElementClickInterceptedException: Message: element click intercepted: Element is not clickable at point (849, 1027)
+E     (Session info: chrome=146.0.7680.178); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#elementclickinterceptedexception
+E   Stacktrace:
+E   	chromedriver!GetHandleVerifier [0x7ff6927929c5+2ed785]
+E   	chromedriver!GetHandleVerifier [0x7ff6924ba0d0+14e90]
+E   	chromedriver!(No symbol) [0x7ff69221db2d]
+E   	chromedriver!(No symbol) [0x7ff69227f0e5]
+E   	chromedriver!(No symbol) [0x7ff69227c7fa]
+E   	chromedriver!(No symbol) [0x7ff692279685]
+E   	chromedriver!(No symbol) [0x7ff692278537]
+E   	chromedriver!(No symbol) [0x7ff69226b186]
+E   	chromedriver!(No symbol) [0x7ff69229ff8a]
+E   	chromedriver!(No symbol) [0x7ff69226aa06]
+E   	chromedriver!(No symbol) [0x7ff6922c3b9b]
+E   	chromedriver!(No symbol) [0x7ff692269298]
+E   	chromedriver!(No symbol) [0x7ff69226a183]
+E   	chromedriver!GetHandleVerifier [0x7ff6927bde0d+318bcd]
+E   	chromedriver!GetHandleVerifier [0x7ff6927b8588+313348]
+E   	chromedriver!GetHandleVerifier [0x7ff6927d9d7a+334b3a]
+E   	chromedriver!GetHandleVerifier [0x7ff6924d6785+31545]
+E   	chromedriver!GetHandleVerifier [0x7ff6924dfacc+3a88c]
+E   	chromedriver!GetHandleVerifier [0x7ff6924c3634+1e3f4]
+E   	chromedriver!GetHandleVerifier [0x7ff6924c37e6+1e5a6]
+E   	chromedriver!GetHandleVerifier [0x7ff6924a7e37+2bf7]
+E   	KERNEL32!BaseThreadInitThunk [0x7ffcd010e8d7+17]
+E   	ntdll!RtlUserThreadStart [0x7ffcd10cc3fc+2c]
+=========================== short test summary info ===========================
+FAILED tests\ui\test_donation_upload_page.py::test_create_donation_with_image_e2e
+======================== 1 failed, 7 passed in 48.13s =========================

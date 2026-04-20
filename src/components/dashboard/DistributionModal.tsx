@@ -30,10 +30,10 @@ export default function DistributionModal({
 		try {
 			setIsSubmitting(true);
 			setError(null);
-			
+
 			// Backend expects the NEW TOTAL distributed quantity (UpdateDistributedQuantityDto)
 			const id = donation.inventoryLogId ?? donation.donationId;
-			
+
 			await distributeInventory(id, amount);
 			onSuccess();
 		} catch (err) {
