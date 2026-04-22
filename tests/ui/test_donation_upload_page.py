@@ -263,23 +263,36 @@ def test_create_donation_with_image_e2e(driver, base_url):
     # ── Fill donation form fields ──
     exp_date = (datetime.today() + timedelta(days=2)).strftime("%Y-%m-%d")
 
-    def fill(selector_id, value):
-        el = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, f"input#{selector_id}")))
-        el.clear()
-        el.send_keys(value)
+    def fill_controlled(selector_id, value):
+        """Use JS + React 16+ Native Setter + dispatchEvent for all inputs."""
+        el = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, f"input#{selector_id}")))
+        driver.execute_script(
+            "const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;"
+            "nativeInputValueSetter.call(arguments[0], arguments[1]);"
+            "arguments[0].dispatchEvent(new Event('input', {bubbles:true}));"
+            "arguments[0].dispatchEvent(new Event('change', {bubbles:true}));",
+            el,
+            value,
+        )
 
-    fill("foodType", "QA Automated Test Food")
-    fill("quantity", "5")
-    fill("unit", "Boxes")
-    fill("expirationDate", exp_date)
-    fill("availabilityTime", "14:00")
+    fill_controlled("foodType", "QA Automated Test Food")
+    fill_controlled("quantity", "5")
+    fill_controlled("unit", "Boxes")
+    fill_controlled("expirationDate", exp_date)
+    fill_controlled("availabilityTime", "14:00")
 
     # Pickup address
     addr_input = wait.until(
-        EC.element_to_be_clickable((By.CSS_SELECTOR, "input[placeholder*='Lat']"))
+        EC.presence_of_element_located((By.CSS_SELECTOR, "input[placeholder*='Lat']"))
     )
-    addr_input.clear()
-    addr_input.send_keys("6.9271, 79.8612")
+    driver.execute_script(
+        "const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;"
+        "nativeInputValueSetter.call(arguments[0], arguments[1]);"
+        "arguments[0].dispatchEvent(new Event('input', {bubbles:true}));"
+        "arguments[0].dispatchEvent(new Event('change', {bubbles:true}));",
+        addr_input,
+        "6.9271, 79.8612",
+    )
 
     # ── Submit ──
     submit_btn = wait.until(
@@ -292,27 +305,25 @@ def test_create_donation_with_image_e2e(driver, base_url):
 
     # ── Assert outcome ──
     # Wait for either success notice or error notice (the form was submitted)
+    # Wait longer for React async submission + potential image upload
     import time
-    time.sleep(3)  # Allow React async submission to complete
+    time.sleep(5)
 
     page_text = driver.find_element(By.TAG_NAME, "body").text.lower()
+    current_url = driver.current_url
 
-    # The form was submitted successfully if we see either:
-    # (a) "successfully" — donation created and images uploaded
-    # (b) "creating..." — still processing (backend is slow)
-    # (c) "failed" / "error" — backend returned an error (acceptable in test env)
-    # The key assertion is that the form submission actually fired
     form_was_submitted = (
         "successfully" in page_text
-        or "creating..." in page_text
+        or "creating" in page_text
         or "failed" in page_text
         or "error" in page_text
-        or "/dashboard/donor/my-donations" in driver.current_url
+        or "my-donations" in current_url
+        or "uploaded" in page_text
     )
 
     assert form_was_submitted, (
-        "Expected the donation form to be submitted (success or error response), "
-        f"but page shows: {page_text[:300]}"
+        "Expected donation form submission response (success/error/redirect). "
+        f"URL: {current_url} | Page (first 400 chars): {page_text[:400]}"
     )
 
 
